@@ -1,5 +1,4 @@
 import com.android.Version
-import org.jetbrains.kotlin.config.KotlinCompilerVersion
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -7,6 +6,7 @@ import java.util.Locale
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -32,31 +32,23 @@ android {
         buildConfig = true  // Hier hinzufügen
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
 
-    namespace = "info.meuse24.smsforwarderneo"
-    compileSdk = 34
+    namespace = "info.meuse24.smsforwarderneoA1"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "info.meuse24.smsforwarderneo"
+        applicationId = "info.meuse24.smsforwarderneoA1"
         minSdk = 29
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 3
         versionName = "Anchovy"
 
         val agpVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION
         buildConfigField("String", "AGP_VERSION", "\"$agpVersion\"")
-        buildConfigField("String", "KOTLIN_VERSION", "\"${KotlinCompilerVersion.VERSION}\"")
+        buildConfigField("String", "KOTLIN_VERSION", "\"${libs.versions.kotlin.get()}\"")
 
-        // Compose Version aus den Abhängigkeiten
-        val composeVersion = project.configurations
-            .findByName("implementation")
-            ?.dependencies
-            ?.find { it.group == "androidx.compose.runtime" && it.name == "runtime" }
-            ?.version ?: "unknown"
-        buildConfigField("String", "COMPOSE_VERSION", "\"$composeVersion\"")
+        // Compose Version aus dem Version Catalog
+        buildConfigField("String", "COMPOSE_VERSION", "\"${libs.versions.composeBom.get()}\"")
 
         // Neue Build Config Fields
 
@@ -98,9 +90,6 @@ android {
 
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
     }
     packaging {
         resources {
