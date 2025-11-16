@@ -1410,12 +1410,17 @@ class MainActivity : ComponentActivity() {
 
                 CallStatusCard(callState = callState)
 
-                ForwardingStatus(forwardingActive, selectedContact, forwardSmsToEmail, emailAddresses)
+                ForwardingStatus(
+                    forwardingActive = forwardingActive,
+                    selectedContact = selectedContact,
+                    forwardSmsToEmail = forwardSmsToEmail,
+                    emailAddresses = emailAddresses,
+                    onQueryStatus = viewModel::queryForwardingStatus
+                )
 
                 ControlButtons(
                     onDeactivateForwarding = viewModel::deactivateForwarding,
                     onSendTestSms = viewModel::sendTestSms,
-                    onQueryStatus = viewModel::queryForwardingStatus,
                     isEnabled = selectedContact != null
                 )
             }
@@ -1462,12 +1467,17 @@ class MainActivity : ComponentActivity() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CallStatusCard(callState = callState)
-                ForwardingStatus(forwardingActive, selectedContact, forwardSmsToEmail, emailAddresses)
+                ForwardingStatus(
+                    forwardingActive = forwardingActive,
+                    selectedContact = selectedContact,
+                    forwardSmsToEmail = forwardSmsToEmail,
+                    emailAddresses = emailAddresses,
+                    onQueryStatus = viewModel::queryForwardingStatus
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 ControlButtons(
                     onDeactivateForwarding = viewModel::deactivateForwarding,
                     onSendTestSms = viewModel::sendTestSms,
-                    onQueryStatus = viewModel::queryForwardingStatus,
                     isEnabled = selectedContact != null
                 )
             }
@@ -1711,7 +1721,8 @@ class MainActivity : ComponentActivity() {
         forwardingActive: Boolean,
         selectedContact: Contact?,
         forwardSmsToEmail: Boolean,
-        emailAddresses: List<String>
+        emailAddresses: List<String>,
+        onQueryStatus: () -> Unit
     ) {
         val hasEmailForwarding = forwardSmsToEmail && emailAddresses.isNotEmpty()
         val hasAnyForwarding = forwardingActive || hasEmailForwarding
@@ -1723,36 +1734,56 @@ class MainActivity : ComponentActivity() {
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp, horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (forwardingActive) {
-                    Text(
-                        text = "SMS-Weiterleitung aktiv zu ${selectedContact?.phoneNumber}",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
+                // Status Text(s)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (forwardingActive) {
+                        Text(
+                            text = "SMS-Weiterleitung aktiv zu ${selectedContact?.phoneNumber}",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    if (hasEmailForwarding) {
+                        Text(
+                            text = "Email-Weiterleitung aktiv an ${emailAddresses.size} Adresse(n)",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    if (!hasAnyForwarding) {
+                        Text(
+                            text = "Weiterleitung inaktiv",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
 
-                if (hasEmailForwarding) {
-                    Text(
-                        text = "Email-Weiterleitung aktiv an ${emailAddresses.size} Adresse(n)",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                if (!hasAnyForwarding) {
-                    Text(
-                        text = "Weiterleitung inaktiv",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                // Status Query Icon Button
+                IconButton(
+                    onClick = onQueryStatus,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Status abfragen",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -1763,7 +1794,6 @@ class MainActivity : ComponentActivity() {
     fun ControlButtons(
         onDeactivateForwarding: () -> Unit,
         onSendTestSms: () -> Unit,
-        onQueryStatus: () -> Unit,
         isEnabled: Boolean
     ) {
         Column(
@@ -1826,32 +1856,6 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
-            }
-
-            // Second row: Status query button (full width)
-            Button(
-                onClick = onQueryStatus,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                )
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Info,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Status abfragen",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
             }
         }
     }
