@@ -1228,7 +1228,10 @@ class ContactsViewModel(
                     filterNoise = !showAll,
                     noiseActions = NOISE_ACTIONS
                 )
-                _logEntries.value = logger.getLogEntriesAsList()
+                _logEntries.value = logger.getLogEntriesAsList(
+                    filterNoise = !showAll,
+                    noiseActions = NOISE_ACTIONS
+                )
             } catch (e: Exception) {
                 LoggingManager.logError(
                     component = "ContactsViewModel",
@@ -3275,7 +3278,10 @@ class Logger(
         append(HTML_FOOTER)
     }
 
-    fun getLogEntriesAsList(): List<LogEntry> {
+    fun getLogEntriesAsList(
+        filterNoise: Boolean = false,
+        noiseActions: Set<String> = emptySet()
+    ): List<LogEntry> {
         return try {
             val document = DocumentBuilderFactory.newInstance()
                 .newDocumentBuilder()
@@ -3288,6 +3294,16 @@ class Logger(
                 val timestamp = entry.getElementsByTagName("time").item(0).textContent
                 val text = entry.getElementsByTagName("text").item(0).textContent
                 val number = entry.getElementsByTagName("number").item(0)?.textContent ?: "N/A"
+
+                // Apply noise filtering if enabled
+                if (filterNoise) {
+                    val actionMatch = Regex("""\]\s+([A-Z_]+)(?:\s+\||$)""").find(text)
+                    val action = actionMatch?.groupValues?.get(1)
+
+                    if (action != null && action in noiseActions) {
+                        continue  // Skip this entry
+                    }
+                }
 
                 // Check if this entry should be highlighted
                 val shouldHighlight = highlightPatterns.any { pattern ->
