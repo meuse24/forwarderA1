@@ -85,6 +85,32 @@ class ContactsViewModel(
     private val contactsMutex = Mutex()
     private val stateMutex = Mutex()
 
+    // Noise Actions: Log-Einträge, die standardmäßig ausgeblendet werden
+    companion object {
+        private val NOISE_ACTIONS = setOf(
+            "HEARTBEAT",
+            "UPDATE_NOTIFICATION",
+            "LOAD_CONTACTS",
+            "LOAD_CONTACTS_START",
+            "CONTACTS_RELOAD",
+            "FILTER_CONTACTS",
+            "FILTER_APPLIED",
+            "GET_PREFERENCE",
+            "SET_PREFERENCE",
+            "SAVE_STATE",
+            "VALIDATE_STATE",
+            "REGISTER_OBSERVER",
+            "UNREGISTER_OBSERVER",
+            "WAKE_LOCK_ACQUIRED",
+            "WAKE_LOCK_RELEASED",
+            "LOW_MEMORY",
+            "TRIM_MEMORY",
+            "CONFIG_CHANGED",
+            "CONTACTS_CHANGED_SKIPPED",
+            "APPLY_FILTER"
+        )
+    }
+
     // Callback for dialing MMI codes with speakerphone
     var onDialMmiCode: ((String) -> Unit)? = null
 
@@ -178,6 +204,9 @@ class ContactsViewModel(
 
     private val _mmiDeactivateCode = MutableStateFlow(prefsManager.getMmiDeactivateCode())
     val mmiDeactivateCode: StateFlow<String> = _mmiDeactivateCode.asStateFlow()
+
+    private val _showAllLogs = MutableStateFlow(false)  // Default: nur wichtige Logs
+    val showAllLogs: StateFlow<Boolean> = _showAllLogs.asStateFlow()
 
     private val _mmiStatusCode = MutableStateFlow(prefsManager.getMmiStatusCode())
     val mmiStatusCode: StateFlow<String> = _mmiStatusCode.asStateFlow()
@@ -1194,7 +1223,11 @@ class ContactsViewModel(
     fun reloadLogs() {
         viewModelScope.launch {
             try {
-                _logEntriesHtml.value = logger.getLogEntriesHtml()
+                val showAll = _showAllLogs.value
+                _logEntriesHtml.value = logger.getLogEntriesHtml(
+                    filterNoise = !showAll,
+                    noiseActions = NOISE_ACTIONS
+                )
                 _logEntries.value = logger.getLogEntriesAsList()
             } catch (e: Exception) {
                 LoggingManager.logError(
@@ -1205,6 +1238,11 @@ class ContactsViewModel(
                 )
             }
         }
+    }
+
+    fun toggleLogFilter() {
+        _showAllLogs.value = !_showAllLogs.value
+        reloadLogs()  // Logs mit neuem Filter neu laden
     }
 
     fun updateTopBarTitle(title: String) {
@@ -3149,7 +3187,11 @@ class Logger(
         "AUTHENTICATION_FAILED"
     )
 
-    private fun readLogEntries(process: (Element, Boolean) -> String): String {
+    private fun readLogEntries(
+        filterNoise: Boolean = false,
+        noiseActions: Set<String> = emptySet(),
+        process: (Element, Boolean) -> String
+    ): String {
         return try {
             val document = DocumentBuilderFactory.newInstance()
                 .newDocumentBuilder()
@@ -3160,6 +3202,16 @@ class Logger(
                     val entry = entries.item(i) as? Element ?: continue
                     val entryText = entry.getElementsByTagName("text").item(0).textContent
                     entry.getElementsByTagName("number").item(0)?.textContent?.toIntOrNull()
+
+                    // Extrahiere ACTION aus dem Log-Text
+                    // Format: [Component] ACTION | details | message
+                    val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entryText)
+                    val action = actionMatch?.groupValues?.get(1)
+
+                    // Filtere Noise-Actions wenn aktiviert
+                    if (filterNoise && action != null && action in noiseActions) {
+                        continue  // Überspringe diesen Eintrag
+                    }
 
                     // Prüfe, ob einer der Patterns im Text vorkommt
                     val shouldHighlight = highlightPatterns.any { pattern ->
@@ -3177,9 +3229,12 @@ class Logger(
         }
     }
 
-    fun getLogEntriesHtml(): String = buildString {
+    fun getLogEntriesHtml(
+        filterNoise: Boolean = false,
+        noiseActions: Set<String> = emptySet()
+    ): String = buildString {
         append(HTML_HEADER)
-        append(readLogEntries { entry, shouldHighlight ->
+        append(readLogEntries(filterNoise, noiseActions) { entry, shouldHighlight ->
             val timestamp = entry.getElementsByTagName("time").item(0).textContent
             val text = entry.getElementsByTagName("text").item(0).textContent
             val number = entry.getElementsByTagName("number").item(0)?.textContent ?: "N/A"

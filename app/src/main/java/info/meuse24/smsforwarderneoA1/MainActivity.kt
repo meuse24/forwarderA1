@@ -2975,6 +2975,7 @@ class MainActivity : ComponentActivity() {
     fun LogScreen() {
         val context = LocalContext.current
         val logEntriesHtml by viewModel.logEntriesHtml.collectAsState()
+        val showAllLogs by viewModel.showAllLogs.collectAsState()
 
         LaunchedEffect(Unit) {
             viewModel.reloadLogs()
@@ -3012,6 +3013,7 @@ class MainActivity : ComponentActivity() {
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
+                            FilterLogButton(viewModel, showAllLogs)
                             ShareLogIconButton(context, logEntriesHtml)
                             //DeleteLogIconButton()
                             RefreshLogButton(viewModel)
@@ -3035,6 +3037,8 @@ class MainActivity : ComponentActivity() {
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        FilterLogButton(viewModel, showAllLogs)
+                        Spacer(modifier = Modifier.width(16.dp))
                         ShareLogIconButton(context, logEntriesHtml)
                         Spacer(modifier = Modifier.width(16.dp))
                         RefreshLogButton(viewModel)
@@ -3262,6 +3266,21 @@ class MainActivity : ComponentActivity() {
             Icon(
                 imageVector = Icons.Default.Refresh,
                 contentDescription = "Logs aktualisieren"
+            )
+        }
+    }
+
+    @Composable
+    fun FilterLogButton(viewModel: ContactsViewModel, showAllLogs: Boolean) {
+        IconButton(
+            onClick = {
+                viewModel.toggleLogFilter()
+            }
+        ) {
+            Icon(
+                imageVector = if (showAllLogs) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                contentDescription = if (showAllLogs) "Nur wichtige Logs" else "Alle Logs anzeigen",
+                tint = if (showAllLogs) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
             )
         }
     }
