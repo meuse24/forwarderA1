@@ -2289,6 +2289,7 @@ class MainActivity : ComponentActivity() {
         val context = LocalContext.current
         var simInfoList by remember { mutableStateOf<List<PhoneSmsUtils.SimInfo>>(emptyList()) }
         var storedNumbers by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
+        var defaultSimIds by remember { mutableStateOf<Pair<Int, Int>?>(null) }
         var isLoading by remember { mutableStateOf(true) }
 
         // Load SIM info on first composition
@@ -2296,8 +2297,10 @@ class MainActivity : ComponentActivity() {
             try {
                 val sims = PhoneSmsUtils.getAllSimInfo(context)
                 val stored = AppContainer.getPrefsManagerSafe()?.getSimPhoneNumbers() ?: emptyMap()
+                val defaults = PhoneSmsUtils.getDefaultSimIds(context)
                 simInfoList = sims
                 storedNumbers = stored
+                defaultSimIds = defaults
                 isLoading = false
             } catch (e: Exception) {
                 LoggingManager.logError(
@@ -2412,6 +2415,30 @@ class MainActivity : ComponentActivity() {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
+                                    // Check if this SIM is default for SMS or Voice
+                                    val isDefaultSms = defaultSimIds?.first == sim.subscriptionId
+                                    val isDefaultVoice = defaultSimIds?.second == sim.subscriptionId
+
+                                    // Default SIM Badge
+                                    if (isDefaultSms || isDefaultVoice) {
+                                        Surface(
+                                            shape = MaterialTheme.shapes.small,
+                                            color = MaterialTheme.colorScheme.tertiaryContainer
+                                        ) {
+                                            Text(
+                                                text = when {
+                                                    isDefaultSms && isDefaultVoice -> "Standard"
+                                                    isDefaultSms -> "Standard SMS"
+                                                    else -> "Standard Voice"
+                                                },
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                            )
+                                        }
+                                    }
+
                                     if (sim.isAutoDetected) {
                                         Surface(
                                             shape = MaterialTheme.shapes.small,

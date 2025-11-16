@@ -559,6 +559,45 @@ class PhoneSmsUtils private constructor() {
         }
 
         /**
+         * Ermittelt die Default-SIM-IDs für SMS und Voice/MMI
+         * @return Pair<smsSubId, voiceSubId> oder null wenn nicht verfügbar
+         */
+        @SuppressLint("MissingPermission")
+        fun getDefaultSimIds(context: Context): Pair<Int, Int>? {
+            return try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                        ?: return null
+
+                    val defaultSmsSubId = SubscriptionManager.getDefaultSmsSubscriptionId()
+                    val defaultVoiceSubId = SubscriptionManager.getDefaultVoiceSubscriptionId()
+
+                    LoggingManager.logInfo(
+                        component = "PhoneSmsUtils",
+                        action = "GET_DEFAULT_SIMS",
+                        message = "Default SIM IDs ermittelt",
+                        details = mapOf(
+                            "sms_sub_id" to defaultSmsSubId,
+                            "voice_sub_id" to defaultVoiceSubId
+                        )
+                    )
+
+                    Pair(defaultSmsSubId, defaultVoiceSubId)
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                LoggingManager.logError(
+                    component = "PhoneSmsUtils",
+                    action = "GET_DEFAULT_SIMS",
+                    message = "Fehler beim Ermitteln der Default-SIM-IDs",
+                    error = e
+                )
+                null
+            }
+        }
+
+        /**
          * Versucht die Telefonnummer für eine spezifische Subscription zu ermitteln
          */
         @SuppressLint("MissingPermission")
