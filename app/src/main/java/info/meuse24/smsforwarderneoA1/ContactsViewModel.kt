@@ -3129,9 +3129,9 @@ class Logger(
     private fun recoverLogFile() {
         try {
             // Save corrupted file for debugging
-            val corruptedFile = File(logDir, "log_corrupted_${System.currentTimeMillis()}.xml")
+            val corruptedFile = File(mainLogFile.parentFile, "log_corrupted_${System.currentTimeMillis()}.xml")
             mainLogFile.copyTo(corruptedFile, overwrite = true)
-            Log.w(TAG, "Saved corrupted log file to: ${corruptedFile.absolutePath}")
+            Log.w(TAG, "Saved corrupted log file to: ${corruptedFile.path}")
 
             // Create fresh log file
             createEmptyLogFile()
