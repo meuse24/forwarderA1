@@ -3086,19 +3086,36 @@ class Logger(
 
     private fun appendToLogFile(timestamp: String, entry: String, entryNumber: Int) {
         try {
-            val document = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
-                .parse(mainLogFile)
+            val document = try {
+                DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(mainLogFile)
+            } catch (parseException: Exception) {
+                Log.e(TAG, "Log file corrupted, recovering...", parseException)
+                recoverLogFile()
+                DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(mainLogFile)
+            }
 
             val root = document.documentElement
             val newEntry = document.createElement("logEntry").apply {
                 appendChild(document.createElement("number").apply { textContent = entryNumber.toString() })
                 appendChild(document.createElement("time").apply { textContent = timestamp })
-                appendChild(document.createElement("text").apply { textContent = entry })
+                appendChild(document.createElement("text").apply {
+                    // Use CDATA to safely store text with special characters
+                    val cdataSection = document.createCDATASection(entry)
+                    appendChild(cdataSection)
+                })
             }
             root.appendChild(newEntry)
 
-            TransformerFactory.newInstance().newTransformer().transform(
+            val transformer = TransformerFactory.newInstance().newTransformer().apply {
+                setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes")
+                setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, "UTF-8")
+                setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2")
+            }
+            transformer.transform(
                 DOMSource(document),
                 StreamResult(mainLogFile)
             )
@@ -3108,6 +3125,26 @@ class Logger(
     }
 
 
+
+    private fun recoverLogFile() {
+        try {
+            // Save corrupted file for debugging
+            val corruptedFile = File(logDir, "log_corrupted_${System.currentTimeMillis()}.xml")
+            mainLogFile.copyTo(corruptedFile, overwrite = true)
+            Log.w(TAG, "Saved corrupted log file to: ${corruptedFile.absolutePath}")
+
+            // Create fresh log file
+            createEmptyLogFile()
+            logEntryCounter = 0
+
+            Log.w(TAG, "Log file recovered - old entries lost, starting fresh")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to recover log file", e)
+            // Last resort: delete and recreate
+            mainLogFile.delete()
+            createEmptyLogFile()
+        }
+    }
 
     private fun rotateLogFiles() {
         backupFile.delete()
@@ -3159,9 +3196,17 @@ class Logger(
 
     private fun readLogEntries(process: (Element) -> String): String {
         return try {
-            val document = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
-                .parse(mainLogFile)
+            val document = try {
+                DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(mainLogFile)
+            } catch (parseException: Exception) {
+                Log.e(TAG, "Log file corrupted during read, recovering...", parseException)
+                recoverLogFile()
+                DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(mainLogFile)
+            }
             val entries = document.getElementsByTagName("logEntry")
             buildString {
                 for (i in entries.length - 1 downTo 0) {
@@ -3196,9 +3241,18 @@ class Logger(
         process: (Element, Boolean) -> String
     ): String {
         return try {
-            val document = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
-                .parse(mainLogFile)
+            val document = try {
+                DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(mainLogFile)
+            } catch (parseException: Exception) {
+                Log.e(TAG, "Log file corrupted during read, recovering...", parseException)
+                recoverLogFile()
+                DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(mainLogFile)
+            }
+
             val entries = document.getElementsByTagName("logEntry")
             var totalEntries = 0
             var filteredEntries = 0
@@ -3283,9 +3337,18 @@ class Logger(
         noiseActions: Set<String> = emptySet()
     ): List<LogEntry> {
         return try {
-            val document = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
-                .parse(mainLogFile)
+            val document = try {
+                DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(mainLogFile)
+            } catch (parseException: Exception) {
+                Log.e(TAG, "Log file corrupted during read, recovering...", parseException)
+                recoverLogFile()
+                DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(mainLogFile)
+            }
+
             val entries = document.getElementsByTagName("logEntry")
             val logEntries = mutableListOf<LogEntry>()
 
