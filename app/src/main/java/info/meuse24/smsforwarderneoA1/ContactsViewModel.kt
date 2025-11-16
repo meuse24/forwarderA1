@@ -3197,19 +3197,31 @@ class Logger(
                 .newDocumentBuilder()
                 .parse(mainLogFile)
             val entries = document.getElementsByTagName("logEntry")
+            var totalEntries = 0
+            var filteredEntries = 0
+
             buildString {
                 for (i in entries.length - 1 downTo 0) {
                     val entry = entries.item(i) as? Element ?: continue
                     val entryText = entry.getElementsByTagName("text").item(0).textContent
-                    entry.getElementsByTagName("number").item(0)?.textContent?.toIntOrNull()
+                    totalEntries++
 
                     // Extrahiere ACTION aus dem Log-Text
-                    // Format: [Component] ACTION | details | message
-                    val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entryText)
+                    // Format: EMOJI [Component] ACTION | details | message
+                    // Verbesserte Regex: Nach ] kommt Leerzeichen, dann ACTION (Großbuchstaben und _)
+                    val actionMatch = Regex("""\]\s+([A-Z_]+)(?:\s+\||$)""").find(entryText)
                     val action = actionMatch?.groupValues?.get(1)
+
+                    // Debug-Logging (nur die ersten paar Einträge)
+                    if (totalEntries <= 3) {
+                        Log.d(TAG, "Log entry text: $entryText")
+                        Log.d(TAG, "Extracted action: $action")
+                        Log.d(TAG, "Filter active: $filterNoise, Is noise: ${action in noiseActions}")
+                    }
 
                     // Filtere Noise-Actions wenn aktiviert
                     if (filterNoise && action != null && action in noiseActions) {
+                        filteredEntries++
                         continue  // Überspringe diesen Eintrag
                     }
 
@@ -3222,6 +3234,8 @@ class Logger(
                     val processedEntry = process(entry, shouldHighlight)
                     append(processedEntry)
                 }
+            }.also {
+                Log.d(TAG, "Log filter stats: Total=$totalEntries, Filtered=$filteredEntries, Shown=${totalEntries - filteredEntries}")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to read log entries", e)
