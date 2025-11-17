@@ -699,7 +699,8 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                 ) {
                     composable("start") {
-                        HomeScreen(viewModel, callState)
+                        val currentCallState = callState.collectAsState()
+                        HomeScreen(viewModel, currentCallState)
                     }
                     composable("mail") {
                         MailScreen(viewModel)
@@ -891,9 +892,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    @Composable
-
 
     // getPhoneNumber Funktion entfernt - Telefonnummer wird jetzt in SIM-Karten-Übersicht verwaltet
     // LogScreen, LogTable, LogButtons moved to presentation.ui.screens.logs/
