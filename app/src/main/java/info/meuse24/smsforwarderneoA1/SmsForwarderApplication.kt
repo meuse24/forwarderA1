@@ -12,6 +12,9 @@ import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import info.meuse24.smsforwarderneoA1.data.local.Logger
+import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
+import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,8 +24,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
+// Type aliases for backward compatibility
 typealias LogLevel = Logger.LogLevel
-
 typealias LogMetadata = Logger.LogMetadata
 
 object AppContainer {
