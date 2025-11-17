@@ -18,6 +18,8 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.screens.info.InfoScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.mail.MailScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings.SettingsScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.home.HomeScreen
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.CustomTopAppBar
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -798,100 +800,6 @@ class MainActivity : ComponentActivity() {
     // CleanupErrorDialog moved to presentation.ui.components.dialogs.CleanupDialogs
 
     @Composable
-    fun CustomTopAppBar(title: String) {
-        Surface(
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                // Kein Text mehr - nur farbige TopAppBar
-            }
-        }
-    }
-
-    @Composable
-    fun BottomNavigationBar(navController: NavController, viewModel: ContactsViewModel) {
-        val mailScreenVisible by viewModel.mailScreenVisible.collectAsState()
-        val items = if (mailScreenVisible) {
-            listOf("start", "mail", "setup", "log", "info")
-        } else {
-            listOf("start", "setup", "log", "info")
-        }
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
-
-        // Navigate away from mail screen if it becomes hidden
-        LaunchedEffect(mailScreenVisible, currentRoute) {
-            if (!mailScreenVisible && currentRoute == "mail") {
-                navController.navigate("start") {
-                    popUpTo("start") { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-        }
-
-        NavigationBar(
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ) {
-            items.forEach { screen ->
-                NavigationBarItem(
-                    icon = {
-                        when (screen) {
-                            "setup" -> Icon(
-                                Icons.Filled.Settings,
-                                contentDescription = "Setup"
-                            )
-
-                            "mail" -> Icon(
-                                Icons.Filled.Email,
-                                contentDescription = "Mail"
-                            )
-
-                            "log" -> Icon(
-                                Icons.AutoMirrored.Filled.List,
-                                contentDescription = "Log"
-                            )
-
-                            "info" -> Icon(
-                                Icons.Filled.Info,
-                                contentDescription = "Info"
-                            )
-
-                            else -> Icon(
-                                Icons.Filled.Home,
-                                contentDescription = "Start"
-                            )
-                        }
-                    },
-                    label = {
-                        Text(
-                            when (screen) {
-                                "start" -> "Start"
-                                "mail" -> "Mail"
-                                "setup" -> "Setup"
-                                "log" -> "Log"
-                                else -> "Info"
-                            }
-                        )
-                    },
-                    selected = currentRoute == screen,
-                    onClick = {
-                        navController.navigate(screen) {
-                            launchSingleTop = true
-                            restoreState = true
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                        }
-                    }
-                )
-            }
-        }
-    }
 
     // getPhoneNumber Funktion entfernt - Telefonnummer wird jetzt in SIM-Karten-Übersicht verwaltet
     // LogScreen, LogTable, LogButtons moved to presentation.ui.screens.logs/
