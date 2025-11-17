@@ -791,20 +791,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // OwnNumberMissingDialog entfernt - Telefonnummer wird jetzt in SIM-Karten-Übersicht verwaltet
-
-    // ExitDialog moved to presentation.ui.components.dialogs.ExitDialog
-
-    // CleanupProgressDialog moved to presentation.ui.components.dialogs.CleanupDialogs
-    // SimNumbersDialog moved to presentation.ui.components.dialogs.SimNumbersDialog
-    // CleanupErrorDialog moved to presentation.ui.components.dialogs.CleanupDialogs
-
-    @Composable
-
-    // getPhoneNumber Funktion entfernt - Telefonnummer wird jetzt in SIM-Karten-Übersicht verwaltet
-    // LogScreen, LogTable, LogButtons moved to presentation.ui.screens.logs/
-    // InfoScreen moved to presentation.ui.screens.info/
-    // PinDialog moved to presentation.ui.components.dialogs.PinDialogs
-    // ChangePinDialog moved to presentation.ui.components.dialogs.PinDialogs
+    // ============================================================================
+    // Phase 4 Refactoring Complete - All UI Components Extracted
+    // ============================================================================
+    //
+    // Dialogs moved to: presentation.ui.components.dialogs/
+    // - LoadingScreen, ExitDialog, CleanupDialogs, SimNumbersDialog, PinDialogs
+    //
+    // Screens moved to: presentation.ui.screens/
+    // - home/ (HomeScreen, FilterAndLogo, ContactList, CallStatusCard, ForwardingStatus, ControlButtons)
+    // - mail/ (MailScreen)
+    // - settings/ (SettingsScreen + 6 sections)
+    // - logs/ (LogScreen, LogTable, LogButtons)
+    // - info/ (InfoScreen)
+    //
+    // Navigation moved to: presentation.ui.components.navigation/
+    // - CustomTopAppBar, BottomNavigationBar
+    //
+    // MainActivity is now focused on:
+    // - Activity lifecycle management
+    // - Permission handling
+    // - Service management
+    // - Telephony callbacks
+    // - Navigation setup
+    //
 }
 
