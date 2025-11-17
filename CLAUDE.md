@@ -351,38 +351,6 @@ typealias LogMetadata = info.meuse24.smsforwarderneoA1.data.local.Logger.LogMeta
 - `AppContainer` access requires `AppContainer.requireXxx()` methods for lateinit properties
 - Coroutines dependencies need comprehensive imports (SupervisorJob, launch, withContext, etc.)
 
-### Future Refactoring Phases (Planned)
-
-#### Phase 3: ViewModel Decomposition
-- Break down `ContactsViewModel` into smaller, focused ViewModels
-- Extract business logic to use cases/interactors
-- Separate email and forwarding state management
-
-#### Phase 4: Service & Utility Refinement
-- Extract SMS operations from `PhoneSmsUtils`
-- Create dedicated SMS and phone utilities
-- Refactor `SmsForegroundService` for better separation
-
-#### Phase 5: UI Decomposition
-- Break down `MainActivity.kt` into screen composables
-- Extract reusable UI components
-- Organize screens by feature
-
-#### Phase 6: Testing Infrastructure
-- Add unit tests for extracted repositories and utilities
-- Integration tests for data layer
-- UI tests for key user flows
-
-#### Phase 7: Dependency Injection
-- Replace manual `AppContainer` with Hilt or Koin
-- Proper dependency scoping
-- Improved testability with DI
-
-#### Phase 8: Performance & Optimization
-- Optimize coroutine usage
-- Review memory leaks and lifecycle issues
-- Performance profiling and improvements
-
 #### Phase 3: Utility Layer Organization ✅
 
 **Objective**: Extract remaining utility classes from PhoneSmsUtils to dedicated packages.
@@ -421,18 +389,21 @@ typealias LogMetadata = info.meuse24.smsforwarderneoA1.data.local.Logger.LogMeta
 - Total extracted: ~158 lines to dedicated utility packages
 - All compilation errors resolved, project builds successfully
 
-**Status**: Phases 1-3 complete and tested. Ready for Phase 4 (UI Decomposition).
+**Status**: Phases 1-3 complete and tested. Phase 4 in progress.
 
-#### Phase 4: MainActivity UI Decomposition (PLANNED - NOT YET EXECUTED)
+#### Phase 4: MainActivity UI Decomposition (IN PROGRESS)
 
 **Objective**: Break down MainActivity.kt (3,870 lines) into modular screen composables.
 
-**Current State Analysis** (as of 2025-11-17):
+**Initial State Analysis** (as of 2025-11-17):
 - **Total Composables**: 34 in single file
 - **Main Screens**: 5 (HomeScreen, MailScreen, SettingsScreen, LogScreen, InfoScreen)
 - **Dialogs**: 6 (Loading, Exit, Cleanup Progress/Error, SIM Numbers, PIN/Change PIN)
 - **Navigation Components**: 2 (CustomTopAppBar, BottomNavigationBar)
 - **Screen-Specific Helpers**: 21 composables distributed across screens
+
+**⚠️ Note on Branch Status:**
+The `main` branch contains experimental refactorings (Hilt DI, EmailViewModel, LoggingViewModel extraction) that failed and were rolled back. Current development continues on `backup-broken-stand` branch with the stable Phase 1-3 foundation.
 
 **Proposed Package Structure**:
 ```
@@ -484,10 +455,18 @@ presentation/
 
 **Extraction Strategy** (bottom-up approach):
 
-1. **Step 1: Dialogs** (lowest dependencies)
+1. **✅ Step 1: Dialogs** (COMPLETED 2025-11-17)
    - 6 dialogs → 5 files
-   - Mostly independent, easy to extract
-   - Expected: ~400 lines extracted
+   - **817 lines extracted** to `presentation/ui/components/dialogs/`
+   - Files created:
+     - `LoadingScreen.kt` (211 lines)
+     - `PinDialogs.kt` (193 lines)
+     - `SimNumbersDialog.kt` (168 lines)
+     - `CleanupDialogs.kt` (125 lines)
+     - `ExitDialog.kt` (120 lines)
+   - MainActivity reduced: **3,870 → 3,297 lines (-573 lines, -15%)**
+   - Remaining composables in MainActivity: **27** (down from 34)
+   - Status: ✅ **Files created, not yet committed to git**
 
 2. **Step 2: Log Screen** (low complexity)
    - 5 composables → 3 files (LogScreen.kt, LogTable.kt, LogButtons.kt)
@@ -522,10 +501,15 @@ presentation/
    - Keep only: setContent + NavHost + UI()
    - Final size: ~200 lines
 
-**Expected Results**:
+**Expected Final Results**:
 - MainActivity.kt: 3,870 → ~200 lines (-95%)
 - New screen files: ~25 files
 - Better organization, testability, and maintainability
+
+**Current Progress**:
+- MainActivity.kt: 3,870 → 3,297 lines (-15% so far)
+- Files created: 5 dialog files (817 lines)
+- Composables remaining: 27 (7 extracted)
 
 **Composable Dependencies** (for extraction reference):
 
@@ -574,7 +558,9 @@ LogScreen (Line 2974)
 - Test compilation after each commit
 - Ensure app runs correctly after each step
 
-**Status**: Phase 4 analyzed and planned. Ready to execute when approved.
+**Status**:
+- ✅ **Step 1 (Dialogs) completed** - Files created, awaiting commit
+- 📋 **Steps 2-8 pending** - Ready to execute
 
 ## Recent Changes
 
@@ -834,3 +820,37 @@ Each fix should be:
 - Validated with permission grant/deny scenarios
 
 **Status**: ✅ ALL CRITICAL FATAL ERRORS RESOLVED (2025-09-17). Application is now significantly more stable and production-ready with comprehensive crash prevention measures implemented.
+
+## Future Refactoring Phases
+
+After completing Phase 4 (MainActivity UI Decomposition), the following phases are planned:
+
+### Phase 5: ViewModel Decomposition
+- Break down `ContactsViewModel` into smaller, focused ViewModels
+- Extract business logic to use cases/interactors
+- Separate email and forwarding state management
+- Status: 📋 Planned
+
+### Phase 6: Service & Utility Refinement
+- Extract SMS operations from `PhoneSmsUtils`
+- Create dedicated SMS and phone utilities
+- Refactor `SmsForegroundService` for better separation
+- Status: 📋 Planned
+
+### Phase 7: Testing Infrastructure
+- Add unit tests for extracted repositories and utilities
+- Integration tests for data layer
+- UI tests for key user flows
+- Status: 📋 Planned
+
+### Phase 8: Dependency Injection
+- Evaluate DI frameworks (Hilt, Koin)
+- **Note**: Previous Hilt integration attempt failed (see `main` branch)
+- Consider simpler alternatives or manual DI improvements
+- Status: 📋 Planned (approach to be determined)
+
+### Phase 9: Performance & Optimization
+- Optimize coroutine usage
+- Review memory leaks and lifecycle issues
+- Performance profiling and improvements
+- Status: 📋 Planned
