@@ -28,6 +28,8 @@ import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.presentation.state.ContactsState
+import info.meuse24.smsforwarderneoA1.util.email.EmailResult
+import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview

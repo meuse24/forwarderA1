@@ -14,22 +14,16 @@ import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import androidx.core.content.ContextCompat
 import com.google.i18n.phonenumbers.PhoneNumberUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.util.Properties
-import javax.mail.Authenticator
-import javax.mail.Message
-import javax.mail.PasswordAuthentication
-import javax.mail.Session
-import javax.mail.Transport
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
 import android.net.ConnectivityManager
 import android.telephony.ServiceState
 import android.telephony.SubscriptionInfo
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
+import info.meuse24.smsforwarderneoA1.util.email.EmailResult
+import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import info.meuse24.smsforwarderneoA1.util.permission.PermissionHelper
+import info.meuse24.smsforwarderneoA1.util.phone.CarrierTrie
+import info.meuse24.smsforwarderneoA1.util.sms.Gsm7BitEncoder
 import java.io.IOException
 
 /**
@@ -38,64 +32,6 @@ import java.io.IOException
  */
 @Suppress("DEPRECATION")
 class PhoneSmsUtils private constructor() {
-
-    /**
-     * Gsm7BitEncoder ist ein Objekt zur Kodierung von Texten in GSM 7-Bit-Format.
-     * Dies ist wichtig für die effiziente Übertragung von SMS.
-     */
-    object Gsm7BitEncoder {
-        // GSM 7-Bit Alphabet: Enthält alle Standard-Zeichen, die in einer SMS verwendet werden können
-        private val gsm7BitAlphabet = charArrayOf(
-            '@', '£', '$', '¥', 'è', 'é', 'ù', 'ì', 'ò', 'Ç', '\n', 'Ø', 'ø', '\r', 'Å', 'å',
-            'Δ', '_', 'Φ', 'Γ', 'Λ', 'Ω', 'Π', 'Ψ', 'Σ', 'Θ', 'Ξ', '\u001B', 'Æ', 'æ', 'ß', 'É',
-            ' ', '!', '"', '#', '¤', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?',
-            '¡', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-            'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'Ä', 'Ö', 'Ñ', 'Ü', '§',
-            '¿', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-            'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'ä', 'ö', 'ñ', 'ü', 'à'
-        )
-
-        // Erweiterte Zeichen: Benötigen 2 Bytes in der GSM 7-Bit-Kodierung
-        private val gsm7BitExtendedChars = mapOf(
-            '|' to 40, '^' to 20, '€' to 101, '{' to 40, '}' to 41,
-            '[' to 60, '~' to 20, ']' to 61, '\\' to 47
-        )
-
-        /**
-         * Kodiert einen String in GSM 7-Bit-Format.
-         * @param input Der zu kodierende Eingabestring
-         * @return Ein Paar bestehend aus dem kodierten String und der Länge der resultierenden SMS
-         */
-        fun encode(input: String): Pair<String, Int> {
-            val sb = StringBuilder()
-            var smsLength = 0
-
-            input.forEach { char ->
-                when {
-                    gsm7BitAlphabet.contains(char) -> {
-                        sb.append(char)
-                        smsLength++
-                    }
-
-                    gsm7BitExtendedChars.containsKey(char) -> {
-                        sb.append('\u001B') // Escape-Zeichen
-                        sb.append(gsm7BitAlphabet[gsm7BitExtendedChars[char] ?: 0])
-                        smsLength += 2 // Erweiterte Zeichen zählen als 2
-                    }
-
-                    else -> {
-                        // Ersetze nicht unterstützte Zeichen durch ein Leerzeichen
-                        sb.append('_')
-                        smsLength++
-                    }
-                }
-            }
-
-            return Pair(sb.toString(), smsLength)
-        }
-
-    }
 
     companion object {
 
@@ -1237,51 +1173,6 @@ data class PhoneNumberResult(
     val carrierInfo: String?
 )
 
-class CarrierNode {
-    val children = Array<CarrierNode?>(10) { null }
-    var carrier: String? = null
-}
-
-class CarrierTrie {
-    private val root = CarrierNode()
-
-    fun insert(prefix: String, carrier: String) {
-        var current = root
-        for (digit in prefix) {
-            val index = digit - '0'
-            if (current.children[index] == null) {
-                current.children[index] = CarrierNode()
-            }
-            current = current.children[index] ?: throw IllegalStateException("CarrierNode sollte nicht null sein")
-        }
-        current.carrier = carrier
-    }
-
-    fun findLongestPrefix(number: String): Pair<String?, String> {
-        var current = root
-        var lastCarrier: String? = null
-        var prefixLength = 0
-        var lastValidPrefix = 0
-
-        for ((index, digit) in number.withIndex()) {
-            val digitIndex = digit - '0'
-            val next = current.children[digitIndex] ?: break
-            current = next
-            if (current.carrier != null) {
-                lastCarrier = current.carrier
-                lastValidPrefix = index + 1
-            }
-            prefixLength++
-        }
-
-        return if (lastCarrier != null) {
-            lastCarrier to number.substring(0, lastValidPrefix)
-        } else {
-            null to number.substring(0, 3.coerceAtMost(number.length))
-        }
-    }
-}
-
 class PhoneNumberFormatter {
     private val phoneUtil = PhoneNumberUtil.getInstance()
     private val austrianMobileTrie = CarrierTrie()
@@ -1467,61 +1358,4 @@ class PhoneNumberFormatter {
     private fun getSwissCarrierInfo(nationalNumber: String): Pair<String?, String> =
         swissMobileTrie.findLongestPrefix(nationalNumber)
 
-}
-
-sealed class EmailResult {
-    data object Success : EmailResult()
-    data class Error(val message: String) : EmailResult()
-}
-
-class EmailSender(
-    private val host: String,
-    private val port: Int,
-    private val username: String,
-    private val password: String
-) {
-    private val properties = Properties().apply {
-        put("mail.smtp.auth", "true")
-        put("mail.smtp.starttls.enable", "true")
-        put("mail.smtp.host", host)
-        put("mail.smtp.port", port)
-        put("mail.smtp.timeout", "10000")
-        put("mail.smtp.connectiontimeout", "10000")
-    }
-
-    private val session = Session.getInstance(properties, object : Authenticator() {
-        override fun getPasswordAuthentication(): PasswordAuthentication {
-            return PasswordAuthentication(username, password)
-        }
-    })
-
-    suspend fun sendEmail(
-        to: List<String>,
-        subject: String,
-        body: String
-    ): EmailResult = withContext(Dispatchers.IO) {
-        try {
-            // Validierung
-            if (to.isEmpty()) {
-                return@withContext EmailResult.Error("Keine Empfänger angegeben")
-            }
-
-            val message = MimeMessage(session).apply {
-                setFrom(InternetAddress(username))
-                setRecipients(
-                    Message.RecipientType.TO,
-                    to.map { InternetAddress(it) }.toTypedArray()
-                )
-                setSubject(subject, "UTF-8")
-                setText(body, "UTF-8")
-                sentDate = java.util.Date()
-            }
-
-            Transport.send(message)
-            EmailResult.Success
-
-        } catch (e: Exception) {
-            EmailResult.Error("Fehler beim E-Mail-Versand: ${e.message}")
-        }
-    }
 }
