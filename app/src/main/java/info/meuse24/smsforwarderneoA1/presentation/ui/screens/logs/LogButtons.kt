@@ -14,8 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.core.content.FileProvider
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.LoggingManager
-import info.meuse24.smsforwarderneoA1.SmsForwarderApplication.AppContainer
 import info.meuse24.smsforwarderneoA1.SnackbarManager
+import info.meuse24.smsforwarderneoA1.SmsForwarderApplication
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -107,7 +107,7 @@ private fun shareLogsAsFile(context: Context) {
         val file = File(context.cacheDir, fileName)
 
         // Hole CSV-Daten vom Logger und schreibe sie in die Datei
-        val csvContent = AppContainer.requireLogger().getLogEntriesAsCsv()
+        val csvContent = SmsForwarderApplication.AppContainer.requireLogger().getLogEntriesAsCsv()
         file.writeText(csvContent)
 
         // Erstelle FileProvider URI
