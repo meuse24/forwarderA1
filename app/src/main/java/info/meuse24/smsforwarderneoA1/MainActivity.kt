@@ -743,6 +743,7 @@ class MainActivity : ComponentActivity() {
                 val selectedContact by viewModel.selectedContact.collectAsState() // Hier collectAsState verwenden
                 ExitDialog(
                     contact = selectedContact,
+                    initialKeepForwarding = AppContainer.requirePrefsManager().getKeepForwardingOnExit(),
                     onDismiss = { viewModel.hideExitDialog() },
                     onConfirm = { keepForwarding ->
                         viewModel.hideExitDialog()
@@ -1685,6 +1686,7 @@ class MainActivity : ComponentActivity() {
             // Die existierenden PIN-Dialoge aus dem LogScreen
             if (showPinDialog) {
                 PinDialog(
+                    storedPin = AppContainer.requirePrefsManager().getLogPIN(),
                     onPinCorrect = {
                         AppContainer.requireLogger().clearLog()
                         LoggingManager.logInfo(
@@ -1701,6 +1703,17 @@ class MainActivity : ComponentActivity() {
 
             if (showChangePinDialog) {
                 ChangePinDialog(
+                    storedPin = AppContainer.requirePrefsManager().getLogPIN(),
+                    onPinChanged = { newPin ->
+                        AppContainer.requirePrefsManager().setLogPIN(newPin)
+                        LoggingManager.logInfo(
+                            component = "SettingsScreen",
+                            action = "CHANGE_PIN",
+                            message = "Log-PIN wurde geändert"
+                        )
+                        SnackbarManager.showSuccess("PIN wurde geändert")
+                        showChangePinDialog = false
+                    },
                     onDismiss = { showChangePinDialog = false }
                 )
             }
