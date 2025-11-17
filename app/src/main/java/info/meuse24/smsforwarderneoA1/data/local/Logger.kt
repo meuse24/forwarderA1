@@ -131,10 +131,11 @@ class Logger(
                 .parse(mainLogFile)
 
             val root = document.documentElement
+            val sanitizedEntry = sanitizeXmlText(entry)
             val newEntry = document.createElement("logEntry").apply {
                 appendChild(document.createElement("number").apply { textContent = entryNumber.toString() })
                 appendChild(document.createElement("time").apply { textContent = timestamp })
-                appendChild(document.createElement("text").apply { textContent = entry })
+                appendChild(document.createElement("text").apply { textContent = sanitizedEntry })
             }
             root.appendChild(newEntry)
 
@@ -144,6 +145,19 @@ class Logger(
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to append log entry", e)
+        }
+    }
+
+    /**
+     * Sanitizes text for XML by removing invalid XML characters.
+     * Valid XML chars: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+     */
+    private fun sanitizeXmlText(text: String): String {
+        return text.filter { char ->
+            val code = char.code
+            code == 0x9 || code == 0xA || code == 0xD ||
+            (code in 0x20..0xD7FF) ||
+            (code in 0xE000..0xFFFD)
         }
     }
 
@@ -208,7 +222,18 @@ class Logger(
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to read log entries", e)
+            Log.e(TAG, "Failed to read log entries - XML corrupted, recreating log file", e)
+            // Backup corrupted file and create new one
+            try {
+                val corruptedBackup = File(baseLogDir, "app_log_corrupted_${System.currentTimeMillis()}.xml")
+                mainLogFile.renameTo(corruptedBackup)
+                createEmptyLogFile()
+                addInitialLogEntry()
+                log(LogLevel.WARNING, LogMetadata("Logger", "RECOVER_CORRUPTED_LOG"),
+                    "Previous log file was corrupted and backed up to: ${corruptedBackup.name}")
+            } catch (recoveryError: Exception) {
+                Log.e(TAG, "Failed to recover from corrupted log", recoveryError)
+            }
             ""
         }
     }
@@ -249,8 +274,14 @@ class Logger(
                     val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entryText)
                     val action = actionMatch?.groupValues?.get(1)
 
+                    // Debug: Log the filtering
+                    if (filterNoise) {
+                        Log.d(TAG, "Filtering: action='$action', in noiseActions=${action in noiseActions}, text='${entryText.take(100)}'")
+                    }
+
                     // Filtere Noise-Actions wenn aktiviert
                     if (filterNoise && action != null && action in noiseActions) {
+                        Log.d(TAG, "  -> FILTERED OUT: $action")
                         continue  // Überspringe diesen Eintrag
                     }
 
@@ -265,7 +296,18 @@ class Logger(
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to read log entries", e)
+            Log.e(TAG, "Failed to read log entries (filtered) - XML corrupted, recreating log file", e)
+            // Backup corrupted file and create new one
+            try {
+                val corruptedBackup = File(baseLogDir, "app_log_corrupted_${System.currentTimeMillis()}.xml")
+                mainLogFile.renameTo(corruptedBackup)
+                createEmptyLogFile()
+                addInitialLogEntry()
+                log(LogLevel.WARNING, LogMetadata("Logger", "RECOVER_CORRUPTED_LOG"),
+                    "Previous log file was corrupted and backed up to: ${corruptedBackup.name}")
+            } catch (recoveryError: Exception) {
+                Log.e(TAG, "Failed to recover from corrupted log", recoveryError)
+            }
             ""
         }
     }
@@ -341,7 +383,18 @@ class Logger(
 
             logEntries
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to read log entries as list", e)
+            Log.e(TAG, "Failed to read log entries as list - XML corrupted, recreating log file", e)
+            // Backup corrupted file and create new one
+            try {
+                val corruptedBackup = File(baseLogDir, "app_log_corrupted_${System.currentTimeMillis()}.xml")
+                mainLogFile.renameTo(corruptedBackup)
+                createEmptyLogFile()
+                addInitialLogEntry()
+                log(LogLevel.WARNING, LogMetadata("Logger", "RECOVER_CORRUPTED_LOG"),
+                    "Previous log file was corrupted and backed up to: ${corruptedBackup.name}")
+            } catch (recoveryError: Exception) {
+                Log.e(TAG, "Failed to recover from corrupted log", recoveryError)
+            }
             emptyList()
         }
     }

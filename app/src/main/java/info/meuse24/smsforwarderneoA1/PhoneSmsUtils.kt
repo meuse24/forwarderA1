@@ -27,6 +27,9 @@ import javax.mail.internet.MimeMessage
 import android.net.ConnectivityManager
 import android.telephony.ServiceState
 import android.telephony.SubscriptionInfo
+import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
+import info.meuse24.smsforwarderneoA1.util.permission.PermissionHelper
 import java.io.IOException
 
 /**
@@ -93,18 +96,6 @@ class PhoneSmsUtils private constructor() {
         }
 
     }
-
-    /**
-     * Datenklasse für SIM-Karteninformationen
-     */
-    data class SimInfo(
-        val subscriptionId: Int,
-        val slotIndex: Int,
-        val displayName: String?,
-        val carrierName: String?,
-        val phoneNumber: String? = null, // Auto-erkannt oder aus Preferences
-        val isAutoDetected: Boolean = false
-    )
 
     companion object {
 

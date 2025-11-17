@@ -5,6 +5,7 @@ import android.content.Context
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
+import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -317,7 +318,7 @@ class MainActivity : ComponentActivity() {
             }
 
             val storedNumbers = prefsManager.getSimPhoneNumbers()
-            val missingSims = mutableListOf<PhoneSmsUtils.SimInfo>()
+            val missingSims = mutableListOf<SimInfo>()
 
             // Prüfe jede SIM auf fehlende Telefonnummern
             simInfoList.forEach { simInfo ->
@@ -1030,7 +1031,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun SimNumbersDialog(
-        missingSims: List<PhoneSmsUtils.SimInfo>,
+        missingSims: List<SimInfo>,
         onDismiss: () -> Unit,
         onSaveNumber: (Int, String) -> Unit
     ) {
@@ -2289,7 +2290,7 @@ class MainActivity : ComponentActivity() {
         sectionTitleStyle: TextStyle
     ) {
         val context = LocalContext.current
-        var simInfoList by remember { mutableStateOf<List<PhoneSmsUtils.SimInfo>>(emptyList()) }
+        var simInfoList by remember { mutableStateOf<List<SimInfo>>(emptyList()) }
         var storedNumbers by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
         var defaultSimIds by remember { mutableStateOf<Pair<Int, Int>?>(null) }
         var isLoading by remember { mutableStateOf(true) }

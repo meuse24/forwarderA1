@@ -26,6 +26,7 @@ import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
+import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.presentation.state.ContactsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -163,8 +164,8 @@ class ContactsViewModel(
     // showOwnNumberMissingDialog StateFlows entfernt - wird jetzt über SIM-Verwaltung abgewickelt
 
     // SIM-Nummern Dialog State
-    private val _missingSims = MutableStateFlow<List<PhoneSmsUtils.SimInfo>>(emptyList())
-    val missingSims: StateFlow<List<PhoneSmsUtils.SimInfo>> = _missingSims.asStateFlow()
+    private val _missingSims = MutableStateFlow<List<SimInfo>>(emptyList())
+    val missingSims: StateFlow<List<SimInfo>> = _missingSims.asStateFlow()
 
     private val _showSimNumbersDialog = MutableStateFlow(false)
     val showSimNumbersDialog: StateFlow<Boolean> = _showSimNumbersDialog.asStateFlow()
@@ -794,7 +795,7 @@ class ContactsViewModel(
     // showOwnNumberMissingDialog und hideOwnNumberMissingDialog Funktionen entfernt - werden über SIM-Verwaltung abgewickelt
 
     // SIM-Nummern Dialog Funktionen
-    fun requestMissingSimNumbers(sims: List<PhoneSmsUtils.SimInfo>) {
+    fun requestMissingSimNumbers(sims: List<SimInfo>) {
         _missingSims.value = sims
         _showSimNumbersDialog.value = true
     }
@@ -1210,7 +1211,19 @@ class ContactsViewModel(
                     filterNoise = !showAll,
                     noiseActions = NOISE_ACTIONS
                 )
-                _logEntries.value = logger.getLogEntriesAsList()
+
+                // Lade alle Einträge und filtere clientseitig wenn nötig
+                val allEntries = logger.getLogEntriesAsList()
+                _logEntries.value = if (!showAll) {
+                    // Filtere Noise-Actions aus
+                    allEntries.filter { entry ->
+                        val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
+                        val action = actionMatch?.groupValues?.get(1)
+                        action == null || action !in NOISE_ACTIONS
+                    }
+                } else {
+                    allEntries
+                }
             } catch (e: Exception) {
                 LoggingManager.logError(
                     component = "ContactsViewModel",

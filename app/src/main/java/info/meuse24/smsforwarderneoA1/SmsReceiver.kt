@@ -21,6 +21,7 @@ import android.telephony.SmsMessage
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
