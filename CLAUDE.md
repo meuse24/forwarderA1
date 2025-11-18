@@ -610,6 +610,9 @@ presentation/
 
 **Commits**: (in progress)
 - `68d2426` - refactor: Extract LogViewModel from ContactsViewModel (Phase 5 Step 1)
+- `04ff09d` - fix: Correct imports in EmailViewModel (Logger, SharedPreferencesManager)
+- `8601b8b` - fix: Correct Logger import in LogViewModel
+- `b6b309c` - refactor: Integrate EmailViewModel into UI components (Phase 5 Step 2)
 
 **Low-Risk Steps** (3 total):
 
@@ -625,12 +628,26 @@ presentation/
    - **MainActivity**: LogViewModel instantiated via ViewModelProvider.Factory
    - **Commit**: `68d2426`
 
-2. **📋 Step 2: EmailViewModel** (PLANNED)
-   - **To Extract**: 9 StateFlows (emailAddresses, SMTP settings, forwardSmsToEmail)
-   - **Functions**: 7 (add/remove email, SMTP config, test email)
+2. **✅ Step 2: EmailViewModel** (COMPLETED 2025-11-18)
+   - **Extracted**: 9 StateFlows (emailAddresses, newEmailAddress, forwardSmsToEmail, smtpHost, smtpPort, smtpUsername, smtpPassword, testEmailText)
+   - **Functions**: 7 (updateNewEmailAddress, addEmailAddress, removeEmailAddress, updateTestEmailText, updateSmtpSettings, sendTestEmail, updateForwardSmsToEmail)
+   - **Helper**: getCurrentTimestamp() for test email formatting
+   - **Callback**: onForwardingStateChanged wired to ContactsViewModel.updateServiceNotification()
    - **Dependencies**: SharedPreferencesManager, Logger
-   - **Risk**: LOW (well isolated)
-   - **Expected**: ~300 lines extracted
+   - **Risk**: LOW (well isolated, zero ContactsStore coupling)
+   - **File Created**: `presentation/viewmodel/EmailViewModel.kt` (377 lines)
+   - **ContactsViewModel Changes**:
+     - Removed 9 StateFlows and 8 functions (~295 lines removed)
+     - loadSavedState() no longer initializes email StateFlows
+     - saveState() no longer saves email preferences
+     - updateServiceNotification() reads email status from prefs instead of StateFlows
+   - **UI Updated**: MailScreen.kt, EmailSettingsSection.kt use EmailViewModel
+   - **SettingsScreen**: Accepts emailViewModel parameter, passes to EmailSettingsSection
+   - **MainActivity**:
+     - EmailViewModel instantiated via ViewModelProvider.Factory
+     - Callback wired in onCreate()
+     - Back button reads email forwarding from prefs
+   - **Commits**: `04ff09d` (import fix), `b6b309c` (UI integration)
 
 3. **📋 Step 3: SimManagementViewModel** (PLANNED)
    - **To Extract**: 2 StateFlows (missingSims, showSimNumbersDialog)
@@ -644,15 +661,20 @@ presentation/
 **ContactsViewModel Status**:
 - Start: 2,341 lines
 - After Step 1: 2,295 lines (-46 lines, -2%)
+- After Step 2: ~2,000 lines (-295 lines, -13% from Step 2)
 - Expected after all low-risk steps: ~1,850 lines (-491 lines, -21%)
 
 **New ViewModels Created**:
 - LogViewModel: 134 lines ✅
+- EmailViewModel: 377 lines ✅
 
 **Benefits Achieved So Far**:
 - ✅ Logging logic isolated from ContactsViewModel
-- ✅ LogViewModel independently testable
+- ✅ Email management isolated from ContactsViewModel
+- ✅ LogViewModel and EmailViewModel independently testable
 - ✅ Cleaner separation of concerns
+- ✅ Service notification callback pattern established
+- ✅ Zero coupling to ContactsStore/Repository
 - ✅ Foundation for further ViewModel decomposition
 
 **Deferred to Future Phase** (Medium/High-Risk):
@@ -666,7 +688,7 @@ presentation/
 - ✅ Zero new build dependencies
 - ✅ Easy rollback (one commit per ViewModel)
 
-**Status**: 🔄 **Phase 5 IN PROGRESS** - Step 1 complete, Steps 2-3 pending
+**Status**: 🔄 **Phase 5 IN PROGRESS** - Steps 1-2 complete (LogViewModel, EmailViewModel), Step 3 pending (SimManagementViewModel)
 
 ## Recent Changes
 
