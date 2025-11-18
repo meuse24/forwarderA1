@@ -59,6 +59,7 @@ fun SettingsScreen(viewModel: ContactsViewModel, emailViewModel: EmailViewModel)
 
         AppSettingsSection(
             viewModel = viewModel,
+            emailViewModel = emailViewModel,
             onFocusChanged = { isAnyFieldFocused = it },
             sectionTitleStyle = sectionTitleStyle
         )

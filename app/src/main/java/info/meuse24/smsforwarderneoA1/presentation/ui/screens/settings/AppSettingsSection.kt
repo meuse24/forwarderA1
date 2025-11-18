@@ -24,16 +24,18 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 
 @Composable
 fun AppSettingsSection(
     viewModel: ContactsViewModel,
+    emailViewModel: EmailViewModel,
     onFocusChanged: (Boolean) -> Unit,
     sectionTitleStyle: TextStyle
 ) {
     val filterText by viewModel.filterText.collectAsState()
     val testSmsText by viewModel.testSmsText.collectAsState()
-    val testEmailText by viewModel.testEmailText.collectAsState()
+    val testEmailText by emailViewModel.testEmailText.collectAsState()
     val topBarTitle by viewModel.topBarTitle.collectAsState()
     val mailScreenVisible by viewModel.mailScreenVisible.collectAsState()
     val phoneNumberFormatting by viewModel.phoneNumberFormatting.collectAsState()
@@ -90,7 +92,7 @@ fun AppSettingsSection(
 
         OutlinedTextField(
             value = testEmailText,
-            onValueChange = { viewModel.updateTestEmailText(it) },
+            onValueChange = { emailViewModel.updateTestEmailText(it) },
             label = { Text("Text der Test-Email") },
             modifier = Modifier
                 .fillMaxWidth()
