@@ -3,7 +3,7 @@ package info.meuse24.smsforwarderneoA1.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import info.meuse24.smsforwarderneoA1.Logger
+import info.meuse24.smsforwarderneoA1.data.local.Logger
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
 import kotlinx.coroutines.flow.MutableStateFlow
