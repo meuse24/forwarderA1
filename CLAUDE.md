@@ -602,6 +602,72 @@ presentation/
 
 **Status**: ✅ **Phase 4 COMPLETE** - All 8 steps executed successfully, MainActivity reduced by 79%, 24 new UI component files created
 
+#### Phase 5: ViewModel Decomposition (IN PROGRESS - Low-Risk Only)
+
+**Objective**: Extract independent, low-risk ViewModels from ContactsViewModel (2,341 lines) to improve separation of concerns and testability.
+
+**Strategy**: Bottom-up extraction of low-risk ViewModels only. Medium/high-risk ViewModels (Settings, Forwarding) deferred to future phase.
+
+**Commits**: (in progress)
+- `68d2426` - refactor: Extract LogViewModel from ContactsViewModel (Phase 5 Step 1)
+
+**Low-Risk Steps** (3 total):
+
+1. **✅ Step 1: LogViewModel** (COMPLETED 2025-11-18)
+   - **Extracted**: 3 StateFlows (logEntriesHtml, logEntries, showAllLogs)
+   - **Functions**: 2 (reloadLogs, toggleLogFilter)
+   - **Constants**: NOISE_ACTIONS set for filtering
+   - **Dependencies**: Logger only
+   - **Risk**: LOW (completely independent)
+   - **File Created**: `presentation/viewmodel/LogViewModel.kt` (134 lines)
+   - **ContactsViewModel**: 2,341 → 2,295 lines (-46 lines, -2%)
+   - **UI Updated**: LogScreen.kt, LogTable.kt, LogButtons.kt use LogViewModel
+   - **MainActivity**: LogViewModel instantiated via ViewModelProvider.Factory
+   - **Commit**: `68d2426`
+
+2. **📋 Step 2: EmailViewModel** (PLANNED)
+   - **To Extract**: 9 StateFlows (emailAddresses, SMTP settings, forwardSmsToEmail)
+   - **Functions**: 7 (add/remove email, SMTP config, test email)
+   - **Dependencies**: SharedPreferencesManager, Logger
+   - **Risk**: LOW (well isolated)
+   - **Expected**: ~300 lines extracted
+
+3. **📋 Step 3: SimManagementViewModel** (PLANNED)
+   - **To Extract**: 2 StateFlows (missingSims, showSimNumbersDialog)
+   - **Functions**: 3 (request SIMs, hide dialog, save number)
+   - **Dependencies**: SharedPreferencesManager, Logger
+   - **Risk**: LOW (isolated)
+   - **Expected**: ~100 lines extracted
+
+### Current Progress (Phase 5)
+
+**ContactsViewModel Status**:
+- Start: 2,341 lines
+- After Step 1: 2,295 lines (-46 lines, -2%)
+- Expected after all low-risk steps: ~1,850 lines (-491 lines, -21%)
+
+**New ViewModels Created**:
+- LogViewModel: 134 lines ✅
+
+**Benefits Achieved So Far**:
+- ✅ Logging logic isolated from ContactsViewModel
+- ✅ LogViewModel independently testable
+- ✅ Cleaner separation of concerns
+- ✅ Foundation for further ViewModel decomposition
+
+**Deferred to Future Phase** (Medium/High-Risk):
+- SettingsViewModel (MEDIUM risk - ~350 lines, ContactsStore coupling)
+- ForwardingViewModel (MEDIUM-HIGH risk - ~400 lines, Service integration)
+
+**Lessons from Failed `main` Branch Attempt**:
+- ❌ Avoided Hilt DI framework (complex annotation processing)
+- ✅ Used manual Factory pattern (simple, explicit)
+- ✅ Incremental approach (one ViewModel at a time)
+- ✅ Zero new build dependencies
+- ✅ Easy rollback (one commit per ViewModel)
+
+**Status**: 🔄 **Phase 5 IN PROGRESS** - Step 1 complete, Steps 2-3 pending
+
 ## Recent Changes
 
 ### Mail Screen Visibility Toggle Implementation (2025)
