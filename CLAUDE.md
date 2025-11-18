@@ -602,17 +602,20 @@ presentation/
 
 **Status**: ✅ **Phase 4 COMPLETE** - All 8 steps executed successfully, MainActivity reduced by 79%, 24 new UI component files created
 
-#### Phase 5: ViewModel Decomposition (IN PROGRESS - Low-Risk Only)
+#### Phase 5: ViewModel Decomposition ✅ COMPLETE
 
 **Objective**: Extract independent, low-risk ViewModels from ContactsViewModel (2,341 lines) to improve separation of concerns and testability.
 
 **Strategy**: Bottom-up extraction of low-risk ViewModels only. Medium/high-risk ViewModels (Settings, Forwarding) deferred to future phase.
 
-**Commits**: (in progress)
+**Commits**: (6 total)
 - `68d2426` - refactor: Extract LogViewModel from ContactsViewModel (Phase 5 Step 1)
 - `04ff09d` - fix: Correct imports in EmailViewModel (Logger, SharedPreferencesManager)
 - `8601b8b` - fix: Correct Logger import in LogViewModel
 - `b6b309c` - refactor: Integrate EmailViewModel into UI components (Phase 5 Step 2)
+- `155169b` - fix: Add EmailViewModel parameter to HomeScreen
+- `1869f5e` - fix: Add EmailViewModel parameter to AppSettingsSection
+- `df343a0` - refactor: Extract SimManagementViewModel from ContactsViewModel (Phase 5 Step 3)
 
 **Low-Risk Steps** (3 total):
 
@@ -649,32 +652,45 @@ presentation/
      - Back button reads email forwarding from prefs
    - **Commits**: `04ff09d` (import fix), `b6b309c` (UI integration)
 
-3. **📋 Step 3: SimManagementViewModel** (PLANNED)
-   - **To Extract**: 2 StateFlows (missingSims, showSimNumbersDialog)
-   - **Functions**: 3 (request SIMs, hide dialog, save number)
-   - **Dependencies**: SharedPreferencesManager, Logger
-   - **Risk**: LOW (isolated)
-   - **Expected**: ~100 lines extracted
+3. **✅ Step 3: SimManagementViewModel** (COMPLETED 2025-11-18)
+   - **Extracted**: 2 StateFlows (missingSims, showSimNumbersDialog)
+   - **Functions**: 3 (requestMissingSimNumbers, hideSimNumbersDialog, saveSimNumber)
+   - **Dependencies**: SharedPreferencesManager only (uses LoggingManager for logging)
+   - **Risk**: LOW (completely isolated, zero ViewModel coupling)
+   - **File Created**: `presentation/viewmodel/SimManagementViewModel.kt` (107 lines)
+   - **ContactsViewModel Changes**:
+     - Removed 2 StateFlows and 3 functions (~45 lines removed)
+     - Removed SimInfo import (no longer used)
+   - **MainActivity Integration**:
+     - SimManagementViewModel instantiated via ViewModelProvider.Factory
+     - checkSimNumbers() calls simManagementViewModel.requestMissingSimNumbers()
+     - SimNumbersDialog wired to simManagementViewModel
+   - **Commit**: `df343a0`
 
-### Current Progress (Phase 5)
+### Final Results (Phase 5 COMPLETE)
 
-**ContactsViewModel Status**:
-- Start: 2,341 lines
-- After Step 1: 2,295 lines (-46 lines, -2%)
-- After Step 2: ~2,000 lines (-295 lines, -13% from Step 2)
-- Expected after all low-risk steps: ~1,850 lines (-491 lines, -21%)
+**ContactsViewModel Size Reduction**:
+- **Start**: 2,341 lines
+- **After Step 1** (LogViewModel): 2,295 lines (-46 lines, -2%)
+- **After Step 2** (EmailViewModel): ~2,000 lines (-295 lines, -13%)
+- **After Step 3** (SimManagementViewModel): ~1,955 lines (-45 lines, -2%)
+- **Total Reduction**: -386 lines (-16.5%)
 
 **New ViewModels Created**:
 - LogViewModel: 134 lines ✅
 - EmailViewModel: 377 lines ✅
+- SimManagementViewModel: 107 lines ✅
+- **Total**: 618 lines of well-organized, testable code
 
-**Benefits Achieved So Far**:
-- ✅ Logging logic isolated from ContactsViewModel
-- ✅ Email management isolated from ContactsViewModel
-- ✅ LogViewModel and EmailViewModel independently testable
-- ✅ Cleaner separation of concerns
+**Benefits Achieved**:
+- ✅ Logging logic completely isolated
+- ✅ Email management completely isolated
+- ✅ SIM management completely isolated
+- ✅ All new ViewModels independently testable
+- ✅ Zero coupling between extracted ViewModels
+- ✅ Clean separation of concerns maintained
 - ✅ Service notification callback pattern established
-- ✅ Zero coupling to ContactsStore/Repository
+- ✅ Manual Factory pattern proven successful
 - ✅ Foundation for further ViewModel decomposition
 
 **Deferred to Future Phase** (Medium/High-Risk):
@@ -688,7 +704,7 @@ presentation/
 - ✅ Zero new build dependencies
 - ✅ Easy rollback (one commit per ViewModel)
 
-**Status**: 🔄 **Phase 5 IN PROGRESS** - Steps 1-2 complete (LogViewModel, EmailViewModel), Step 3 pending (SimManagementViewModel)
+**Status**: ✅ **Phase 5 COMPLETE** - All 3 low-risk ViewModels successfully extracted (LogViewModel, EmailViewModel, SimManagementViewModel). ContactsViewModel reduced by 386 lines (-16.5%). Medium/high-risk ViewModels deferred to future phase.
 
 ## Recent Changes
 
