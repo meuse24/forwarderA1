@@ -21,6 +21,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.screens.home.HomeScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.CustomTopAppBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -169,6 +170,12 @@ class MainActivity : ComponentActivity() {
     private val logViewModel: LogViewModel by viewModels {
         LogViewModel.Factory(AppContainer.requireLogger())
     }
+    private val emailViewModel: EmailViewModel by viewModels {
+        EmailViewModel.Factory(
+            AppContainer.requirePrefsManager(),
+            AppContainer.requireLogger()
+        )
+    }
     private val _isLoading = MutableStateFlow(true)
     private val _loadingError = MutableStateFlow<String?>(null)
     private lateinit var permissionHandler: PermissionHandler
@@ -185,12 +192,18 @@ class MainActivity : ComponentActivity() {
         // Set the MMI code dial callback in ViewModel
         viewModel.onDialMmiCode = { code -> dialCode(code) }
 
+        // Set EmailViewModel callback to update service notification when forwarding state changes
+        emailViewModel.onForwardingStateChanged = {
+            viewModel.updateServiceNotification()
+        }
+
         // Normale Statusleiste - kein Edge-to-Edge
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
         onBackPressedDispatcher.addCallback(this) {
             // Prüfe ob irgendeine Art der Weiterleitung aktiv ist
-            if (viewModel.forwardingActive.value || viewModel.forwardSmsToEmail.value) {
+            val emailForwardingActive = AppContainer.requirePrefsManager().isForwardSmsToEmail()
+            if (viewModel.forwardingActive.value || emailForwardingActive) {
                 // Zeige Exit-Dialog mit Optionen zum Deaktivieren/Beibehalten
                 viewModel.onShowExitDialog()
             } else {
@@ -224,7 +237,7 @@ class MainActivity : ComponentActivity() {
                         val permissionAvailable = AppContainer.getPermissionHandlerSafe() != null
 
                         if (prefsAvailable && loggerAvailable && permissionAvailable) {
-                            UI(viewModel)
+                            UI(viewModel, emailViewModel)
                         } else {
                             LoadingScreen(
                                 error = "Initialisierung unvollständig - Komponenten nicht verfügbar",
@@ -653,7 +666,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun UI(viewModel: ContactsViewModel) {
+    fun UI(viewModel: ContactsViewModel, emailViewModel: EmailViewModel) {
         val navController = rememberNavController()
         val topBarTitle by viewModel.topBarTitle.collectAsState()
         val navigationTarget by viewModel.navigationTarget.collectAsState()
@@ -709,10 +722,10 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(viewModel, currentCallState)
                     }
                     composable("mail") {
-                        MailScreen(viewModel)
+                        MailScreen(emailViewModel)
                     }
                     composable("setup") {
-                        SettingsScreen(viewModel)
+                        SettingsScreen(viewModel, emailViewModel)
                     }
                     composable("log") {
                         LogScreen(logViewModel)

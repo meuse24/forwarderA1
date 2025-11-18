@@ -29,18 +29,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 
 @Composable
 fun EmailSettingsSection(
-    viewModel: ContactsViewModel,
+    emailViewModel: EmailViewModel,
     sectionTitleStyle: TextStyle
 ) {
-    val smtpHost by viewModel.smtpHost.collectAsState()
-    val smtpPort by viewModel.smtpPort.collectAsState()
-    val smtpUsername by viewModel.smtpUsername.collectAsState()
-    val smtpPassword by viewModel.smtpPassword.collectAsState()
+    val smtpHost by emailViewModel.smtpHost.collectAsState()
+    val smtpPort by emailViewModel.smtpPort.collectAsState()
+    val smtpUsername by emailViewModel.smtpUsername.collectAsState()
+    val smtpPassword by emailViewModel.smtpPassword.collectAsState()
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     Column(
@@ -56,7 +56,7 @@ fun EmailSettingsSection(
 
         OutlinedTextField(
             value = smtpHost,
-            onValueChange = { viewModel.updateSmtpSettings(it, smtpPort, smtpUsername, smtpPassword) },
+            onValueChange = { emailViewModel.updateSmtpSettings(it, smtpPort, smtpUsername, smtpPassword) },
             label = { Text("SMTP Server") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -67,7 +67,7 @@ fun EmailSettingsSection(
             value = smtpPort.toString(),
             onValueChange = {
                 val newPort = it.toIntOrNull() ?: smtpPort
-                viewModel.updateSmtpSettings(smtpHost, newPort, smtpUsername, smtpPassword)
+                emailViewModel.updateSmtpSettings(smtpHost, newPort, smtpUsername, smtpPassword)
             },
             label = { Text("TLS Port") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -78,7 +78,7 @@ fun EmailSettingsSection(
 
         OutlinedTextField(
             value = smtpUsername,
-            onValueChange = { viewModel.updateSmtpSettings(smtpHost, smtpPort, it, smtpPassword) },
+            onValueChange = { emailViewModel.updateSmtpSettings(smtpHost, smtpPort, it, smtpPassword) },
             label = { Text("Benutzername/Email-Adresse") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -88,7 +88,7 @@ fun EmailSettingsSection(
         if (!smtpHost.equals("smtp.world4you.com", ignoreCase = true)) {
             OutlinedTextField(
                 value = smtpPassword,
-                onValueChange = { viewModel.updateSmtpSettings(smtpHost, smtpPort, smtpUsername, it) },
+                onValueChange = { emailViewModel.updateSmtpSettings(smtpHost, smtpPort, smtpUsername, it) },
                 label = { Text("Passwort") },
                 visualTransformation = if (isPasswordVisible)
                     VisualTransformation.None
@@ -121,7 +121,7 @@ fun EmailSettingsSection(
         ) {
             Button(
                 onClick = {
-                    viewModel.updateSmtpSettings(
+                    emailViewModel.updateSmtpSettings(
                         "smtp.gmail.com",
                         587,
                         "",
@@ -134,7 +134,7 @@ fun EmailSettingsSection(
             }
             Button(
                 onClick = {
-                    viewModel.updateSmtpSettings(
+                    emailViewModel.updateSmtpSettings(
                         "mail.gmx.net",
                         587,
                         "",

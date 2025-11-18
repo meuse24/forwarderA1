@@ -41,15 +41,14 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 
 @Composable
-fun MailScreen(viewModel: ContactsViewModel) {
-    //val viewModel: ContactsViewModel = viewModel
-    val emailAddresses by viewModel.emailAddresses.collectAsState()
-    val newEmailAddress by viewModel.newEmailAddress.collectAsState()
-    val forwardSmsToEmail by viewModel.forwardSmsToEmail.collectAsState()
+fun MailScreen(emailViewModel: EmailViewModel) {
+    val emailAddresses by emailViewModel.emailAddresses.collectAsState()
+    val newEmailAddress by emailViewModel.newEmailAddress.collectAsState()
+    val forwardSmsToEmail by emailViewModel.forwardSmsToEmail.collectAsState()
     var isEmailAddressFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
@@ -78,7 +77,7 @@ fun MailScreen(viewModel: ContactsViewModel) {
                     checked = forwardSmsToEmail,
                     onCheckedChange = { checked ->
                         if (emailAddresses.isNotEmpty()) {
-                            viewModel.updateForwardSmsToEmail(checked)
+                            emailViewModel.updateForwardSmsToEmail(checked)
                         } else if (checked) {
                             SnackbarManager.showWarning("Bitte fügen Sie zuerst E-Mail-Adressen hinzu")
                         }
@@ -107,7 +106,7 @@ fun MailScreen(viewModel: ContactsViewModel) {
         ) {
             OutlinedTextField(
                 value = newEmailAddress,
-                onValueChange = { viewModel.updateNewEmailAddress(it) },
+                onValueChange = { emailViewModel.updateNewEmailAddress(it) },
                 label = { Text("Neue E-Mail-Adresse") },
                 modifier = Modifier
                     .weight(1f)
@@ -120,7 +119,7 @@ fun MailScreen(viewModel: ContactsViewModel) {
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
-                        viewModel.addEmailAddress()
+                        emailViewModel.addEmailAddress()
                     }
                 )
             )
@@ -130,7 +129,7 @@ fun MailScreen(viewModel: ContactsViewModel) {
             Button(
                 onClick = {
                     focusManager.clearFocus()
-                    viewModel.addEmailAddress()
+                    emailViewModel.addEmailAddress()
                 },
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
@@ -184,7 +183,7 @@ fun MailScreen(viewModel: ContactsViewModel) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 IconButton(
-                                    onClick = { viewModel.sendTestEmail(email) }
+                                    onClick = { emailViewModel.sendTestEmail(email) }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Email,
@@ -193,7 +192,7 @@ fun MailScreen(viewModel: ContactsViewModel) {
                                     )
                                 }
                                 IconButton(
-                                    onClick = { viewModel.removeEmailAddress(email) }
+                                    onClick = { emailViewModel.removeEmailAddress(email) }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
