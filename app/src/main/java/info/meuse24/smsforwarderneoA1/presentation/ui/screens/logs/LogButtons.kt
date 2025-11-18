@@ -13,9 +13,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.core.content.FileProvider
 import info.meuse24.smsforwarderneoA1.AppContainer
-import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.SnackbarManager
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -24,13 +24,13 @@ import java.util.Locale
 /**
  * Button to refresh/reload log entries from storage.
  *
- * @param viewModel The ContactsViewModel instance for log operations
+ * @param logViewModel The LogViewModel instance for log operations
  */
 @Composable
-fun RefreshLogButton(viewModel: ContactsViewModel) {
+fun RefreshLogButton(logViewModel: LogViewModel) {
     IconButton(
         onClick = {
-            viewModel.reloadLogs()
+            logViewModel.reloadLogs()
         }
     ) {
         Icon(
@@ -43,14 +43,14 @@ fun RefreshLogButton(viewModel: ContactsViewModel) {
 /**
  * Button to toggle log filtering between all logs and important logs only.
  *
- * @param viewModel The ContactsViewModel instance for log filtering
+ * @param logViewModel The LogViewModel instance for log filtering
  * @param showAllLogs Current filter state (true = showing all, false = showing important only)
  */
 @Composable
-fun FilterLogButton(viewModel: ContactsViewModel, showAllLogs: Boolean) {
+fun FilterLogButton(logViewModel: LogViewModel, showAllLogs: Boolean) {
     IconButton(
         onClick = {
-            viewModel.toggleLogFilter()
+            logViewModel.toggleLogFilter()
         }
     ) {
         Icon(

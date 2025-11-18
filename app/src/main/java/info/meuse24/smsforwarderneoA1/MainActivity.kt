@@ -20,6 +20,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings.SettingsS
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.home.HomeScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.CustomTopAppBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -165,6 +166,9 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private val viewModel: ContactsViewModel by viewModels { ContactsViewModel.Factory() }
+    private val logViewModel: LogViewModel by viewModels {
+        LogViewModel.Factory(AppContainer.requireLogger())
+    }
     private val _isLoading = MutableStateFlow(true)
     private val _loadingError = MutableStateFlow<String?>(null)
     private lateinit var permissionHandler: PermissionHandler
@@ -711,7 +715,7 @@ class MainActivity : ComponentActivity() {
                         SettingsScreen(viewModel)
                     }
                     composable("log") {
-                        LogScreen(viewModel)
+                        LogScreen(logViewModel)
                     }
                     composable("info") {
                         InfoScreen()

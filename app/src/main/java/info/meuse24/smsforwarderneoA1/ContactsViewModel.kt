@@ -70,32 +70,6 @@ class ContactsViewModel(
     private val contactsMutex = Mutex()
     private val stateMutex = Mutex()
 
-    // Noise Actions: Log-Einträge, die standardmäßig ausgeblendet werden
-    companion object {
-        private val NOISE_ACTIONS = setOf(
-            "HEARTBEAT",
-            "UPDATE_NOTIFICATION",
-            "LOAD_CONTACTS",
-            "LOAD_CONTACTS_START",
-            "CONTACTS_RELOAD",
-            "FILTER_CONTACTS",
-            "FILTER_APPLIED",
-            "GET_PREFERENCE",
-            "SET_PREFERENCE",
-            "SAVE_STATE",
-            "VALIDATE_STATE",
-            "REGISTER_OBSERVER",
-            "UNREGISTER_OBSERVER",
-            "WAKE_LOCK_ACQUIRED",
-            "WAKE_LOCK_RELEASED",
-            "LOW_MEMORY",
-            "TRIM_MEMORY",
-            "CONFIG_CHANGED",
-            "CONTACTS_CHANGED_SKIPPED",
-            "APPLY_FILTER"
-        )
-    }
-
     // Callback for dialing MMI codes with speakerphone
     var onDialMmiCode: ((String) -> Unit)? = null
 
@@ -119,12 +93,6 @@ class ContactsViewModel(
 
     private val _filterText = MutableStateFlow("")
     val filterText: StateFlow<String> = _filterText
-
-    private val _logEntriesHtml = MutableStateFlow("")
-    val logEntriesHtml: StateFlow<String> = _logEntriesHtml
-
-    private val _logEntries = MutableStateFlow<List<LogEntry>>(emptyList())
-    val logEntries: StateFlow<List<LogEntry>> = _logEntries
 
     private val _testSmsText = MutableStateFlow("")
     val testSmsText: StateFlow<String> = _testSmsText
@@ -189,9 +157,6 @@ class ContactsViewModel(
 
     private val _mmiDeactivateCode = MutableStateFlow(prefsManager.getMmiDeactivateCode())
     val mmiDeactivateCode: StateFlow<String> = _mmiDeactivateCode.asStateFlow()
-
-    private val _showAllLogs = MutableStateFlow(false)  // Default: nur wichtige Logs
-    val showAllLogs: StateFlow<Boolean> = _showAllLogs.asStateFlow()
 
     private val _mmiStatusCode = MutableStateFlow(prefsManager.getMmiStatusCode())
     val mmiStatusCode: StateFlow<String> = _mmiStatusCode.asStateFlow()
@@ -1203,43 +1168,6 @@ class ContactsViewModel(
                 )
             }
         }
-    }
-
-    fun reloadLogs() {
-        viewModelScope.launch {
-            try {
-                val showAll = _showAllLogs.value
-                _logEntriesHtml.value = logger.getLogEntriesHtml(
-                    filterNoise = !showAll,
-                    noiseActions = NOISE_ACTIONS
-                )
-
-                // Lade alle Einträge und filtere clientseitig wenn nötig
-                val allEntries = logger.getLogEntriesAsList()
-                _logEntries.value = if (!showAll) {
-                    // Filtere Noise-Actions aus
-                    allEntries.filter { entry ->
-                        val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
-                        val action = actionMatch?.groupValues?.get(1)
-                        action == null || action !in NOISE_ACTIONS
-                    }
-                } else {
-                    allEntries
-                }
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "ContactsViewModel",
-                    action = "RELOAD_LOGS_ERROR",
-                    message = "Fehler beim Neuladen der Log-Einträge",
-                    error = e
-                )
-            }
-        }
-    }
-
-    fun toggleLogFilter() {
-        _showAllLogs.value = !_showAllLogs.value
-        reloadLogs()  // Logs mit neuem Filter neu laden
     }
 
     fun updateTopBarTitle(title: String) {

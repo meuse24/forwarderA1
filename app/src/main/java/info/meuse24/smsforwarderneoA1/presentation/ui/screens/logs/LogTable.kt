@@ -18,8 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 
 /**
  * CSS styles for HTML log table display.
@@ -163,11 +163,11 @@ private fun modifyLogHtml(logEntriesHtml: String): String {
  * - Lazy-loaded log entries for performance
  * - Empty state message
  *
- * @param viewModel The ContactsViewModel instance containing log entries
+ * @param logViewModel The LogViewModel instance containing log entries
  */
 @Composable
-fun LogTable(viewModel: ContactsViewModel) {
-    val logEntries by viewModel.logEntries.collectAsState()
+fun LogTable(logViewModel: LogViewModel) {
+    val logEntries by logViewModel.logEntries.collectAsState()
 
     if (logEntries.isEmpty()) {
         Text("Keine Log-Einträge vorhanden oder Fehler beim Laden der Logs.")

@@ -20,7 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 
 /**
  * Main Log Screen showing application logs with filtering and sharing capabilities.
@@ -29,16 +29,16 @@ import info.meuse24.smsforwarderneoA1.ContactsViewModel
  * - Landscape: Side-by-side table and buttons
  * - Portrait: Stacked table over buttons
  *
- * @param viewModel The ContactsViewModel instance for log data and operations
+ * @param logViewModel The LogViewModel instance for log data and operations
  */
 @Composable
-fun LogScreen(viewModel: ContactsViewModel) {
+fun LogScreen(logViewModel: LogViewModel) {
     val context = LocalContext.current
-    val logEntriesHtml by viewModel.logEntriesHtml.collectAsState()
-    val showAllLogs by viewModel.showAllLogs.collectAsState()
+    val logEntriesHtml by logViewModel.logEntriesHtml.collectAsState()
+    val showAllLogs by logViewModel.showAllLogs.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.reloadLogs()
+        logViewModel.reloadLogs()
     }
 
     BoxWithConstraints {
@@ -56,7 +56,7 @@ fun LogScreen(viewModel: ContactsViewModel) {
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
-                    LogTable(viewModel)
+                    LogTable(logViewModel)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -73,9 +73,9 @@ fun LogScreen(viewModel: ContactsViewModel) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        FilterLogButton(viewModel, showAllLogs)
+                        FilterLogButton(logViewModel, showAllLogs)
                         ShareLogIconButton(context, logEntriesHtml)
-                        RefreshLogButton(viewModel)
+                        RefreshLogButton(logViewModel)
                     }
                 }
             }
@@ -86,7 +86,7 @@ fun LogScreen(viewModel: ContactsViewModel) {
 
             ) {
                 Box(modifier = Modifier.weight(1f)) {
-                    LogTable(viewModel)
+                    LogTable(logViewModel)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -96,11 +96,11 @@ fun LogScreen(viewModel: ContactsViewModel) {
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilterLogButton(viewModel, showAllLogs)
+                    FilterLogButton(logViewModel, showAllLogs)
                     Spacer(modifier = Modifier.width(16.dp))
                     ShareLogIconButton(context, logEntriesHtml)
                     Spacer(modifier = Modifier.width(16.dp))
-                    RefreshLogButton(viewModel)
+                    RefreshLogButton(logViewModel)
                 }
             }
         }
