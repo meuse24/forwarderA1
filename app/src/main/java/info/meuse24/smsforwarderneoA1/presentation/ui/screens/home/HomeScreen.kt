@@ -21,15 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 
 @Composable
-fun HomeScreen(viewModel: ContactsViewModel, callState: androidx.compose.runtime.State<Int>) {
+fun HomeScreen(viewModel: ContactsViewModel, emailViewModel: EmailViewModel, callState: androidx.compose.runtime.State<Int>) {
     val contacts by viewModel.contacts.collectAsState()
     val selectedContact by viewModel.selectedContact.collectAsState()
     val forwardingActive by viewModel.forwardingActive.collectAsState()
     val filterText by viewModel.filterText.collectAsState()
-    val forwardSmsToEmail by viewModel.forwardSmsToEmail.collectAsState()
-    val emailAddresses by viewModel.emailAddresses.collectAsState()
+    val forwardSmsToEmail by emailViewModel.forwardSmsToEmail.collectAsState()
+    val emailAddresses by emailViewModel.emailAddresses.collectAsState()
     val currentCallState by callState
 
     // Check if call is active (for button disabling)

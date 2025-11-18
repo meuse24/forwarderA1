@@ -719,7 +719,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     composable("start") {
                         val currentCallState = callState.collectAsState()
-                        HomeScreen(viewModel, currentCallState)
+                        HomeScreen(viewModel, emailViewModel, currentCallState)
                     }
                     composable("mail") {
                         MailScreen(emailViewModel)
