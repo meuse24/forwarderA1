@@ -22,6 +22,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.Cust
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.SimManagementViewModel
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -175,6 +176,9 @@ class MainActivity : ComponentActivity() {
             AppContainer.requirePrefsManager(),
             AppContainer.requireLogger()
         )
+    }
+    private val simManagementViewModel: SimManagementViewModel by viewModels {
+        SimManagementViewModel.Factory(AppContainer.requirePrefsManager())
     }
     private val _isLoading = MutableStateFlow(true)
     private val _loadingError = MutableStateFlow<String?>(null)
@@ -383,7 +387,7 @@ class MainActivity : ComponentActivity() {
             // Falls SIM-Nummern fehlen, zeige Dialog
             if (missingSims.isNotEmpty()) {
                 withContext(Dispatchers.Main) {
-                    viewModel.requestMissingSimNumbers(missingSims)
+                    simManagementViewModel.requestMissingSimNumbers(missingSims)
                 }
             }
 
@@ -674,8 +678,8 @@ class MainActivity : ComponentActivity() {
         val showProgressDialog by viewModel.showProgressDialog.collectAsState()
         val errorState by viewModel.errorState.collectAsState()
         // showOwnNumberMissingDialog StateFlow entfernt
-        val showSimNumbersDialog by viewModel.showSimNumbersDialog.collectAsState()
-        val missingSims by viewModel.missingSims.collectAsState()
+        val showSimNumbersDialog by simManagementViewModel.showSimNumbersDialog.collectAsState()
+        val missingSims by simManagementViewModel.missingSims.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
         val coroutineScope = rememberCoroutineScope()
 
@@ -755,9 +759,9 @@ class MainActivity : ComponentActivity() {
             if (showSimNumbersDialog) {
                 SimNumbersDialog(
                     missingSims = missingSims,
-                    onDismiss = { viewModel.hideSimNumbersDialog() },
+                    onDismiss = { simManagementViewModel.hideSimNumbersDialog() },
                     onSaveNumber = { subscriptionId, phoneNumber ->
-                        viewModel.saveSimNumber(subscriptionId, phoneNumber)
+                        simManagementViewModel.saveSimNumber(subscriptionId, phoneNumber)
                     }
                 )
             }

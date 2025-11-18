@@ -26,7 +26,6 @@ import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
-import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.presentation.state.ContactsState
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
@@ -117,12 +116,6 @@ class ContactsViewModel(
     private val _showProgressDialog = MutableStateFlow(false)
     val showProgressDialog: StateFlow<Boolean> = _showProgressDialog.asStateFlow()
 
-    private val _emailAddresses = MutableStateFlow<List<String>>(emptyList())
-    val emailAddresses: StateFlow<List<String>> = _emailAddresses.asStateFlow()
-
-    private val _newEmailAddress = MutableStateFlow("")
-    val newEmailAddress: StateFlow<String> = _newEmailAddress.asStateFlow()
-
     private val _errorState = MutableStateFlow<ErrorDialogState?>(null)
     val errorState: StateFlow<ErrorDialogState?> = _errorState.asStateFlow()
 
@@ -132,16 +125,7 @@ class ContactsViewModel(
     val cleanupCompleted = _cleanupCompleted.asSharedFlow()
 
     // showOwnNumberMissingDialog StateFlows entfernt - wird jetzt über SIM-Verwaltung abgewickelt
-
-    // SIM-Nummern Dialog State
-    private val _missingSims = MutableStateFlow<List<SimInfo>>(emptyList())
-    val missingSims: StateFlow<List<SimInfo>> = _missingSims.asStateFlow()
-
-    private val _showSimNumbersDialog = MutableStateFlow(false)
-    val showSimNumbersDialog: StateFlow<Boolean> = _showSimNumbersDialog.asStateFlow()
-
-    private val _forwardSmsToEmail = MutableStateFlow(prefsManager.isForwardSmsToEmail())
-    val forwardSmsToEmail: StateFlow<Boolean> = _forwardSmsToEmail.asStateFlow()
+    // SIM-Nummern Dialog State moved to SimManagementViewModel (Phase 5 Step 3)
 
     private val _mailScreenVisible = MutableStateFlow(prefsManager.isMailScreenVisible())
     val mailScreenVisible: StateFlow<Boolean> = _mailScreenVisible.asStateFlow()
@@ -165,21 +149,6 @@ class ContactsViewModel(
     //val keepForwardingOnExit: StateFlow<Boolean> = _keepForwardingOnExit.asStateFlow()
 
     private val filterMutex = Mutex() // Verhindert parallele Filteroperationen
-
-    private val _smtpHost = MutableStateFlow(prefsManager.getSmtpHost())
-    val smtpHost: StateFlow<String> = _smtpHost.asStateFlow()
-
-    private val _smtpPort = MutableStateFlow(prefsManager.getSmtpPort())
-    val smtpPort: StateFlow<Int> = _smtpPort.asStateFlow()
-
-    private val _smtpUsername = MutableStateFlow(prefsManager.getSmtpUsername())
-    val smtpUsername: StateFlow<String> = _smtpUsername.asStateFlow()
-
-    private val _smtpPassword = MutableStateFlow(prefsManager.getSmtpPassword())
-    val smtpPassword: StateFlow<String> = _smtpPassword.asStateFlow()
-
-    private val _testEmailText = MutableStateFlow("")
-    val testEmailText: StateFlow<String> = _testEmailText.asStateFlow()
 
     class Factory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -436,229 +405,6 @@ class ContactsViewModel(
         _showExitDialog.value = true
     }
 
-    fun updateNewEmailAddress(email: String) {
-        _newEmailAddress.value = email
-    }
-
-    fun addEmailAddress() {
-        val email = _newEmailAddress.value.trim()
-        if (email.isNotEmpty() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            viewModelScope.launch {
-                try {
-                    val currentList = _emailAddresses.value.toMutableList()
-                    if (!currentList.contains(email)) {
-                        currentList.add(email)
-                        _emailAddresses.value = currentList
-                        prefsManager.saveEmailAddresses(currentList)
-                        _newEmailAddress.value = "" // Reset input field
-                        SnackbarManager.showSuccess("E-Mail-Adresse hinzugefügt")
-                    } else {
-                        SnackbarManager.showWarning("E-Mail-Adresse existiert bereits")
-                    }
-                } catch (e: Exception) {
-                    LoggingManager.logError(
-                        component = "ContactsViewModel",
-                        action = "ADD_EMAIL_ERROR",
-                        message = "Fehler beim Hinzufügen der E-Mail-Adresse",
-                        error = e,
-                        details = mapOf("email" to email)
-                    )
-                    SnackbarManager.showError("Fehler beim Hinzufügen der E-Mail-Adresse: ${e.message}")
-                }
-            }
-        } else {
-            SnackbarManager.showError("Ungültige E-Mail-Adresse")
-        }
-    }
-
-    fun removeEmailAddress(email: String) {
-        viewModelScope.launch {
-            try {
-                val currentList = _emailAddresses.value.toMutableList()
-                currentList.remove(email)
-                _emailAddresses.value = currentList
-                prefsManager.saveEmailAddresses(currentList)
-
-                // Wenn die Liste leer ist, deaktiviere die SMS-Email-Weiterleitung
-                if (currentList.isEmpty() && _forwardSmsToEmail.value) {
-                    _forwardSmsToEmail.value = false
-                    prefsManager.setForwardSmsToEmail(false)
-                    LoggingManager.log(
-                        LogLevel.INFO,
-                        LogMetadata(
-                            component = "ContactsViewModel",
-                            action = "SMS_EMAIL_FORWARD_AUTO_DISABLE",
-                            details = mapOf(
-                                "reason" to "no_email_addresses"
-                            )
-                        ),
-                        "SMS-E-Mail-Weiterleitung automatisch deaktiviert (keine E-Mail-Adressen vorhanden)"
-                    )
-                    SnackbarManager.showInfo("SMS-E-Mail-Weiterleitung wurde deaktiviert, da keine E-Mail-Adressen mehr vorhanden sind")
-                }
-
-                LoggingManager.log(
-                    LogLevel.INFO,
-                    LogMetadata(
-                        component = "ContactsViewModel",
-                        action = "REMOVE_EMAIL",
-                        details = mapOf(
-                            "remaining_emails" to currentList.size,
-                            "forwarding_status" to _forwardSmsToEmail.value
-                        )
-                    ),
-                    "E-Mail-Adresse entfernt"
-                )
-                SnackbarManager.showSuccess("E-Mail-Adresse entfernt")
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "ContactsViewModel",
-                    action = "REMOVE_EMAIL_ERROR",
-                    message = "Fehler beim Entfernen der E-Mail-Adresse",
-                    error = e,
-                    details = mapOf(
-                        "email" to email,
-                        "current_list_size" to _emailAddresses.value.size
-                    )
-                )
-                SnackbarManager.showError("Fehler beim Entfernen der E-Mail-Adresse: ${e.message}")
-            }
-        }
-    }
-
-    fun updateTestEmailText(newText: String) {
-        _testEmailText.value = newText
-        prefsManager.saveTestEmailText(newText)
-
-        LoggingManager.log(
-            LogLevel.DEBUG,
-            LogMetadata(
-                component = "ContactsViewModel",
-                action = "UPDATE_TEST_EMAIL",
-                details = mapOf(
-                    "old_length" to _testEmailText.value.length,
-                    "new_length" to newText.length,
-                    "is_empty" to newText.isEmpty()
-                )
-            ),
-            "Test-Email Text aktualisiert"
-        )
-    }
-
-    fun updateSmtpSettings(
-        host: String,
-        port: Int,
-        username: String,
-        password: String
-    ) {
-        _smtpHost.value = host
-        _smtpPort.value = port
-        _smtpUsername.value = username
-        _smtpPassword.value = password
-        prefsManager.saveSmtpSettings(host, port, username, password)
-    }
-
-    fun sendTestEmail(mailrecipent: String) {
-        viewModelScope.launch {
-            try {
-                // Hole SMTP-Einstellungen aus SharedPreferences
-                val host = prefsManager.getSmtpHost()
-                val port = prefsManager.getSmtpPort()
-                val username = prefsManager.getSmtpUsername()
-                val password = prefsManager.getSmtpPassword()
-                val testEmailText = prefsManager.getTestEmailText()
-
-                // Prüfe ob alle erforderlichen SMTP-Einstellungen vorhanden sind
-                if (host.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                    LoggingManager.log(
-                        LogLevel.WARNING,
-                        LogMetadata(
-                            component = "ContactsViewModel",
-                            action = "TEST_EMAIL",
-                            details = mapOf(
-                                "error" to "incomplete_smtp_settings",
-                                "has_host" to host.isNotEmpty(),
-                                "has_username" to username.isNotEmpty()
-                            )
-                        ),
-                        "Unvollständige SMTP-Einstellungen"
-                    )
-                    SnackbarManager.showError("SMTP-Einstellungen sind unvollständig")
-                    return@launch
-                }
-
-                val emailSender = EmailSender(host, port, username, password)
-
-                // Erstelle formatierten Email-Text mit Timestamp
-                val emailBody = buildString {
-                    append("Test-Email von SMS Forwarder\n\n")
-                    append("Zeitpunkt: ${getCurrentTimestamp()}\n\n")
-                    append("Nachricht:\n")
-                    append(testEmailText)
-                    append("\n\nDies ist eine Test-Email zur Überprüfung der Email-Weiterleitungsfunktion.")
-                }
-
-                when (val result = emailSender.sendEmail(
-                    to = listOf(mailrecipent),
-                    subject = "SMS Forwarder Test E-Mail",
-                    body = emailBody
-                )) {
-                    is EmailResult.Success -> {
-                        LoggingManager.log(
-                            LogLevel.INFO,
-                            LogMetadata(
-                                component = "ContactsViewModel",
-                                action = "TEST_EMAIL_SENT",
-                                details = mapOf(
-                                    "recipient" to mailrecipent,
-                                    "smtp_host" to host,
-                                    "text_length" to testEmailText.length
-                                )
-                            ),
-                            "Test-E-Mail wurde versendet"
-                        )
-                        SnackbarManager.showSuccess("Test-E-Mail wurde an $mailrecipent versendet")
-                    }
-
-                    is EmailResult.Error -> {
-                        LoggingManager.log(
-                            LogLevel.ERROR,
-                            LogMetadata(
-                                component = "ContactsViewModel",
-                                action = "TEST_EMAIL_FAILED",
-                                details = mapOf(
-                                    "error" to result.message,
-                                    "smtp_host" to host,
-                                    "recipient" to mailrecipent
-                                )
-                            ),
-                            "Fehler beim Versenden der Test-E-Mail"
-                        )
-                        SnackbarManager.showError("E-Mail-Versand fehlgeschlagen: ${result.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                LoggingManager.log(
-                    LogLevel.ERROR,
-                    LogMetadata(
-                        component = "ContactsViewModel",
-                        action = "TEST_EMAIL_ERROR",
-                        details = mapOf(
-                            "error" to e.message,
-                            "recipient" to mailrecipent
-                        )
-                    ),
-                    "Unerwarteter Fehler beim E-Mail-Versand"
-                )
-                SnackbarManager.showError("E-Mail-Versand fehlgeschlagen: ${e.message}")
-            }
-        }
-    }
-
-    private fun getCurrentTimestamp(): String {
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
-        return dateFormat.format(Date())
-    }
 
     @VisibleForTesting
     fun setTestContacts(contacts: List<Contact>) = viewModelScope.launch {
@@ -760,42 +506,7 @@ class ContactsViewModel(
     }
 
     // showOwnNumberMissingDialog und hideOwnNumberMissingDialog Funktionen entfernt - werden über SIM-Verwaltung abgewickelt
-
-    // SIM-Nummern Dialog Funktionen
-    fun requestMissingSimNumbers(sims: List<SimInfo>) {
-        _missingSims.value = sims
-        _showSimNumbersDialog.value = true
-    }
-
-    fun hideSimNumbersDialog() {
-        _showSimNumbersDialog.value = false
-        _missingSims.value = emptyList()
-    }
-
-    fun saveSimNumber(subscriptionId: Int, phoneNumber: String) {
-        try {
-            if (phoneNumber.isNotBlank()) {
-                prefsManager.setSimPhoneNumber(subscriptionId, phoneNumber.trim())
-                LoggingManager.logInfo(
-                    component = "ContactsViewModel",
-                    action = "SAVE_SIM_NUMBER",
-                    message = "SIM-Nummer vom User gespeichert",
-                    details = mapOf(
-                        "subscription_id" to subscriptionId,
-                        "number_length" to phoneNumber.length
-                    )
-                )
-            }
-        } catch (e: Exception) {
-            LoggingManager.logError(
-                component = "ContactsViewModel",
-                action = "SAVE_SIM_NUMBER",
-                message = "Fehler beim Speichern der SIM-Nummer",
-                error = e,
-                details = mapOf("subscription_id" to subscriptionId)
-            )
-        }
-    }
+    // SIM-Nummern Dialog Funktionen moved to SimManagementViewModel (Phase 5 Step 3)
 
     sealed class ErrorDialogState {
         data class DeactivationError(val message: String) : ErrorDialogState()
@@ -929,16 +640,9 @@ class ContactsViewModel(
         }
         _filterText.value = prefsManager.getFilterText()
         _testSmsText.value = prefsManager.getTestSmsText()
-        _testEmailText.value = prefsManager.getTestEmailText()
-        // _ownPhoneNumber.value = prefsManager.getOwnPhoneNumber() // entfernt
+        // Email-related StateFlows moved to EmailViewModel
         _topBarTitle.value = prefsManager.getTopBarTitle()
-        _smtpHost.value = prefsManager.getSmtpHost()
-        _smtpPort.value = prefsManager.getSmtpPort()
-        _smtpUsername.value = prefsManager.getSmtpUsername()
-        _smtpPassword.value = prefsManager.getSmtpPassword()
         _countryCode.value = prefsManager.getCountryCode()
-        _forwardSmsToEmail.value = prefsManager.isForwardSmsToEmail()
-        _emailAddresses.value = prefsManager.getEmailAddresses()
         _forwardingActive.value = prefsManager.isForwardingActive()
         val savedPhoneNumber = prefsManager.getSelectedPhoneNumber()
         _forwardingPhoneNumber.value = savedPhoneNumber
@@ -1219,8 +923,7 @@ class ContactsViewModel(
                 // Rest der Einstellungen speichern
                 prefsManager.saveFilterText(_filterText.value)
                 prefsManager.saveTestSmsText(_testSmsText.value)
-                prefsManager.saveEmailAddresses(_emailAddresses.value)
-                prefsManager.setForwardSmsToEmail(_forwardSmsToEmail.value)
+                // Email settings now saved in EmailViewModel
             } catch (e: Exception) {
                 LoggingManager.logError(
                     component = "ContactsViewModel",
@@ -1441,22 +1144,6 @@ class ContactsViewModel(
         }
     }
 
-    fun updateForwardSmsToEmail(enabled: Boolean) {
-        _forwardSmsToEmail.value = enabled
-        prefsManager.setForwardSmsToEmail(enabled)
-        updateServiceNotification()
-
-        LoggingManager.logInfo(
-            component = "ContactsViewModel",
-            action = if (enabled) "ENABLE_EMAIL_FORWARDING" else "DISABLE_EMAIL_FORWARDING",
-            message = "Email-Weiterleitung ${if (enabled) "aktiviert" else "deaktiviert"}",
-            details = mapOf(
-                "sms_forwarding_active" to _forwardingActive.value,
-                "email_addresses_count" to _emailAddresses.value.size
-            )
-        )
-    }
-
     fun updateMailScreenVisibility(visible: Boolean) {
         _mailScreenVisible.value = visible
         prefsManager.setMailScreenVisible(visible)
@@ -1612,10 +1299,10 @@ class ContactsViewModel(
         )
     }
 
-    private fun updateServiceNotification() {
+    fun updateServiceNotification() {
         val status = buildString {
             val hasForwarding = _forwardingActive.value
-            val hasEmail = _forwardSmsToEmail.value
+            val hasEmail = prefsManager.isForwardSmsToEmail()  // Get from prefs (EmailViewModel manages this)
 
             when {
                 // Beide aktiv
@@ -1625,7 +1312,7 @@ class ContactsViewModel(
                         append(" zu ${contact.name}")
                     }
                     append("\nEmail-Weiterleitung aktiv")
-                    val emailCount = _emailAddresses.value.size
+                    val emailCount = prefsManager.getEmailAddresses().size  // Get from prefs
                     append(" an $emailCount Email(s)")
                 }
                 // Nur SMS-Weiterleitung
@@ -1638,7 +1325,7 @@ class ContactsViewModel(
                 // Nur Email-Weiterleitung
                 hasEmail -> {
                     append("Email-Weiterleitung aktiv")
-                    val emailCount = _emailAddresses.value.size
+                    val emailCount = prefsManager.getEmailAddresses().size  // Get from prefs
                     append(" an $emailCount Email(s)")
                 }
                 // Keine Weiterleitung aktiv
