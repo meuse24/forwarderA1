@@ -15,9 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.navigation.NavController
-import androidx.compose.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.navOptions
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 
 @Composable

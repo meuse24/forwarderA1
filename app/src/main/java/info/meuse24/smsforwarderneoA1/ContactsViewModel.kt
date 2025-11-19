@@ -945,10 +945,13 @@ class ContactsViewModel(
     fun toggleContactSelection(contact: Contact) {
         // Eigentelefonnummer-Prüfung entfernt - wird jetzt über SIM-Verwaltung abgewickelt
 
-        val currentSelected = _selectedContact.value
-
         viewModelScope.launch {
             try {
+                // Thread-safe Zugriff auf selectedContact innerhalb der Coroutine
+                val currentSelected = stateMutex.withLock {
+                    _selectedContact.value
+                }
+
                 // Vergleich der normalisierten Nummern statt der Kontaktobjekte
                 if (currentSelected != null &&
                     contact.phoneNumber.filter { it.isDigit() } ==
@@ -1694,33 +1697,35 @@ class ContactsStore {
     fun cleanup() {
         val startTime = System.currentTimeMillis()
         try {
-            // Zuerst isActive auf false setzen um weitere Observer-Callbacks zu verhindern
+            // 1. Zuerst isActive auf false setzen um weitere Observer-Callbacks zu verhindern
             isActive.set(false)
 
+            // 2. WICHTIG: Handler-Queue SOFORT leeren (BEVOR unregister!)
+            // Verhindert dass pending Messages nach unregister noch laufen
+            observerHandler?.removeCallbacksAndMessages(null)
+
+            // 3. Jetzt sicher: Update Job canceln
             updateJob?.cancel()
+
+            // 4. ContentObserver unregistern (Handler-Queue bereits leer)
             contentObserver?.let { observer ->
                 contentResolver?.unregisterContentObserver(observer)
             }
 
-            // Cleanup vor Scope-Cancellation
-            runBlocking {
-                contactsMutex.withLock {
-                    allContacts.clear()
-                    searchIndex.clear()
-                    _contacts.value = emptyList()
-                }
-            }
-
-            // Handler cleanup für Memory-Leak-Prävention
-            observerHandler?.removeCallbacksAndMessages(null)
-            observerHandler = null
-
-            contentObserver = null
-            contentResolver = null
-
-            // Scope als letztes canceln
+            // 5. Cancelle Scopes (stoppt alle laufenden Coroutines)
             storeScope.cancel()
             scope.cancel()
+
+            // 6. Jetzt können wir sicher synchron clearen (keine concurrent access mehr)
+            // Kein runBlocking nötig, da alle Coroutines bereits gestoppt sind
+            allContacts.clear()
+            searchIndex.clear()
+            _contacts.value = emptyList()
+
+            // 7. Nullen setzen
+            observerHandler = null
+            contentObserver = null
+            contentResolver = null
 
             LoggingManager.log(
                 LogLevel.INFO,

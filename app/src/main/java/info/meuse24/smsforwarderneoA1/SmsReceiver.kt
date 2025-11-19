@@ -49,7 +49,8 @@ class SmsReceiver : BroadcastReceiver() {
         private const val TAG = "SmsReceiver"
     }
 
-    private lateinit var prefsManager: SharedPreferencesManager
+    // prefsManager entfernt - wird in SmsReceiver nicht verwendet
+    // SmsForegroundService hat eigene lazy prefsManager Instanz
 
     /**
      * Diese Methode wird aufgerufen, wenn eine Broadcast-Nachricht empfangen wird.
@@ -57,7 +58,6 @@ class SmsReceiver : BroadcastReceiver() {
      */
     override fun onReceive(context: Context, intent: Intent) {
         Log.d(TAG, "onReceive: ${intent.action}")
-        prefsManager = SharedPreferencesManager(context)
         when (intent.action) {
             Telephony.Sms.Intents.SMS_RECEIVED_ACTION -> {
                 if (isSmsIntentValid(intent)) {
@@ -633,79 +633,81 @@ class SmsForegroundService : Service() {
             0
         }
 
-    private fun handleEmailForwarding(sender: String, messageBody: String) {
-        serviceScope.launch {
-            withWakeLock(30 * 1000L) { // 30 Sekunden für Email-Versand
-                try {
-                    val emailAddresses = prefsManager.getEmailAddresses()
-                    if (emailAddresses.isEmpty()) {
-                        LoggingManager.logWarning(
-                            component = "SmsForegroundService",
-                            action = "EMAIL_FORWARD",
-                            message = "Keine Email-Adressen konfiguriert"
-                        )
-                        return@withWakeLock
-                    }
-
-                    val host = prefsManager.getSmtpHost()
-                    val port = prefsManager.getSmtpPort()
-                    val username = prefsManager.getSmtpUsername()
-                    val password = prefsManager.getSmtpPassword()
-
-                    if (host.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                        LoggingManager.logWarning(
-                            component = "SmsForegroundService",
-                            action = "EMAIL_FORWARD",
-                            message = "Unvollständige SMTP-Konfiguration",
-                            details = mapOf(
-                                "has_host" to host.isNotEmpty(),
-                                "has_username" to username.isNotEmpty(),
-                                "has_credentials" to password.isNotEmpty()
-                            )
-                        )
-                        return@withWakeLock
-                    }
-
-                    val emailSender = EmailSender(host, port, username, password)
-                    val subject = "Neue SMS von $sender"
-                    val body = buildEmailBody(sender, messageBody)
-
-                    when (val result = emailSender.sendEmail(emailAddresses, subject, body)) {
-                        is EmailResult.Success -> {
-                            LoggingManager.logInfo(
-                                component = "SmsForegroundService",
-                                action = "EMAIL_FORWARD",
-                                message = "SMS erfolgreich per Email weitergeleitet",
-                                details = mapOf(
-                                    "sender" to sender,
-                                    "recipients" to emailAddresses.size,
-                                    "smtp_host" to host
-                                )
-                            )
-                            SnackbarManager.showSuccess("SMS per Email weitergeleitet")
-                            updateServiceStatus()
-                        }
-
-                        is EmailResult.Error -> handleEmailError(
-                            result.message,
-                            sender,
-                            emailAddresses,
-                            host
-                        )
-                    }
-                } catch (e: Exception) {
-                    LoggingManager.logError(
+    private suspend fun handleEmailForwarding(sender: String, messageBody: String) {
+        // Nutze structured concurrency - kein neuer serviceScope.launch!
+        // Exceptions werden automatisch an Caller (processMessageGroup) propagiert
+        withWakeLock(30 * 1000L) { // 30 Sekunden für Email-Versand
+            try {
+                val emailAddresses = prefsManager.getEmailAddresses()
+                if (emailAddresses.isEmpty()) {
+                    LoggingManager.logWarning(
                         component = "SmsForegroundService",
                         action = "EMAIL_FORWARD",
-                        message = "Unerwarteter Fehler bei Email-Weiterleitung",
-                        error = e,
+                        message = "Keine Email-Adressen konfiguriert"
+                    )
+                    return@withWakeLock
+                }
+
+                val host = prefsManager.getSmtpHost()
+                val port = prefsManager.getSmtpPort()
+                val username = prefsManager.getSmtpUsername()
+                val password = prefsManager.getSmtpPassword()
+
+                if (host.isEmpty() || username.isEmpty() || password.isEmpty()) {
+                    LoggingManager.logWarning(
+                        component = "SmsForegroundService",
+                        action = "EMAIL_FORWARD",
+                        message = "Unvollständige SMTP-Konfiguration",
                         details = mapOf(
-                            "sender" to sender,
-                            "message_length" to messageBody.length
+                            "has_host" to host.isNotEmpty(),
+                            "has_username" to username.isNotEmpty(),
+                            "has_credentials" to password.isNotEmpty()
                         )
                     )
-                    SnackbarManager.showError("Fehler bei der Email-Weiterleitung")
+                    return@withWakeLock
                 }
+
+                val emailSender = EmailSender(host, port, username, password)
+                val subject = "Neue SMS von $sender"
+                val body = buildEmailBody(sender, messageBody)
+
+                when (val result = emailSender.sendEmail(emailAddresses, subject, body)) {
+                    is EmailResult.Success -> {
+                        LoggingManager.logInfo(
+                            component = "SmsForegroundService",
+                            action = "EMAIL_FORWARD",
+                            message = "SMS erfolgreich per Email weitergeleitet",
+                            details = mapOf(
+                                "sender" to sender,
+                                "recipients" to emailAddresses.size,
+                                "smtp_host" to host
+                            )
+                        )
+                        SnackbarManager.showSuccess("SMS per Email weitergeleitet")
+                        updateServiceStatus()
+                    }
+
+                    is EmailResult.Error -> handleEmailError(
+                        result.message,
+                        sender,
+                        emailAddresses,
+                        host
+                    )
+                }
+            } catch (e: Exception) {
+                LoggingManager.logError(
+                    component = "SmsForegroundService",
+                    action = "EMAIL_FORWARD_ERROR",
+                    message = "Unerwarteter Fehler bei Email-Weiterleitung",
+                    error = e,
+                    details = mapOf(
+                        "sender" to sender,
+                        "message_length" to messageBody.length
+                    )
+                )
+                SnackbarManager.showError("Fehler bei der Email-Weiterleitung")
+                // Re-throw um in processMessageGroup error handling zu triggern
+                throw e
             }
         }
     }
@@ -969,20 +971,15 @@ class SmsForegroundService : Service() {
     override fun onDestroy() {
         try {
             serviceHandler.removeCallbacks(heartbeatRunnable)
-            // Beende alle laufenden Coroutines und warte auf deren Beendigung
-            runBlocking {
-                serviceScope.coroutineContext[Job]?.let { job ->
-                    job.children.forEach { it.join() }
-                }
-            }
 
-            // Jetzt den Scope selbst abbrechen
+            // Cancelle den Scope ohne zu warten (non-blocking)
+            // cancel() beendet automatisch alle child coroutines
             serviceScope.cancel()
 
             LoggingManager.logInfo(
                 component = "SmsForegroundService",
                 action = "DESTROY",
-                message = "Foreground Service wurde beendet und alle laufenden Coroutines wurden ordnungsgemäß gestoppt"
+                message = "Foreground Service wurde beendet, Coroutines werden abgebrochen"
             )
 
         } catch (e: Exception) {
@@ -994,6 +991,7 @@ class SmsForegroundService : Service() {
             )
         } finally {
             serviceHandler.removeCallbacksAndMessages(null)
+            isRunning = false
             super.onDestroy()
         }
     }

@@ -189,6 +189,8 @@ class MainActivity : ComponentActivity() {
     val callState = _callState
     private var telephonyManager: TelephonyManager? = null
     private var telephonyCallback: TelephonyCallback? = null
+    @Suppress("DEPRECATION")
+    private var phoneStateListener: PhoneStateListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -499,55 +501,75 @@ class MainActivity : ComponentActivity() {
     private fun setupPhoneStateListener() {
         telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
 
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            // Use TelephonyCallback for API 31+
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                telephonyCallback = object : TelephonyCallback(), TelephonyCallback.CallStateListener {
-                    override fun onCallStateChanged(state: Int) {
-                        _callState.value = state
-                        LoggingManager.logInfo(
-                            component = "MainActivity",
-                            action = "CALL_STATE_CHANGED",
-                            message = "Telefonstatus geändert",
-                            details = mapOf(
-                                "state" to when (state) {
-                                    TelephonyManager.CALL_STATE_IDLE -> "IDLE"
-                                    TelephonyManager.CALL_STATE_OFFHOOK -> "OFFHOOK"
-                                    TelephonyManager.CALL_STATE_RINGING -> "RINGING"
-                                    else -> "UNKNOWN"
-                                }
-                            )
+        // Prüfe Berechtigung UND TelephonyManager verfügbar
+        if (telephonyManager == null) {
+            LoggingManager.logWarning(
+                component = "MainActivity",
+                action = "PHONE_STATE_LISTENER",
+                message = "TelephonyManager nicht verfügbar"
+            )
+            return
+        }
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            LoggingManager.logWarning(
+                component = "MainActivity",
+                action = "PHONE_STATE_LISTENER",
+                message = "READ_PHONE_STATE Berechtigung fehlt"
+            )
+            return
+        }
+
+        // Use TelephonyCallback for API 31+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            telephonyCallback = object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                override fun onCallStateChanged(state: Int) {
+                    _callState.value = state
+                    LoggingManager.logInfo(
+                        component = "MainActivity",
+                        action = "CALL_STATE_CHANGED",
+                        message = "Telefonstatus geändert",
+                        details = mapOf(
+                            "state" to when (state) {
+                                TelephonyManager.CALL_STATE_IDLE -> "IDLE"
+                                TelephonyManager.CALL_STATE_OFFHOOK -> "OFFHOOK"
+                                TelephonyManager.CALL_STATE_RINGING -> "RINGING"
+                                else -> "UNKNOWN"
+                            }
                         )
-                    }
+                    )
                 }
-                telephonyManager?.registerTelephonyCallback(
-                    mainExecutor,
-                    telephonyCallback!!
-                )
-            } else {
-                // For older versions use PhoneStateListener
-                @Suppress("DEPRECATION")
-                val phoneStateListener = object : PhoneStateListener() {
-                    @Deprecated("Deprecated in Java")
-                    override fun onCallStateChanged(state: Int, phoneNumber: String?) {
-                        _callState.value = state
-                        LoggingManager.logInfo(
-                            component = "MainActivity",
-                            action = "CALL_STATE_CHANGED",
-                            message = "Telefonstatus geändert",
-                            details = mapOf(
-                                "state" to when (state) {
-                                    TelephonyManager.CALL_STATE_IDLE -> "IDLE"
-                                    TelephonyManager.CALL_STATE_OFFHOOK -> "OFFHOOK"
-                                    TelephonyManager.CALL_STATE_RINGING -> "RINGING"
-                                    else -> "UNKNOWN"
-                                }
-                            )
+            }
+            // Safe call ohne force-unwrap
+            telephonyCallback?.let { callback ->
+                telephonyManager?.registerTelephonyCallback(mainExecutor, callback)
+            }
+        } else {
+            // For older versions use PhoneStateListener
+            @Suppress("DEPRECATION")
+            phoneStateListener = object : PhoneStateListener() {
+                @Deprecated("Deprecated in Java")
+                override fun onCallStateChanged(state: Int, phoneNumber: String?) {
+                    _callState.value = state
+                    LoggingManager.logInfo(
+                        component = "MainActivity",
+                        action = "CALL_STATE_CHANGED",
+                        message = "Telefonstatus geändert",
+                        details = mapOf(
+                            "state" to when (state) {
+                                TelephonyManager.CALL_STATE_IDLE -> "IDLE"
+                                TelephonyManager.CALL_STATE_OFFHOOK -> "OFFHOOK"
+                                TelephonyManager.CALL_STATE_RINGING -> "RINGING"
+                                else -> "UNKNOWN"
+                            }
                         )
-                    }
+                    )
                 }
-                @Suppress("DEPRECATION")
-                telephonyManager?.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
+            }
+            // Safe call ohne force-unwrap
+            @Suppress("DEPRECATION")
+            phoneStateListener?.let { listener ->
+                telephonyManager?.listen(listener, PhoneStateListener.LISTEN_CALL_STATE)
             }
         }
     }
@@ -611,7 +633,38 @@ class MainActivity : ComponentActivity() {
                     }
                     .build()
 
-                audioManager.requestAudioFocus(focusRequest)
+                // Prüfe Audio-Fokus Result
+                val focusResult = audioManager.requestAudioFocus(focusRequest)
+                when (focusResult) {
+                    AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
+                        LoggingManager.logInfo(
+                            component = "MainActivity",
+                            action = "AUDIO_FOCUS_GRANTED",
+                            message = "Audio-Fokus erfolgreich erhalten"
+                        )
+                    }
+                    AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
+                        LoggingManager.logWarning(
+                            component = "MainActivity",
+                            action = "AUDIO_FOCUS_FAILED",
+                            message = "Audio-Fokus konnte nicht erhalten werden - kein Audio-Feedback"
+                        )
+                        // Hinweis: MMI-Code wird trotzdem gewählt, aber ohne Audio-Feedback
+                    }
+                    AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
+                        LoggingManager.logInfo(
+                            component = "MainActivity",
+                            action = "AUDIO_FOCUS_DELAYED",
+                            message = "Audio-Fokus verzögert - möglicherweise kein sofortiges Audio-Feedback"
+                        )
+                    }
+                }
+            } else {
+                LoggingManager.logWarning(
+                    component = "MainActivity",
+                    action = "AUDIO_MANAGER_NULL",
+                    message = "AudioManager nicht verfügbar - kein Audio-Feedback möglich"
+                )
             }
 
             startActivity(intent)
@@ -646,10 +699,16 @@ class MainActivity : ComponentActivity() {
         //viewModel.deactivateForwarding()
         //viewModel.saveCurrentState() // Neue Methode, die wir im ViewModel hinzufügen werden
 
-        // Unregister telephony callback
+        // Unregister telephony callbacks
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             telephonyCallback?.let {
                 telephonyManager?.unregisterTelephonyCallback(it)
+            }
+        } else {
+            // Unregister PhoneStateListener für ältere Versionen
+            @Suppress("DEPRECATION")
+            phoneStateListener?.let { listener ->
+                telephonyManager?.listen(listener, PhoneStateListener.LISTEN_NONE)
             }
         }
 
