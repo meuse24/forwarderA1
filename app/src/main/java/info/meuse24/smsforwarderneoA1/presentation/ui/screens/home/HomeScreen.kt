@@ -22,9 +22,15 @@ import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
 
 @Composable
-fun HomeScreen(viewModel: ContactsViewModel, emailViewModel: EmailViewModel, callState: androidx.compose.runtime.State<Int>) {
+fun HomeScreen(
+    viewModel: ContactsViewModel,
+    emailViewModel: EmailViewModel,
+    testUtilsViewModel: TestUtilsViewModel,
+    callState: androidx.compose.runtime.State<Int>
+) {
     val contacts by viewModel.contacts.collectAsState()
     val selectedContact by viewModel.selectedContact.collectAsState()
     val forwardingActive by viewModel.forwardingActive.collectAsState()
@@ -55,6 +61,7 @@ fun HomeScreen(viewModel: ContactsViewModel, emailViewModel: EmailViewModel, cal
         if (isLandscape) {
             LandscapeLayout(
                 viewModel = viewModel,
+                testUtilsViewModel = testUtilsViewModel,
                 contacts = contacts,
                 selectedContact = selectedContact,
                 forwardingActive = forwardingActive,
@@ -67,6 +74,7 @@ fun HomeScreen(viewModel: ContactsViewModel, emailViewModel: EmailViewModel, cal
         } else {
             PortraitLayout(
                 viewModel = viewModel,
+                testUtilsViewModel = testUtilsViewModel,
                 contacts = contacts,
                 selectedContact = selectedContact,
                 forwardingActive = forwardingActive,
@@ -83,6 +91,7 @@ fun HomeScreen(viewModel: ContactsViewModel, emailViewModel: EmailViewModel, cal
 @Composable
 fun LandscapeLayout(
     viewModel: ContactsViewModel,
+    testUtilsViewModel: TestUtilsViewModel,
     contacts: List<Contact>,
     selectedContact: Contact?,
     forwardingActive: Boolean,
@@ -136,7 +145,7 @@ fun LandscapeLayout(
 
             ControlButtons(
                 onDeactivateForwarding = viewModel::deactivateForwarding,
-                onSendTestSms = viewModel::sendTestSms,
+                onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) },
                 isEnabled = selectedContact != null
             )
         }
@@ -146,6 +155,7 @@ fun LandscapeLayout(
 @Composable
 fun PortraitLayout(
     viewModel: ContactsViewModel,
+    testUtilsViewModel: TestUtilsViewModel,
     contacts: List<Contact>,
     selectedContact: Contact?,
     forwardingActive: Boolean,
@@ -193,7 +203,7 @@ fun PortraitLayout(
             Spacer(modifier = Modifier.height(4.dp))
             ControlButtons(
                 onDeactivateForwarding = viewModel::deactivateForwarding,
-                onSendTestSms = viewModel::sendTestSms,
+                onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) },
                 isEnabled = selectedContact != null
             )
         }

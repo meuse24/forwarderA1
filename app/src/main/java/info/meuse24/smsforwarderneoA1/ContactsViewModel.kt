@@ -24,9 +24,11 @@ import info.meuse24.smsforwarderneoA1.AppContainer.prefsManager
 import info.meuse24.smsforwarderneoA1.data.local.Logger
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import info.meuse24.smsforwarderneoA1.data.repository.ContactsRepositoryImpl
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
 import info.meuse24.smsforwarderneoA1.presentation.state.ContactsState
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import kotlinx.coroutines.CoroutineScope
@@ -72,6 +74,9 @@ class ContactsViewModel(
     // Callback for dialing MMI codes with speakerphone
     var onDialMmiCode: ((String) -> Unit)? = null
 
+    // Callback for error notifications (NavigationViewModel integration)
+    var onErrorOccurred: ((NavigationViewModel.ErrorDialogState) -> Unit)? = null
+
     // StateFlows with thread-safe access
     private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
     val contacts: StateFlow<List<Contact>> = _contacts.asStateFlow()
@@ -79,7 +84,7 @@ class ContactsViewModel(
     private val _selectedContact = MutableStateFlow<Contact?>(null)
     val selectedContact: StateFlow<Contact?> = _selectedContact.asStateFlow()
 
-    private val contactsStore = ContactsStore()
+    private val contactsStore = ContactsRepositoryImpl(prefsManager)
     private val _state = MutableStateFlow(ContactsState())
 
     // StateFlows für verschiedene UI-Zustände
@@ -90,19 +95,14 @@ class ContactsViewModel(
 
     private val _forwardingPhoneNumber = MutableStateFlow("")
 
+    // filterText kept in ContactsViewModel (needed for core filter logic)
     private val _filterText = MutableStateFlow("")
-    val filterText: StateFlow<String> = _filterText
+    val filterText: StateFlow<String> = _filterText.asStateFlow()
 
-    private val _testSmsText = MutableStateFlow("")
-    val testSmsText: StateFlow<String> = _testSmsText
+    // testSmsText moved to TestUtilsViewModel (Phase 1 Step 1.1)
+    // topBarTitle, navigationTarget moved to NavigationViewModel (Phase 1 Step 1.2)
 
     // Eigene Telefonnummer StateFlows entfernt - wird jetzt über SIM-spezifische Verwaltung abgewickelt
-
-    private val _topBarTitle = MutableStateFlow("")
-    val topBarTitle: StateFlow<String> = _topBarTitle
-
-    private val _navigationTarget = MutableStateFlow<String?>(null)
-    val navigationTarget: StateFlow<String?> = _navigationTarget.asStateFlow()
 
     private val _countryCode = MutableStateFlow("")
     val countryCode: StateFlow<String> = _countryCode.asStateFlow()
@@ -110,14 +110,10 @@ class ContactsViewModel(
     private val _countryCodeSource = MutableStateFlow("")
     val countryCodeSource: StateFlow<String> = _countryCodeSource.asStateFlow()
 
-    private val _showExitDialog = MutableStateFlow(false)
-    val showExitDialog: StateFlow<Boolean> = _showExitDialog.asStateFlow()
+    // showExitDialog, errorState moved to NavigationViewModel (Phase 1 Step 1.2)
 
     private val _showProgressDialog = MutableStateFlow(false)
     val showProgressDialog: StateFlow<Boolean> = _showProgressDialog.asStateFlow()
-
-    private val _errorState = MutableStateFlow<ErrorDialogState?>(null)
-    val errorState: StateFlow<ErrorDialogState?> = _errorState.asStateFlow()
 
     private val _isCleaningUp = MutableStateFlow(false)
 
@@ -401,38 +397,8 @@ class ContactsViewModel(
         manageForwardingStatus(ForwardingAction.TOGGLE, contact, onResult)
     }
 
-    fun onShowExitDialog() {
-        _showExitDialog.value = true
-    }
-
-
-    @VisibleForTesting
-    fun setTestContacts(contacts: List<Contact>) = viewModelScope.launch {
-        try {
-            // Warten bis der Store initialisiert ist
-            contactsStore.setTestContacts(contacts)
-            // Warten bis die Änderungen übernommen wurden
-            delay(500)
-            withContext(Dispatchers.IO) {
-                // Verify contacts are set
-                val contactsList = contactsStore.contacts.first()
-                if (contactsList.isEmpty()) {
-                    throw AssertionError("Failed to initialize test contacts")
-                }
-            }
-        } catch (e: Exception) {
-            LoggingManager.logError(
-                component = "ContactsViewModel",
-                action = "SET_TEST_CONTACTS_ERROR",
-                message = "Fehler beim Setzen der Test-Kontakte",
-                error = e,
-                details = mapOf(
-                    "contacts_count" to contacts.size
-                )
-            )
-            throw e // Re-throw for test visibility
-        }
-    }
+    // onShowExitDialog moved to NavigationViewModel (Phase 1 Step 1.2)
+    // setTestContacts moved to TestUtilsViewModel (Phase 1 Step 1.1)
 
     fun updateKeepForwardingOnExit(keep: Boolean) {
         _keepForwardingOnExit.value = keep
@@ -449,8 +415,9 @@ class ContactsViewModel(
                     deactivateForwarding { result ->
                         when (result) {
                             is ForwardingResult.Error -> {
-                                _errorState.value =
-                                    ErrorDialogState.DeactivationError(result.message)
+                                onErrorOccurred?.invoke(
+                                    NavigationViewModel.ErrorDialogState.DeactivationError(result.message)
+                                )
                             }
 
                             ForwardingResult.Success -> {
@@ -463,8 +430,9 @@ class ContactsViewModel(
                         activateForwarding(contact) { result ->
                             when (result) {
                                 is ForwardingResult.Error -> {
-                                    _errorState.value =
-                                        ErrorDialogState.DeactivationError(result.message)
+                                    onErrorOccurred?.invoke(
+                                        NavigationViewModel.ErrorDialogState.DeactivationError(result.message)
+                                    )
                                 }
 
                                 ForwardingResult.Success -> {
@@ -477,7 +445,7 @@ class ContactsViewModel(
 
                 _cleanupCompleted.emit(Unit)
             } catch (e: Exception) {
-                _errorState.value = ErrorDialogState.GeneralError(e)
+                onErrorOccurred?.invoke(NavigationViewModel.ErrorDialogState.GeneralError(e))
             } finally {
                 _isCleaningUp.value = false
                 _showProgressDialog.value = false
@@ -507,20 +475,7 @@ class ContactsViewModel(
 
     // showOwnNumberMissingDialog und hideOwnNumberMissingDialog Funktionen entfernt - werden über SIM-Verwaltung abgewickelt
     // SIM-Nummern Dialog Funktionen moved to SimManagementViewModel (Phase 5 Step 3)
-
-    sealed class ErrorDialogState {
-        data class DeactivationError(val message: String) : ErrorDialogState()
-        data object TimeoutError : ErrorDialogState()
-        data class GeneralError(val error: Exception) : ErrorDialogState()
-    }
-
-    fun hideExitDialog() {
-        _showExitDialog.value = false
-    }
-
-    fun clearErrorState() {
-        _errorState.value = null
-    }
+    // ErrorDialogState, hideExitDialog, clearErrorState moved to NavigationViewModel (Phase 1 Step 1.2)
 
 
     init {
@@ -555,25 +510,7 @@ class ContactsViewModel(
         initialize()
     }
 
-    fun updateFilterText(newFilter: String) {
-        _filterText.value = newFilter
-        viewModelScope.launch {
-            try {
-                applyCurrentFilter()  // Direkter Aufruf für sofortige Aktualisierung
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "ContactsViewModel",
-                    action = "FILTER_UPDATE_ERROR",
-                    message = "Fehler beim Aktualisieren des Kontaktfilters",
-                    error = e,
-                    details = mapOf(
-                        "filter_text" to newFilter
-                    )
-                )
-            }
-        }
-        prefsManager.saveFilterText(newFilter)
-    }
+    // updateFilterText moved to TestUtilsViewModel (Phase 1 Step 1.1)
 
     fun initialize() {
         viewModelScope.launch {
@@ -639,9 +576,9 @@ class ContactsViewModel(
             )
         }
         _filterText.value = prefsManager.getFilterText()
-        _testSmsText.value = prefsManager.getTestSmsText()
+        // testSmsText now managed by TestUtilsViewModel
         // Email-related StateFlows moved to EmailViewModel
-        _topBarTitle.value = prefsManager.getTopBarTitle()
+        // topBarTitle moved to NavigationViewModel
         _countryCode.value = prefsManager.getCountryCode()
         _forwardingActive.value = prefsManager.isForwardingActive()
         val savedPhoneNumber = prefsManager.getSelectedPhoneNumber()
@@ -840,13 +777,7 @@ class ContactsViewModel(
         contactsStore.updateCountryCode(code)
     }
 
-    fun navigateToSettings() {
-        _navigationTarget.value = "setup"
-    }
-
-    fun onNavigated() {
-        _navigationTarget.value = null
-    }
+    // navigateToSettings, onNavigated moved to NavigationViewModel (Phase 1 Step 1.2)
 
     override fun onCleared() {
         super.onCleared()
@@ -874,10 +805,7 @@ class ContactsViewModel(
         }
     }
 
-    fun updateTopBarTitle(title: String) {
-        _topBarTitle.value = title
-        prefsManager.saveTopBarTitle(title)
-    }
+    // updateTopBarTitle moved to NavigationViewModel (Phase 1 Step 1.2)
 
     // updateOwnPhoneNumber Funktion entfernt - wird jetzt über SIM-spezifische Verwaltung abgewickelt
 
@@ -922,7 +850,7 @@ class ContactsViewModel(
 
                 // Rest der Einstellungen speichern
                 prefsManager.saveFilterText(_filterText.value)
-                prefsManager.saveTestSmsText(_testSmsText.value)
+                // testSmsText now managed by TestUtilsViewModel
                 // Email settings now saved in EmailViewModel
             } catch (e: Exception) {
                 LoggingManager.logError(
@@ -1122,29 +1050,15 @@ class ContactsViewModel(
         }
     }
 
-    /**
-     * Aktualisiert den Text für Test-SMS.
-     */
-    fun updateTestSmsText(newText: String) {
-        val oldText = _testSmsText.value
-        _testSmsText.value = newText
-        prefsManager.saveTestSmsText(newText)
+    // updateTestSmsText moved to TestUtilsViewModel (Phase 1 Step 1.1)
 
-        if (oldText != newText) {
-            LoggingManager.log(
-                LogLevel.DEBUG,
-                LogMetadata(
-                    component = "ContactsViewModel",
-                    action = "UPDATE_TEST_SMS",
-                    details = mapOf(
-                        "old_length" to oldText.length,
-                        "new_length" to newText.length,
-                        "is_empty" to newText.isEmpty()
-                    )
-                ),
-                "Test-SMS Text aktualisiert"
-            )
-        }
+    /**
+     * Aktualisiert den Filter-Text für die Kontaktsuche.
+     * Triggert automatisch die Filterung durch den debounce-Mechanismus im init Block.
+     */
+    fun updateFilterText(newFilter: String) {
+        _filterText.value = newFilter
+        prefsManager.saveFilterText(newFilter)
     }
 
     fun updateMailScreenVisibility(visible: Boolean) {
@@ -1358,604 +1272,7 @@ class ContactsViewModel(
         }
     }
 
-    /**
-     * Sendet eine Test-SMS.
-     */
-    fun sendTestSms() {
-        val contact = _selectedContact.value
-        if (contact != null) {
-            // Verwendung der eigenen Telefonnummer aus SIM-Verwaltung
-            val simNumbers = prefsManager.getSimPhoneNumbers()
-            val receiver = simNumbers.values.firstOrNull()
-
-            if (receiver.isNullOrEmpty()) {
-                LoggingManager.log(
-                    LogLevel.WARNING,
-                    LogMetadata(
-                        component = "ContactsViewModel",
-                        action = "TEST_SMS_FAILED",
-                        details = mapOf("reason" to "no_sim_number_available")
-                    ),
-                    "Test-SMS konnte nicht gesendet werden - keine SIM-Nummer verfügbar"
-                )
-                SnackbarManager.showError("Keine SIM-Telefonnummer verfügbar")
-                return
-            }
-            if (PhoneSmsUtils.sendTestSms(
-                    application,
-                    receiver,
-                    prefsManager.getTestSmsText()
-                )
-            ) {
-                LoggingManager.log(
-                    LogLevel.INFO,
-                    LogMetadata(
-                        component = "ContactsViewModel",
-                        action = "TEST_SMS_SENT",
-                        details = mapOf(
-                            "receiver" to receiver,
-                            "text" to prefsManager.getTestSmsText()
-                        )
-                    ),
-                    "Test-SMS wurde versendet"
-                )
-            } else {
-                LoggingManager.log(
-                    LogLevel.ERROR,
-                    LogMetadata(
-                        component = "ContactsViewModel",
-                        action = "TEST_SMS_FAILED",
-                        details = mapOf(
-                            "receiver" to receiver,
-                            "text" to prefsManager.getTestSmsText()
-                        )
-                    ),
-                    "Fehler beim Versenden der Test-SMS"
-                )
-            }
-        }
-    }
-    }
-
-class ContactsStore {
-
-    private var contentObserver: ContentObserver? = null
-    private var contentResolver: ContentResolver? = null
-    private var updateJob: Job? = null
-    private val scope = CoroutineScope(Job() + Dispatchers.IO)
-
-    // Lifecycle-aware Handler für ContentObserver
-    private var observerHandler: Handler? = null
-
-    // Flag um zu verhindern dass Observer nach cleanup noch aktiv ist
-    private val isActive = AtomicBoolean(true)
-
-    // Koroutinen-Scope für dieses Objekt statt statisch
-    private val storeScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    // Mutex für thread-safe Zugriff auf die Listen
-    private val contactsMutex = Mutex()
-
-    // MutableStateFlow für die Kontaktliste
-    private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
-    val contacts: StateFlow<List<Contact>> = _contacts.asStateFlow()
-
-    private val allContacts = mutableListOf<Contact>()
-    private val searchIndex = HashMap<String, MutableSet<Contact>>()
-    private var currentCountryCode: String = "+43"
-
-    private var isUpdating = AtomicBoolean(false)
-
-    fun initialize(contentResolver: ContentResolver, countryCode: String) {
-        this.currentCountryCode = countryCode
-        this.contentResolver = contentResolver
-        scope.launch { setupContentObserver(contentResolver) }
-
-        // Initial load
-        storeScope.launch {
-            loadContacts(contentResolver)
-        }
-    }
-
-    @VisibleForTesting
-    suspend fun setTestContacts(contacts: List<Contact>) {
-        contactsMutex.withLock {
-            _contacts.value = contacts
-            allContacts.clear()
-            allContacts.addAll(contacts)
-            rebuildSearchIndex()
-        }
-    }
-
-
-    private fun setupContentObserver(contentResolver: ContentResolver) {
-        contentObserver?.let {
-            contentResolver.unregisterContentObserver(it)
-            LoggingManager.log(
-                LogLevel.INFO,
-                LogMetadata(
-                    component = "ContactsStore",
-                    action = "UNREGISTER_OBSERVER",
-                    details = emptyMap()
-                ),
-                "Alter ContentObserver wurde entfernt"
-            )
-        }
-
-        // Erstelle lifecycle-aware Handler
-        if (observerHandler == null) {
-            observerHandler = Handler(Looper.getMainLooper())
-        }
-
-        contentObserver = object : ContentObserver(observerHandler) {
-            override fun onChange(selfChange: Boolean) {
-                super.onChange(selfChange)
-
-                // Prüfe ob Store noch aktiv ist (Memory-Leak-Prävention)
-                if (!isActive.get()) {
-                    return
-                }
-
-                if (!isUpdating.compareAndSet(false, true)) {
-                    scope.launch {
-                        LoggingManager.log(
-                            LogLevel.INFO,
-                            LogMetadata(
-                                component = "ContactsStore",
-                                action = "CONTACTS_CHANGED_SKIPPED",
-                                details = mapOf("reason" to "update_in_progress")
-                            ),
-                            "Update übersprungen - bereits in Bearbeitung"
-                        )
-                    }
-                    return
-                }
-
-                updateJob?.cancel()
-                updateJob = storeScope.launch {
-                    try {
-                        delay(500) // Debouncing
-                        val startTime = System.currentTimeMillis()
-
-                        contentResolver.let { resolver ->
-                            withContext(Dispatchers.IO) {
-                                loadContacts(resolver)
-                            }
-
-                            val duration = System.currentTimeMillis() - startTime
-                            LoggingManager.log(
-                                LogLevel.INFO,
-                                LogMetadata(
-                                    component = "ContactsStore",
-                                    action = "CONTACTS_RELOAD",
-                                    details = mapOf(
-                                        "duration_ms" to duration,
-                                        "contacts_count" to allContacts.size
-                                    )
-                                ),
-                                "Kontakte erfolgreich neu geladen"
-                            )
-                        }
-                    } catch (e: Exception) {
-                        LoggingManager.log(
-                            LogLevel.ERROR,
-                            LogMetadata(
-                                component = "ContactsStore",
-                                action = "CONTACTS_RELOAD_ERROR",
-                                details = mapOf(
-                                    "error" to e.message,
-                                    "error_type" to e.javaClass.simpleName
-                                )
-                            ),
-                            "Fehler beim Neuladen der Kontakte",
-                            e
-                        )
-                    } finally {
-                        isUpdating.set(false)
-                    }
-                }
-            }
-        }
-
-        try {
-            contentObserver?.let { observer ->
-                contentResolver.registerContentObserver(
-                    ContactsContract.Contacts.CONTENT_URI,
-                    true,
-                    observer
-                )
-                contentResolver.registerContentObserver(
-                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    true,
-                    observer
-                )
-                contentResolver.registerContentObserver(
-                    ContactsContract.Groups.CONTENT_URI,
-                    true,
-                    observer
-                )
-
-                LoggingManager.log(
-                    LogLevel.INFO,
-                    LogMetadata(
-                        component = "ContactsStore",
-                        action = "REGISTER_OBSERVER",
-                        details = mapOf("status" to "success")
-                    ),
-                    "ContentObserver erfolgreich registriert"
-                )
-            }
-        } catch (e: Exception) {
-            LoggingManager.log(
-                LogLevel.ERROR,
-                LogMetadata(
-                    component = "ContactsStore",
-                    action = "OBSERVER_REGISTRATION_ERROR",
-                    details = mapOf(
-                        "error" to e.message,
-                        "error_type" to e.javaClass.simpleName
-                    )
-                ),
-                "Fehler bei der Observer-Registrierung",
-                e
-            )
-        }
-    }
-
-    suspend fun loadContacts(contentResolver: ContentResolver) {
-        contactsMutex.withLock {
-            val startTime = System.currentTimeMillis()
-            try {
-                LoggingManager.logInfo(
-                    component = "ContactsStore",
-                    action = "LOAD_CONTACTS_START",
-                    message = "Starte Laden der Kontakte"
-                )
-
-                val contacts = readContactsFromProvider(contentResolver)
-                allContacts.clear()
-                allContacts.addAll(contacts)
-                rebuildSearchIndex()
-                _contacts.value = allContacts.toList()
-
-                LoggingManager.logInfo(
-                    component = "ContactsStore",
-                    action = "LOAD_CONTACTS",
-                    details = mapOf(
-                        "duration_ms" to (System.currentTimeMillis() - startTime),
-                        "contacts_count" to contacts.size,
-                        "index_size" to searchIndex.size
-                    ),
-                    message = "Kontakte erfolgreich geladen"
-                )
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "ContactsStore",
-                    action = "LOAD_CONTACTS_ERROR",
-                    details = mapOf(
-                        "error" to e.message,
-                        "duration_ms" to (System.currentTimeMillis() - startTime)
-                    ),
-                    message = "Fehler beim Laden der Kontakte",
-                    error = e
-                )
-                throw e
-            }
-        }
-    }
-
-    suspend fun filterContacts(query: String): List<Contact> {
-        return contactsMutex.withLock {
-            val startTime = System.currentTimeMillis()
-            val results = if (query.isBlank()) {
-                allContacts.toList()
-            } else {
-                val searchTerms = query.lowercase().split(" ")
-                var filteredResults = mutableSetOf<Contact>()
-
-                // Für den ersten Suchbegriff
-                searchTerms.firstOrNull()?.let { firstTerm ->
-                    filteredResults = searchIndex.entries
-                        .filter { (key, _) -> key.contains(firstTerm) }
-                        .flatMap { it.value }
-                        .toMutableSet()
-                }
-
-                // Für weitere Suchbegriffe (AND-Verknüpfung)
-                searchTerms.drop(1).forEach { term ->
-                    val termResults = searchIndex.entries
-                        .filter { (key, _) -> key.contains(term) }
-                        .flatMap { it.value }
-                        .toSet()
-                    filteredResults.retainAll(termResults)
-                }
-
-                filteredResults.sortedBy { it.name }
-            }
-
-            val duration = System.currentTimeMillis() - startTime
-            LoggingManager.log(
-                LogLevel.DEBUG,
-                LogMetadata(
-                    component = "ContactsStore",
-                    action = "FILTER_CONTACTS",
-                    details = mapOf(
-                        "query" to query,
-                        "duration_ms" to duration,
-                        "results_count" to results.size,
-                        "total_contacts" to allContacts.size
-                    )
-                ),
-                "Kontakte gefiltert (${duration}ms)"
-            )
-
-            results
-        }
-    }
-
-
-    fun cleanup() {
-        val startTime = System.currentTimeMillis()
-        try {
-            // 1. Zuerst isActive auf false setzen um weitere Observer-Callbacks zu verhindern
-            isActive.set(false)
-
-            // 2. WICHTIG: Handler-Queue SOFORT leeren (BEVOR unregister!)
-            // Verhindert dass pending Messages nach unregister noch laufen
-            observerHandler?.removeCallbacksAndMessages(null)
-
-            // 3. Jetzt sicher: Update Job canceln
-            updateJob?.cancel()
-
-            // 4. ContentObserver unregistern (Handler-Queue bereits leer)
-            contentObserver?.let { observer ->
-                contentResolver?.unregisterContentObserver(observer)
-            }
-
-            // 5. Cancelle Scopes (stoppt alle laufenden Coroutines)
-            storeScope.cancel()
-            scope.cancel()
-
-            // 6. Jetzt können wir sicher synchron clearen (keine concurrent access mehr)
-            // Kein runBlocking nötig, da alle Coroutines bereits gestoppt sind
-            allContacts.clear()
-            searchIndex.clear()
-            _contacts.value = emptyList()
-
-            // 7. Nullen setzen
-            observerHandler = null
-            contentObserver = null
-            contentResolver = null
-
-            LoggingManager.log(
-                LogLevel.INFO,
-                LogMetadata(
-                    component = "ContactsStore",
-                    action = "CLEANUP",
-                    details = mapOf(
-                        "duration_ms" to (System.currentTimeMillis() - startTime)
-                    )
-                ),
-                "ContactsStore erfolgreich bereinigt"
-            )
-        } catch (e: Exception) {
-            LoggingManager.log(
-                LogLevel.ERROR,
-                LogMetadata(
-                    component = "ContactsStore",
-                    action = "CLEANUP_ERROR",
-                    details = mapOf(
-                        "error" to e.message,
-                        "duration_ms" to (System.currentTimeMillis() - startTime)
-                    )
-                ),
-                "Fehler bei der Bereinigung des ContactsStore",
-                e
-            )
-        }
-    }
-
-
-    fun updateCountryCode(newCode: String) {
-        if (currentCountryCode != newCode) {
-            LoggingManager.log(
-                LogLevel.INFO,
-                LogMetadata(
-                    component = "ContactsStore",
-                    action = "UPDATE_COUNTRY_CODE",
-                    details = mapOf(
-                        "old_code" to currentCountryCode,
-                        "new_code" to newCode
-                    )
-                ),
-                "Ländervorwahl wird aktualisiert"
-            )
-
-            currentCountryCode = newCode
-
-            storeScope.launch {
-                try {
-                    contentResolver?.let {
-                        loadContacts(it)
-                        LoggingManager.log(
-                            LogLevel.INFO,
-                            LogMetadata(
-                                component = "ContactsStore",
-                                action = "COUNTRY_CODE_UPDATE_COMPLETE",
-                                details = mapOf(
-                                    "contacts_count" to allContacts.size
-                                )
-                            ),
-                            "Kontakte mit neuer Ländervorwahl geladen"
-                        )
-                    }
-                } catch (e: Exception) {
-                    LoggingManager.log(
-                        LogLevel.ERROR,
-                        LogMetadata(
-                            component = "ContactsStore",
-                            action = "COUNTRY_CODE_UPDATE_ERROR",
-                            details = mapOf(
-                                "error" to e.message,
-                                "error_type" to e.javaClass.simpleName
-                            )
-                        ),
-                        "Fehler beim Aktualisieren der Kontakte mit neuer Ländervorwahl",
-                        e
-                    )
-                }
-            }
-        }
-    }
-
-    private fun rebuildSearchIndex() {
-        searchIndex.clear()
-        allContacts.forEach { contact ->
-            // Indexiere nach Namen
-            contact.name.lowercase().split(" ").forEach { term ->
-                searchIndex.getOrPut(term) { mutableSetOf() }.add(contact)
-            }
-            // Indexiere nach Telefonnummer
-            contact.phoneNumber.filter { it.isDigit() }.windowed(3, 1).forEach { numberPart ->
-                searchIndex.getOrPut(numberPart) { mutableSetOf() }.add(contact)
-            }
-        }
-    }
-
-    private fun readContactsFromProvider(contentResolver: ContentResolver): List<Contact> {
-        // HashMap zur Gruppierung von Kontakten mit gleicher Nummer
-        val contactGroups = mutableMapOf<String, MutableList<Contact>>()
-
-        val projection = arrayOf(
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-            ContactsContract.CommonDataKinds.Phone.NUMBER,
-            ContactsContract.CommonDataKinds.Phone.TYPE,
-            ContactsContract.CommonDataKinds.Phone.IS_PRIMARY
-        )
-
-        val phoneFormatter = PhoneNumberFormatter()
-
-        val defaultRegion = when (currentCountryCode) {
-            "+49" -> "DE"
-            "+41" -> "CH"
-            else -> "AT"
-        }
-
-        try {
-            contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                projection,
-                null,
-                null,
-                "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC"
-            )?.use { cursor ->
-                val nameIndex =
-                    cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                val numberIndex =
-                    cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                val typeIndex =
-                    cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.TYPE)
-
-                while (cursor.moveToNext()) {
-                    val name = cursor.getString(nameIndex).orEmpty().trim()
-                    val phoneNumber = cursor.getString(numberIndex).orEmpty()
-                    val type = cursor.getInt(typeIndex)
-
-                    // Prüfe ob Telefonnummern-Formatierung aktiviert ist
-                    val isFormattingEnabled = prefsManager.isPhoneNumberFormattingEnabled()
-
-                    val finalPhoneNumber: String
-                    val description: String
-                    val normalizedNumber: String
-
-                    if (isFormattingEnabled) {
-                        // Formatiert die Telefonnummer
-                        val numberResult = phoneFormatter.formatPhoneNumber(phoneNumber, defaultRegion)
-
-                        if (name.isNotBlank() && numberResult.formattedNumber != null) {
-                            finalPhoneNumber = numberResult.formattedNumber.replace(" ", "")
-                            // Normalisierte Nummer für Map-Key
-                            normalizedNumber = finalPhoneNumber.filter { it.isDigit() }
-
-                            // Erstellt die beschreibende Information mit Formatierung
-                            description = buildString {
-                                append(numberResult.formattedNumber)
-                                numberResult.carrierInfo?.let { carrier ->
-                                    append(" | ")
-                                    append(carrier)
-                                }
-                                // Optional: Typ der Telefonnummer hinzufügen
-                                append(" | ")
-                                append(getPhoneTypeLabel(type))
-                            }
-                        } else {
-                            continue // Überspringe ungültige Nummern
-                        }
-                    } else {
-                        // Verwende die Originalnummer ohne Formatierung
-                        if (name.isNotBlank() && phoneNumber.isNotBlank()) {
-                            finalPhoneNumber = phoneNumber.trim()
-                            normalizedNumber = finalPhoneNumber.filter { it.isDigit() }
-
-                            // Einfache Beschreibung ohne Formatierung
-                            description = buildString {
-                                append(phoneNumber.trim())
-                                append(" | ")
-                                append(getPhoneTypeLabel(type))
-                            }
-                        } else {
-                            continue // Überspringe leere Nummern
-                        }
-                    }
-
-                    val contact = Contact(
-                        name = name,
-                        phoneNumber = finalPhoneNumber,
-                        description = description
-                    )
-
-                    // Füge den Kontakt zur entsprechenden Gruppe hinzu
-                    contactGroups.getOrPut(normalizedNumber) { mutableListOf() }.add(contact)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("ContactsStore", "Error reading contacts", e)
-        }
-
-        // Wähle aus jeder Gruppe den "besten" Kontakt aus
-        val finalContacts = mutableListOf<Contact>()
-        for (contacts in contactGroups.values) {
-            if (contacts.size == 1) {
-                // Wenn nur ein Kontakt, füge ihn direkt hinzu
-                finalContacts.add(contacts.first())
-            } else {
-                // Bei mehreren Kontakten mit der gleichen Nummer, wähle den besten aus
-                val bestContact = contacts.maxWithOrNull(::compareContacts)
-                bestContact?.let { finalContacts.add(it) }
-            }
-        }
-
-        return finalContacts.sortedBy { it.name }
-    }
-
-    // Hilfsfunktion zum Vergleichen von Kontakten
-    private fun compareContacts(a: Contact, b: Contact): Int {
-        // Längere Namen bevorzugen (oft enthalten diese mehr Informationen)
-        val lengthComparison = a.name.length.compareTo(b.name.length)
-        if (lengthComparison != 0) return lengthComparison
-
-        // Bei gleicher Länge alphabetisch sortieren
-        return a.name.compareTo(b.name)
-    }
-
-    private fun getPhoneTypeLabel(type: Int): String {
-        return when (type) {
-            ContactsContract.CommonDataKinds.Phone.TYPE_HOME -> "Privat"
-            ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE -> "Mobil"
-            ContactsContract.CommonDataKinds.Phone.TYPE_WORK -> "Geschäftlich"
-            else -> "Sonstige"
-        }
-    }
-
+    // sendTestSms moved to TestUtilsViewModel (Phase 1 Step 1.1)
+    // ContactsStore extracted to data/repository/ContactsRepositoryImpl.kt (Phase 1 Step 1.3)
 }
 

@@ -23,6 +23,8 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.Bott
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.SimManagementViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -180,6 +182,12 @@ class MainActivity : ComponentActivity() {
     private val simManagementViewModel: SimManagementViewModel by viewModels {
         SimManagementViewModel.Factory(AppContainer.requirePrefsManager())
     }
+    private val navigationViewModel: NavigationViewModel by viewModels {
+        NavigationViewModel.Factory(AppContainer.requirePrefsManager())
+    }
+    private val testUtilsViewModel: TestUtilsViewModel by viewModels {
+        TestUtilsViewModel.Factory(application, AppContainer.requirePrefsManager())
+    }
     private val _isLoading = MutableStateFlow(true)
     private val _loadingError = MutableStateFlow<String?>(null)
     private lateinit var permissionHandler: PermissionHandler
@@ -203,6 +211,11 @@ class MainActivity : ComponentActivity() {
             viewModel.updateServiceNotification()
         }
 
+        // Set ContactsViewModel callback to forward errors to NavigationViewModel
+        viewModel.onErrorOccurred = { errorState ->
+            navigationViewModel.setErrorState(errorState)
+        }
+
         // Normale Statusleiste - kein Edge-to-Edge
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
@@ -211,7 +224,7 @@ class MainActivity : ComponentActivity() {
             val emailForwardingActive = AppContainer.requirePrefsManager().isForwardSmsToEmail()
             if (viewModel.forwardingActive.value || emailForwardingActive) {
                 // Zeige Exit-Dialog mit Optionen zum Deaktivieren/Beibehalten
-                viewModel.onShowExitDialog()
+                navigationViewModel.onShowExitDialog()
             } else {
                 // Wenn keine Weiterleitung aktiv ist, beende direkt
                 finish()
@@ -731,11 +744,11 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun UI(viewModel: ContactsViewModel, emailViewModel: EmailViewModel) {
         val navController = rememberNavController()
-        val topBarTitle by viewModel.topBarTitle.collectAsState()
-        val navigationTarget by viewModel.navigationTarget.collectAsState()
-        val showExitDialog by viewModel.showExitDialog.collectAsState()
+        val topBarTitle by navigationViewModel.topBarTitle.collectAsState()
+        val navigationTarget by navigationViewModel.navigationTarget.collectAsState()
+        val showExitDialog by navigationViewModel.showExitDialog.collectAsState()
         val showProgressDialog by viewModel.showProgressDialog.collectAsState()
-        val errorState by viewModel.errorState.collectAsState()
+        val errorState by navigationViewModel.errorState.collectAsState()
         // showOwnNumberMissingDialog StateFlow entfernt
         val showSimNumbersDialog by simManagementViewModel.showSimNumbersDialog.collectAsState()
         val missingSims by simManagementViewModel.missingSims.collectAsState()
@@ -764,7 +777,7 @@ class MainActivity : ComponentActivity() {
                         saveState = true
                     }
                 }
-                viewModel.onNavigated()
+                navigationViewModel.onNavigated()
             }
         }
 
@@ -782,13 +795,13 @@ class MainActivity : ComponentActivity() {
                 ) {
                     composable("start") {
                         val currentCallState = callState.collectAsState()
-                        HomeScreen(viewModel, emailViewModel, currentCallState)
+                        HomeScreen(viewModel, emailViewModel, testUtilsViewModel, currentCallState)
                     }
                     composable("mail") {
                         MailScreen(emailViewModel)
                     }
                     composable("setup") {
-                        SettingsScreen(viewModel, emailViewModel)
+                        SettingsScreen(viewModel, emailViewModel, testUtilsViewModel, navigationViewModel)
                     }
                     composable("log") {
                         LogScreen(logViewModel)
@@ -831,14 +844,14 @@ class MainActivity : ComponentActivity() {
                 ExitDialog(
                     contact = selectedContact,
                     initialKeepForwarding = AppContainer.requirePrefsManager().getKeepForwardingOnExit(),
-                    onDismiss = { viewModel.hideExitDialog() },
+                    onDismiss = { navigationViewModel.hideExitDialog() },
                     onConfirm = { keepForwarding ->
-                        viewModel.hideExitDialog()
+                        navigationViewModel.hideExitDialog()
                         viewModel.startCleanup(keepForwarding)
                     },
                     onSettings = {
-                        viewModel.hideExitDialog()
-                        viewModel.navigateToSettings()
+                        navigationViewModel.hideExitDialog()
+                        navigationViewModel.navigateToSettings()
                     },
                     updateKeepForwardingOnExit = { keepForwarding ->
                         viewModel.updateKeepForwardingOnExit(keepForwarding)
@@ -856,15 +869,15 @@ class MainActivity : ComponentActivity() {
                 CleanupErrorDialog(
                     error = error,
                     onRetry = {
-                        viewModel.clearErrorState()
+                        navigationViewModel.clearErrorState()
                         viewModel.startCleanup(false)
                     },
                     onIgnore = {
-                        viewModel.clearErrorState()
+                        navigationViewModel.clearErrorState()
                         finish()
                     },
                     onDismiss = {
-                        viewModel.clearErrorState()
+                        navigationViewModel.clearErrorState()
                     }
                 )
             }

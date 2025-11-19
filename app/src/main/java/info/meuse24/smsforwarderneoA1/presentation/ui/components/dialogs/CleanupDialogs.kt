@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 
 /**
  * Progress dialog shown during app cleanup/exit process.
@@ -72,22 +73,22 @@ fun CleanupProgressDialog() {
  */
 @Composable
 fun CleanupErrorDialog(
-    error: ContactsViewModel.ErrorDialogState,
+    error: NavigationViewModel.ErrorDialogState,
     onRetry: () -> Unit,
     onIgnore: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val (title, message) = when (error) {
-        is ContactsViewModel.ErrorDialogState.DeactivationError ->
+        is NavigationViewModel.ErrorDialogState.DeactivationError ->
             Pair("Deaktivierung fehlgeschlagen", error.message)
 
-        is ContactsViewModel.ErrorDialogState.TimeoutError ->
+        is NavigationViewModel.ErrorDialogState.TimeoutError ->
             Pair(
                 "Zeitüberschreitung",
                 "Die Deaktivierung der Weiterleitung dauert zu lange."
             )
 
-        is ContactsViewModel.ErrorDialogState.GeneralError ->
+        is NavigationViewModel.ErrorDialogState.GeneralError ->
             Pair(
                 "Fehler",
                 "Ein unerwarteter Fehler ist aufgetreten: ${error.error.message}"

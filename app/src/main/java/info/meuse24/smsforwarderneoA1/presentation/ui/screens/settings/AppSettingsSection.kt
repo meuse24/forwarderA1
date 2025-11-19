@@ -25,18 +25,22 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 
 @Composable
 fun AppSettingsSection(
     viewModel: ContactsViewModel,
     emailViewModel: EmailViewModel,
+    testUtilsViewModel: TestUtilsViewModel,
+    navigationViewModel: NavigationViewModel,
     onFocusChanged: (Boolean) -> Unit,
     sectionTitleStyle: TextStyle
 ) {
     val filterText by viewModel.filterText.collectAsState()
-    val testSmsText by viewModel.testSmsText.collectAsState()
+    val testSmsText by testUtilsViewModel.testSmsText.collectAsState()
     val testEmailText by emailViewModel.testEmailText.collectAsState()
-    val topBarTitle by viewModel.topBarTitle.collectAsState()
+    val topBarTitle by navigationViewModel.topBarTitle.collectAsState()
     val mailScreenVisible by viewModel.mailScreenVisible.collectAsState()
     val phoneNumberFormatting by viewModel.phoneNumberFormatting.collectAsState()
 
@@ -81,7 +85,7 @@ fun AppSettingsSection(
 
         OutlinedTextField(
             value = testSmsText,
-            onValueChange = { viewModel.updateTestSmsText(it) },
+            onValueChange = { testUtilsViewModel.updateTestSmsText(it) },
             label = { Text("Text der Test-SMS") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -103,7 +107,7 @@ fun AppSettingsSection(
 
         OutlinedTextField(
             value = topBarTitle,
-            onValueChange = { viewModel.updateTopBarTitle(it) },
+            onValueChange = { navigationViewModel.updateTopBarTitle(it) },
             label = { Text("App Titel") },
             modifier = Modifier
                 .fillMaxWidth()

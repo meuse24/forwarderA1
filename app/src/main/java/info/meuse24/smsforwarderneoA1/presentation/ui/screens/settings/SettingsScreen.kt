@@ -22,9 +22,16 @@ import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ChangePinDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.PinDialog
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 
 @Composable
-fun SettingsScreen(viewModel: ContactsViewModel, emailViewModel: EmailViewModel) {
+fun SettingsScreen(
+    viewModel: ContactsViewModel,
+    emailViewModel: EmailViewModel,
+    testUtilsViewModel: TestUtilsViewModel,
+    navigationViewModel: NavigationViewModel
+) {
     val scrollState = rememberScrollState()
     LocalFocusManager.current
     var isAnyFieldFocused by remember { mutableStateOf(false) }
@@ -60,6 +67,8 @@ fun SettingsScreen(viewModel: ContactsViewModel, emailViewModel: EmailViewModel)
         AppSettingsSection(
             viewModel = viewModel,
             emailViewModel = emailViewModel,
+            testUtilsViewModel = testUtilsViewModel,
+            navigationViewModel = navigationViewModel,
             onFocusChanged = { isAnyFieldFocused = it },
             sectionTitleStyle = sectionTitleStyle
         )
