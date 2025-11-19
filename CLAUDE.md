@@ -171,17 +171,21 @@ The codebase was transformed from monolithic files to Clean Architecture:
 - Created 24 modular UI components in screens/ and components/
 - Improved maintainability and testability
 
-**Phase 5: ViewModel Decomposition ✅**
+**Phase 5: ViewModel Decomposition ✅ COMPLETE**
 - Extracted LogViewModel (134 lines) - logging logic
 - Extracted EmailViewModel (377 lines) - email management
 - Extracted SimManagementViewModel (107 lines) - SIM management
-- Reduced ContactsViewModel by 386 lines (-16.5%)
+- Extracted TestUtilsViewModel (198 lines) - test SMS functionality
+- Extracted NavigationViewModel (115 lines) - navigation & error state
+- Extracted ContactsRepositoryImpl (563 lines) - contacts data repository
+- **Total Reduction**: ContactsViewModel from 2,341 → 1,278 lines (-1,063 lines, -45%)
 
 **Current State:**
 - `MainActivity.kt`: 819 lines (focused activity core)
-- `ContactsViewModel.kt`: ~1,955 lines (still contains forwarding logic)
+- `ContactsViewModel.kt`: 1,278 lines (core contact selection & forwarding logic)
 - `PhoneSmsUtils.kt`: ~1,380 lines (SMS/phone utilities)
 - All critical fatal errors resolved (permissions, null safety, lifecycle, coroutines)
+- Clean ViewModel separation with Factory pattern and callback communication
 
 **⚠️ Branch Note:**
 - Current branch: `backup-broken-stand` (stable)
