@@ -29,26 +29,8 @@ git push https://meuse24:$GITHUB_TOKEN@github.com/meuse24/forwarderA1.git backup
 
 ## Build Commands
 
-### WSL Build Setup (CRITICAL)
-
-**This is a recurring issue. Always run before building:**
-
 ```bash
-# Fix line endings and set JAVA_HOME
-sed -i 's/\r$//' gradlew && chmod +x gradlew
-export JAVA_HOME="/mnt/c/Program Files/Android/Android Studio/jbr"
-
-# Build
-./gradlew assembleDebug
-```
-
-**Verify Java:**
-```bash
-"/mnt/c/Program Files/Android/Android Studio/jbr/bin/java.exe" -version
-```
-
-### Other Build Commands
-```bash
+./gradlew assembleDebug          # Debug build
 ./gradlew assembleRelease        # Release build
 ./gradlew installDebug           # Install to device
 ./gradlew compileDebugKotlin     # Quick compile check
