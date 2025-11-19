@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working with code in this repository.
+Guidance for Claude Code when working with this repository.
 
 ## Task Master AI Instructions
 **Import Task Master's development workflow commands and guidelines.**
@@ -8,198 +8,155 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Git Configuration
 
-### GitHub Repository
 - **Repository:** https://github.com/meuse24/forwarderA1
-- **Branch:** main
-- **Authentication:** Personal Access Token in `.env` as `GITHUB_TOKEN`
+- **Current Branch:** `backup-broken-stand` (stable)
+- **Main Branch:** `main` (contains failed Hilt DI experiment - do not use)
+- **Auth:** Personal Access Token in `.env` as `GITHUB_TOKEN`
 
-### Pushing to GitHub
 ```bash
+# Push to GitHub
 source .env
-git push https://meuse24:$GITHUB_TOKEN@github.com/meuse24/forwarderA1.git main
+git push https://meuse24:$GITHUB_TOKEN@github.com/meuse24/forwarderA1.git backup-broken-stand
 ```
 
 ## Project Overview
 
-SMS Forwarder Neo is an Android application that forwards received SMS messages via SMS and email. The app runs as a foreground service to ensure reliable message forwarding.
+**SMS Forwarder Neo** - Android app that forwards received SMS messages via SMS and email. Runs as foreground service for reliable background processing.
+
+- **Target SDK:** 34, **Min SDK:** 29 (Android 10+)
+- **Stack:** Kotlin 1.9.0, Jetpack Compose, JDK 17
+- **Architecture:** Clean Architecture (data/domain/presentation layers)
 
 ## Build Commands
 
-```bash
-# Build debug APK (most common)
-./gradlew assembleDebug
+### WSL Build Setup (CRITICAL)
 
-# Other commands
-./gradlew assembleRelease        # Release build
-./gradlew installDebug           # Install to device
-./gradlew test                   # Run tests
-./gradlew clean                  # Clean build
-```
-
-### Gradle Configuration
-- Target SDK: 34, Min SDK: 29 (Android 10+)
-- JDK 17, Kotlin 1.9.0, Jetpack Compose
-- Version catalog: `gradle/libs.versions.toml`
-
-### WSL Build Environment
-
-**CRITICAL: This is a recurring issue. Always fix before building.**
+**This is a recurring issue. Always run before building:**
 
 ```bash
 # Fix line endings and set JAVA_HOME
 sed -i 's/\r$//' gradlew && chmod +x gradlew
 export JAVA_HOME="/mnt/c/Program Files/Android/Android Studio/jbr"
+
+# Build
 ./gradlew assembleDebug
 ```
 
-**Java Location:**
-- WSL path: `/mnt/c/Program Files/Android/Android Studio/jbr`
-- Verify: `"/mnt/c/Program Files/Android/Android Studio/jbr/bin/java.exe" -version`
+**Verify Java:**
+```bash
+"/mnt/c/Program Files/Android/Android Studio/jbr/bin/java.exe" -version
+```
 
-## Architecture Overview
+### Other Build Commands
+```bash
+./gradlew assembleRelease        # Release build
+./gradlew installDebug           # Install to device
+./gradlew compileDebugKotlin     # Quick compile check
+./gradlew test                   # Run tests
+./gradlew clean                  # Clean build
+```
 
-### Package Structure (Clean Architecture)
+## Architecture
 
+### Package Structure
 ```
 info.meuse24.smsforwarderneoA1/
 ├── data/
 │   ├── local/              # Logger, SharedPreferencesManager
 │   └── repository/         # ContactsRepositoryImpl
-├── domain/
-│   └── model/             # Contact, LogEntry
+├── domain/model/           # Contact, LogEntry
 ├── presentation/
 │   ├── ui/
 │   │   ├── screens/       # home/, mail/, settings/, logs/, info/
 │   │   └── components/    # dialogs/, navigation/
-│   ├── viewmodel/         # LogViewModel, EmailViewModel, SimManagementViewModel
-│   └── state/             # ContactsState
+│   ├── viewmodel/         # All ViewModels (6 total)
+│   └── state/             # UI state models
 ├── service/               # SmsReceiver, SmsForegroundService
-└── util/
-    ├── email/             # EmailSender
-    ├── permission/        # PermissionHelper
-    ├── phone/             # CarrierTrie
-    └── sms/               # Gsm7BitEncoder
+└── util/                  # email/, permission/, phone/, sms/
 ```
 
-### Core Components
-
-**Application Layer:**
-- `SmsForwarderApplication.kt` - AppContainer (DI), LoggingManager, SnackbarManager
-
-**Service Layer:**
+### Key Files (Current State)
+- `MainActivity.kt` - 819 lines (Activity core, permissions)
+- `ContactsViewModel.kt` - 1,278 lines (contact selection, forwarding)
+- `PhoneSmsUtils.kt` - 1,380 lines (SMS/phone utilities)
+- `SmsForegroundService.kt` - Foreground service with WakeLock, parallel forwarding
 - `SmsReceiver.kt` - BroadcastReceiver for incoming SMS
-- `SmsForegroundService.kt` - Foreground service with WakeLock, parallel forwarding, multi-part SMS reconstruction
 
-**UI Layer:**
-- `MainActivity.kt` (819 lines) - Activity core, permission handling
-- `presentation/ui/screens/` - Modular screen components (home, mail, settings, logs, info)
-- `presentation/ui/components/` - Dialogs and navigation
+### ViewModels (Factory Pattern)
+- `ContactsViewModel` - Core contact selection & forwarding logic
+- `LogViewModel` - Logging display & filtering
+- `EmailViewModel` - Email configuration & sending
+- `SimManagementViewModel` - SIM card management
+- `TestUtilsViewModel` - Test SMS functionality
+- `NavigationViewModel` - Navigation & error state
 
-**Data Layer:**
-- `ContactsViewModel.kt` (~1,955 lines) - Main ViewModel
-- `LogViewModel.kt`, `EmailViewModel.kt`, `SimManagementViewModel.kt` - Extracted ViewModels
-- `SharedPreferencesManager.kt` - Encrypted preferences
-- `ContactsRepositoryImpl.kt` - Contacts data repository
-- `Logger.kt` - Structured logging with XML persistence
+### Data Layer
+- `SharedPreferencesManager` - Encrypted preferences (androidx.security.crypto)
+- `ContactsRepositoryImpl` - Contacts data with ContentObserver
+- `Logger` - Structured XML logging with rotation & export
 
-**Utilities:**
-- `PhoneSmsUtils.kt` - SMS sending, phone number formatting, carrier detection
-- `EmailSender.kt` - SMTP email sending
-- `CarrierTrie.kt` - Carrier prefix lookup
-
-### Data Flow
-1. SMS Reception: `SmsReceiver` → `SmsForegroundService`
-2. Processing: Multi-part reconstruction, parallel forwarding
-3. Output: SMS via `PhoneSmsUtils`, email via `EmailSender`
-4. Feedback: `SnackbarManager`, `LoggingManager`
+### Service Layer
+- `SmsForegroundService` - Multi-part SMS reconstruction, parallel SMS/email forwarding, WakeLock, heartbeat monitoring
+- `SmsReceiver` - Receives `SMS_RECEIVED_ACTION`, forwards to service
 
 ## Development Guidelines
 
-### Permissions Required
-- `RECEIVE_SMS`, `SEND_SMS` - Core SMS functionality
+### Required Permissions
+- `RECEIVE_SMS`, `SEND_SMS` - SMS functionality
 - `READ_CONTACTS` - Contact selection
-- `CALL_PHONE`, `READ_PHONE_STATE` - Phone number utilities
-- `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_PHONE_CALL` - Background processing
+- `CALL_PHONE`, `READ_PHONE_STATE` - USSD codes, phone utilities
+- `FOREGROUND_SERVICE*` - Background processing
 - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` - Service reliability
 
-### Data Security
+### Security
 - All preferences encrypted via `androidx.security.crypto`
 - SMTP passwords stored securely
-- Phone numbers logged for debugging
+- Phone numbers logged for debugging (acceptable for private app)
+
+### Multi-part SMS
+- Grouped by `sender + referenceNumber`
+- Ordered by `sequencePosition`, then `timestamp`
+- Automatically reconstructed before forwarding
 
 ### Service Management
-- Use `SmsForegroundService.startService(context)` / `stopService(context)`
-- Service uses `START_STICKY` for automatic restart
-- Heartbeat monitoring with auto-restart logic
+```kotlin
+SmsForegroundService.startService(context)
+SmsForegroundService.stopService(context)
+```
+- Uses `START_STICKY` for auto-restart
+- Heartbeat monitoring with cooldown logic
 
-### Multi-part SMS Handling
-- Messages grouped by `sender + referenceNumber`
-- Parts ordered by `sequencePosition` then `timestamp`
-- Automatic reconstruction before forwarding
+## Common Tasks
 
-## Common Development Tasks
+### Add New Preference
+1. Add getter/setter to `SharedPreferencesManager` (with encryption)
+2. Add StateFlow to appropriate ViewModel
+3. Update UI in relevant screen component
 
-### Adding New Preferences
-1. Add to `SharedPreferencesManager` with encryption
-2. Update UI in appropriate screen component
-3. Handle migration if needed
+### Modify SMS Processing
+1. Edit `SmsForegroundService.processMessageGroup()`
+2. Add logging via `LoggingManager.log()`
+3. Test with single & multi-part messages
 
-### Modifying SMS Processing Logic
-1. Modify `SmsForegroundService.processMessageGroup()`
-2. Update logging in `LoggingManager` calls
-3. Test with single and multi-part messages
+### Add UI Screen
+1. Create composable in `presentation/ui/screens/<name>/`
+2. Add navigation route in `MainActivity.kt`
+3. Update `BottomNavigationBar` if needed
 
-### Adding UI Components
-- Add screens to `presentation/ui/screens/`
-- Add reusable components to `presentation/ui/components/`
-- Update `MainActivity.kt` navigation if needed
+### Add ViewModel
+1. Create in `presentation/viewmodel/`
+2. Implement `Factory` inner class
+3. Instantiate in `MainActivity` via `viewModels { Factory(...) }`
+4. Pass to composables as parameter
 
-## Refactoring Status
+## Current Architecture Status
 
-### Completed Clean Architecture Refactoring (2025-11)
+**Clean Architecture refactoring completed (Phases 1-5):**
+- ✅ Package structure established
+- ✅ Domain models extracted
+- ✅ Data layer separated (Logger, SharedPrefs, Repository)
+- ✅ MainActivity decomposed: 3,870 → 819 lines (-79%)
+- ✅ ViewModels extracted: ContactsViewModel 2,341 → 1,278 lines (-45%)
+- ✅ All critical errors resolved (permissions, null safety, lifecycle, coroutines)
 
-The codebase was transformed from monolithic files to Clean Architecture:
-
-**Phase 1-3: Foundation & Data Layer ✅**
-- Established package structure (data/, domain/, presentation/, service/, util/)
-- Extracted domain models (Contact, LogEntry, ContactsState)
-- Extracted data layer (Logger, SharedPreferencesManager, ContactsRepositoryImpl)
-- Extracted utilities (EmailSender, PermissionHelper, Gsm7BitEncoder, CarrierTrie)
-
-**Phase 4: MainActivity UI Decomposition ✅**
-- Reduced MainActivity from 3,870 → 819 lines (-79%)
-- Created 24 modular UI components in screens/ and components/
-- Improved maintainability and testability
-
-**Phase 5: ViewModel Decomposition ✅ COMPLETE**
-- Extracted LogViewModel (134 lines) - logging logic
-- Extracted EmailViewModel (377 lines) - email management
-- Extracted SimManagementViewModel (107 lines) - SIM management
-- Extracted TestUtilsViewModel (198 lines) - test SMS functionality
-- Extracted NavigationViewModel (115 lines) - navigation & error state
-- Extracted ContactsRepositoryImpl (563 lines) - contacts data repository
-- **Total Reduction**: ContactsViewModel from 2,341 → 1,278 lines (-1,063 lines, -45%)
-
-**Current State:**
-- `MainActivity.kt`: 819 lines (focused activity core)
-- `ContactsViewModel.kt`: 1,278 lines (core contact selection & forwarding logic)
-- `PhoneSmsUtils.kt`: ~1,380 lines (SMS/phone utilities)
-- All critical fatal errors resolved (permissions, null safety, lifecycle, coroutines)
-- Clean ViewModel separation with Factory pattern and callback communication
-
-**⚠️ Branch Note:**
-- Current branch: `backup-broken-stand` (stable)
-- `main` branch contains failed Hilt DI experiment (do not use)
-
-## Critical Issues - All Resolved ✅
-
-All 7 critical fatal errors fixed (2025-09-17):
-1. ✅ USSD permission logic corrected
-2. ✅ Lateinit property guards added
-3. ✅ MainActivity initialization race condition fixed
-4. ✅ System service null checks added
-5. ✅ ContentObserver lifecycle fixed
-6. ✅ Unsafe type casts replaced with safe casts
-7. ✅ Comprehensive exception handling in coroutines
-
-Application is stable and production-ready.
+**App is stable and production-ready.**
