@@ -120,6 +120,10 @@ dependencies {
     implementation(libs.compose.icons.core)
     implementation(libs.compose.icons.extended)
     implementation(libs.androidx.datastore.core.android)
+
+    // Animation & Visual Effects
+    implementation("com.airbnb.android:lottie-compose:6.1.0")
+
     testImplementation(libs.junit)
 
     androidTestImplementation(libs.androidx.junit)

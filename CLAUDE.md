@@ -44,8 +44,7 @@ git push https://meuse24:$GITHUB_TOKEN@github.com/meuse24/forwarderA1.git backup
 ```
 info.meuse24.smsforwarderneoA1/
 ├── data/
-│   ├── local/              # Logger, SharedPreferencesManager
-│   └── repository/         # ContactsRepositoryImpl
+│   └── local/              # Logger, SharedPreferencesManager
 ├── domain/model/           # Contact, LogEntry
 ├── presentation/
 │   ├── ui/
@@ -58,8 +57,8 @@ info.meuse24.smsforwarderneoA1/
 ```
 
 ### Key Files (Current State)
-- `MainActivity.kt` - 819 lines (Activity core, permissions)
-- `ContactsViewModel.kt` - 1,278 lines (contact selection, forwarding)
+- `MainActivity.kt` - 835 lines (Activity core, permissions, Contact Picker)
+- `ContactsViewModel.kt` - 850 lines (contact selection via picker, forwarding)
 - `PhoneSmsUtils.kt` - 1,380 lines (SMS/phone utilities)
 - `SmsForegroundService.kt` - Foreground service with WakeLock, parallel forwarding
 - `SmsReceiver.kt` - BroadcastReceiver for incoming SMS
@@ -73,8 +72,7 @@ info.meuse24.smsforwarderneoA1/
 - `NavigationViewModel` - Navigation & error state
 
 ### Data Layer
-- `SharedPreferencesManager` - Encrypted preferences (androidx.security.crypto)
-- `ContactsRepositoryImpl` - Contacts data with ContentObserver
+- `SharedPreferencesManager` - Encrypted preferences (androidx.security.crypto), stores contact name & number
 - `Logger` - Structured XML logging with rotation & export
 
 ### Service Layer
@@ -136,9 +134,26 @@ SmsForegroundService.stopService(context)
 **Clean Architecture refactoring completed (Phases 1-5):**
 - ✅ Package structure established
 - ✅ Domain models extracted
-- ✅ Data layer separated (Logger, SharedPrefs, Repository)
-- ✅ MainActivity decomposed: 3,870 → 819 lines (-79%)
-- ✅ ViewModels extracted: ContactsViewModel 2,341 → 1,278 lines (-45%)
+- ✅ Data layer separated (Logger, SharedPrefs)
+- ✅ MainActivity decomposed: 3,870 → 835 lines (-78%)
+- ✅ ViewModels extracted: ContactsViewModel 2,341 → 850 lines (-64%)
 - ✅ All critical errors resolved (permissions, null safety, lifecycle, coroutines)
+
+**Contact Selection Simplification (2025-01-20):**
+- ✅ Replaced contact list + search with Android Contact Picker
+- ✅ Removed ContactsRepositoryImpl (~582 lines)
+- ✅ Removed 4 UI components (FilterAndLogo, ContactList, ControlButtons, ForwardingStatus)
+- ✅ Contact data stored directly in SharedPreferencesManager
+- ✅ Net reduction: -1,249 lines of code
+- ✅ New features: Reset button, Status query button, Test-SMS in contact card
+
+**Contact Selection UI:**
+- **No contact selected:** Large "Kontakt für Weiterleitung auswählen" button → launches Android Contact Picker
+- **Contact selected:** Card showing name, number, type with buttons:
+  - "Kontakt ändern" / "Test-SMS" (top row)
+  - "Deaktivieren" (bottom, red, full width)
+- **Always visible:**
+  - "Status abfragen" button (queries MMI forwarding status)
+  - "Alle Weiterleitungen zurücksetzen" button (red, stops SMS + email forwarding, queries status)
 
 **App is stable and production-ready.**
