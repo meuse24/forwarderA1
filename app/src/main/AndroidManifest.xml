@@ -42,15 +42,13 @@
         </provider>
 
         <service
-            android:name=".SmsForegroundService"
+            android:name=".service.SmsForegroundService"
             android:exported="false"
             android:foregroundServiceType="phoneCall" />
 
-        <receiver android:name=".SmsReceiver" android:exported="true"
-            >
+        <receiver android:name=".service.SmsReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-                 <action android:name="info.meuse24.smsforwarderneoA1.ACTION" />
             </intent-filter>
         </receiver>
 

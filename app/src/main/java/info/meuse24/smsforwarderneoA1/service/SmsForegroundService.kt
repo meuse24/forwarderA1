@@ -1,38 +1,36 @@
-package info.meuse24.smsforwarderneoA1
+package info.meuse24.smsforwarderneoA1.service
 
-import android.app.Activity
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.provider.Telephony
-import android.telephony.ServiceState
 import android.telephony.SmsMessage
-import android.telephony.TelephonyManager
-import android.util.Log
 import androidx.core.app.NotificationCompat
+import info.meuse24.smsforwarderneoA1.AppContainer
+import info.meuse24.smsforwarderneoA1.BuildConfig
+import info.meuse24.smsforwarderneoA1.LoggingManager
+import info.meuse24.smsforwarderneoA1.MainActivity
+import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
+import info.meuse24.smsforwarderneoA1.R
+import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -43,106 +41,14 @@ import java.util.Date
 import java.util.Locale
 import javax.mail.MessagingException
 
-class SmsReceiver : BroadcastReceiver() {
-
-    companion object {
-        private const val TAG = "SmsReceiver"
-    }
-
-    // prefsManager entfernt - wird in SmsReceiver nicht verwendet
-    // SmsForegroundService hat eigene lazy prefsManager Instanz
-
-    /**
-     * Diese Methode wird aufgerufen, wenn eine Broadcast-Nachricht empfangen wird.
-     * Sie verarbeitet eingehende SMS und gesendete SMS-Bestätigungen.
-     */
-    override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG, "onReceive: ${intent.action}")
-        when (intent.action) {
-            Telephony.Sms.Intents.SMS_RECEIVED_ACTION -> {
-                if (isSmsIntentValid(intent)) {
-                    handleSmsReceived(context, intent)
-                } else {
-                    LoggingManager.logWarning(
-                        component = "SmsReceiver",
-                        action = "INVALID_SMS",
-                        message = "Ungültige SMS empfangen"
-                    )
-                }
-            }
-
-            "SMS_SENT" -> handleSmsSent()
-            else -> Log.d(TAG, "Unbekannte Aktion empfangen: ${intent.action}")
-        }
-    }
-
-    private fun isSmsIntentValid(intent: Intent): Boolean {
-        val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-        if (messages.isNullOrEmpty()) {
-            Log.w(TAG, "Received SMS intent with no messages")
-            return false
-        }
-
-        for (smsMessage in messages) {
-            val sender = smsMessage.originatingAddress
-            val messageBody = smsMessage.messageBody
-
-            if (sender.isNullOrEmpty() || messageBody.isNullOrEmpty()) {
-                Log.w(TAG, "Received SMS with empty sender or body")
-                return false
-            }
-        }
-        return true
-    }
-
-    /**
-     * Verarbeitet eingehende SMS-Nachrichten.
-     * Wenn die Weiterleitung aktiviert ist, werden die Nachrichten zusammengeführt und weitergeleitet.
-     */
-    private fun handleSmsReceived(context: Context, intent: Intent) {
-        val serviceIntent = Intent(context, SmsForegroundService::class.java).apply {
-            action = "PROCESS_SMS"
-            // Kopiere alle SMS-relevanten Extras
-            intent.extras?.let { extras ->
-                putExtras(extras)
-            }
-            // Füge die Original-Action hinzu
-            putExtra("original_action", intent.action)
-            flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
-        }
-
-        LoggingManager.logInfo(
-            component = "SmsReceiver",
-            action = "FORWARD_TO_SERVICE",
-            message = "SMS-Daten an Service übergeben",
-            details = mapOf(
-                "has_extras" to (intent.extras != null),
-                "extras_count" to (intent.extras?.size() ?: 0)
-            )
-        )
-        context.startForegroundService(serviceIntent)
-    }
-
-    /**
-     * Verarbeitet Bestätigungen für gesendete SMS.
-     */
-    private fun handleSmsSent() {
-        val resultMessage = when (resultCode) {
-            Activity.RESULT_OK -> "SMS erfolgreich gesendet"
-            else -> "SMS senden fehlgeschlagen"
-        }
-
-        SnackbarManager.showInfo("SMSReceiver: $resultMessage")
-    }
-}
-
 data class SmsMessagePart(
     val body: String,
     val timestamp: Long,
     val referenceNumber: Int,
     val sequencePosition: Int,
     val totalParts: Int,
-    val sender: String
+    val sender: String,
+    val subscriptionId: Int = -1  // -1 = unbekannt/nicht verfügbar
 )
 
 class SmsForegroundService : Service() {
@@ -386,6 +292,9 @@ class SmsForegroundService : Service() {
     private suspend fun processSmsData(extras: Bundle) {
         withWakeLock(2 * 60 * 1000L) {
             try {
+                // Extrahiere Subscription ID aus Intent (für Multi-SIM-Support)
+                val subscriptionId = extras.getInt("subscription", -1)
+
                 val smsIntent = Intent().apply {
                     action = Telephony.Sms.Intents.SMS_RECEIVED_ACTION
                     putExtras(extras)
@@ -411,7 +320,8 @@ class SmsForegroundService : Service() {
                                 referenceNumber = smsMessage.messageRef,
                                 sequencePosition = smsMessage.indexOnIcc,
                                 totalParts = messages.size,
-                                sender = sender
+                                sender = sender,
+                                subscriptionId = subscriptionId
                             )
                         }
                     }
@@ -439,7 +349,8 @@ class SmsForegroundService : Service() {
                     message = "SMS-Verarbeitung abgeschlossen",
                     details = mapOf(
                         "messages_count" to messages.size,
-                        "groups_count" to messageGroups.size
+                        "groups_count" to messageGroups.size,
+                        "subscription_id" to subscriptionId
                     )
                 )
 
@@ -472,7 +383,8 @@ class SmsForegroundService : Service() {
                     "sender" to sender,
                     "parts_count" to parts.size,
                     "total_length" to fullMessage.length,
-                    "is_multipart" to (parts.size > 1)
+                    "is_multipart" to (parts.size > 1),
+                    "subscription_id" to (parts.firstOrNull()?.subscriptionId ?: -1)
                 )
             )
 
@@ -482,7 +394,8 @@ class SmsForegroundService : Service() {
                 if (prefsManager.isForwardingActive()) {
                     launch {
                         prefsManager.getSelectedPhoneNumber().let { forwardToNumber ->
-                            val forwardedMessage = buildForwardedSmsMessage(sender, fullMessage)
+                            val subscriptionId = parts.firstOrNull()?.subscriptionId ?: -1
+                            val forwardedMessage = buildForwardedSmsMessage(sender, fullMessage, subscriptionId)
                             withContext(Dispatchers.IO) {
                                 forwardSms(forwardToNumber, forwardedMessage)
                             }
@@ -567,10 +480,20 @@ class SmsForegroundService : Service() {
         }
     }
 
-    private fun buildForwardedSmsMessage(sender: String, message: String): String {
+    private fun buildForwardedSmsMessage(
+        sender: String,
+        message: String,
+        subscriptionId: Int = -1
+    ): String {
         return buildString {
             append("Von: ").append(sender).append("\n")
             append("Zeit: ").append(getCurrentTimestamp()).append("\n")
+
+            // Multi-SIM: Zeige über welche SIM die SMS empfangen wurde
+            if (subscriptionId != -1) {
+                append("SIM: Slot ").append(subscriptionId).append("\n")
+            }
+
             append("Nachricht:\n").append(message)
             if (message.length > 160) {
                 append("\n\n(Lange Nachricht, ${message.length} Zeichen)")
