@@ -418,24 +418,6 @@ class MainActivity : ComponentActivity() {
                 )
             )
 
-            // Warnung bei mehreren SIM-Karten
-            if (simInfoList.size > 1) {
-                withContext(Dispatchers.Main) {
-                    SnackbarManager.showWarning(
-                        "Diese App wurde nur mit einer SIM-Karte getestet. Bei ${simInfoList.size} SIM-Karten können unerwartete Probleme auftreten.",
-                        duration = SnackbarManager.Duration.LONG
-                    )
-                }
-                LoggingManager.logWarning(
-                    component = "MainActivity",
-                    action = "MULTI_SIM_WARNING",
-                    message = "Multi-SIM Warnung angezeigt",
-                    details = mapOf(
-                        "sim_count" to simInfoList.size,
-                        "sim_slots" to simInfoList.map { "Slot ${it.slotIndex}: ${it.carrierName ?: "Unknown"}" }
-                    )
-                )
-            }
 
         } catch (e: Exception) {
             LoggingManager.logError(
