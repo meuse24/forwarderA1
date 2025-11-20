@@ -1,6 +1,8 @@
 package info.meuse24.smsforwarderneoA1.ui.theme
 
 import androidx.compose.animation.core.*
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
@@ -104,77 +106,6 @@ object AnimationSpecs {
             easing = LinearEasing
         ),
         repeatMode = RepeatMode.Restart
-    )
-}
-
-// Transition Specs for AnimatedVisibility
-object TransitionSpecs {
-    /**
-     * Slide in from top
-     */
-    @Composable
-    fun slideInFromTop() = slideInVertically(
-        initialOffsetY = { -it },
-        animationSpec = tween(
-            durationMillis = AnimationDuration.NORMAL,
-            easing = FastOutSlowInEasing
-        )
-    )
-
-    /**
-     * Slide out to top
-     */
-    @Composable
-    fun slideOutToTop() = slideOutVertically(
-        targetOffsetY = { -it },
-        animationSpec = tween(
-            durationMillis = AnimationDuration.NORMAL,
-            easing = FastOutSlowInEasing
-        )
-    )
-
-    /**
-     * Fade in
-     */
-    @Composable
-    fun fadeIn() = fadeIn(
-        animationSpec = tween(
-            durationMillis = AnimationDuration.NORMAL
-        )
-    )
-
-    /**
-     * Fade out
-     */
-    @Composable
-    fun fadeOut() = fadeOut(
-        animationSpec = tween(
-            durationMillis = AnimationDuration.FAST
-        )
-    )
-
-    /**
-     * Scale in
-     */
-    @Composable
-    fun scaleIn() = scaleIn(
-        initialScale = 0.8f,
-        animationSpec = tween(
-            durationMillis = AnimationDuration.NORMAL,
-            easing = FastOutSlowInEasing
-        )
-    )
-
-    /**
-     * Scale out
-     */
-    @Composable
-    fun scaleOut() = scaleOut(
-        targetScale = 0.8f,
-        animationSpec = tween(
-            durationMillis = AnimationDuration.FAST,
-            easing = FastOutSlowInEasing
-        )
     )
 }
 
