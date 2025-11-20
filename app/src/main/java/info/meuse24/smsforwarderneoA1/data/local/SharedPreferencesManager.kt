@@ -207,9 +207,24 @@ class SharedPreferencesManager(private val context: Context) {
     fun getSelectedPhoneNumber(): String =
         getPreference(KEY_SELECTED_PHONE, "")
 
+    fun saveContactName(name: String) {
+        setPreference(KEY_CONTACT_NAME, name)
+
+        LoggingManager.logInfo(
+            component = "SharedPreferencesManager",
+            action = "SAVE_CONTACT_NAME",
+            message = "Kontaktname gespeichert",
+            details = mapOf("name" to name)
+        )
+    }
+
+    fun getContactName(): String =
+        getPreference(KEY_CONTACT_NAME, "")
+
     fun clearSelection() {
         prefs.edit().apply {
             setPreference(KEY_SELECTED_PHONE, "")
+            setPreference(KEY_CONTACT_NAME, "")
             putBoolean(KEY_FORWARDING_ACTIVE, false)
             apply()
         }
@@ -487,6 +502,7 @@ class SharedPreferencesManager(private val context: Context) {
         private const val DEFAULT_COUNTRY_CODE = "+43"
         private const val KEY_FORWARDING_ACTIVE = "forwarding_active"
         private const val KEY_SELECTED_PHONE = "selected_phone_number"
+        private const val KEY_CONTACT_NAME = "contact_name"
         private const val KEY_KEEP_FORWARDING_ON_EXIT = "keep_forwarding_on_exit"
         private const val KEY_MAIL_SCREEN_VISIBLE = "mail_screen_visible"
         private const val KEY_PHONE_NUMBER_FORMATTING = "phone_number_formatting"

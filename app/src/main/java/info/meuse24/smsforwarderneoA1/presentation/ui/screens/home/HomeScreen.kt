@@ -11,14 +11,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
@@ -31,12 +45,8 @@ fun HomeScreen(
     testUtilsViewModel: TestUtilsViewModel,
     callState: androidx.compose.runtime.State<Int>
 ) {
-    val contacts by viewModel.contacts.collectAsState()
     val selectedContact by viewModel.selectedContact.collectAsState()
     val forwardingActive by viewModel.forwardingActive.collectAsState()
-    val filterText by viewModel.filterText.collectAsState()
-    val forwardSmsToEmail by emailViewModel.forwardSmsToEmail.collectAsState()
-    val emailAddresses by emailViewModel.emailAddresses.collectAsState()
     val currentCallState by callState
 
     // Check if call is active (for button disabling)
@@ -47,13 +57,6 @@ fun HomeScreen(
         viewModel.initialize()
     }
 
-    // Filter neu anwenden beim Betreten des Screens
-    LaunchedEffect(Unit) {
-        if (filterText.isNotEmpty()) {
-            viewModel.applyCurrentFilter()
-        }
-    }
-
     BoxWithConstraints {
         @Suppress("UNUSED_EXPRESSION")
         val isLandscape = this.maxWidth > this.maxHeight
@@ -61,26 +64,20 @@ fun HomeScreen(
         if (isLandscape) {
             LandscapeLayout(
                 viewModel = viewModel,
+                emailViewModel = emailViewModel,
                 testUtilsViewModel = testUtilsViewModel,
-                contacts = contacts,
                 selectedContact = selectedContact,
                 forwardingActive = forwardingActive,
-                filterText = filterText,
-                forwardSmsToEmail = forwardSmsToEmail,
-                emailAddresses = emailAddresses,
                 isCallActive = isCallActive,
                 callState = currentCallState
             )
         } else {
             PortraitLayout(
                 viewModel = viewModel,
+                emailViewModel = emailViewModel,
                 testUtilsViewModel = testUtilsViewModel,
-                contacts = contacts,
                 selectedContact = selectedContact,
                 forwardingActive = forwardingActive,
-                filterText = filterText,
-                forwardSmsToEmail = forwardSmsToEmail,
-                emailAddresses = emailAddresses,
                 isCallActive = isCallActive,
                 callState = currentCallState
             )
@@ -91,63 +88,95 @@ fun HomeScreen(
 @Composable
 fun LandscapeLayout(
     viewModel: ContactsViewModel,
+    emailViewModel: EmailViewModel,
     testUtilsViewModel: TestUtilsViewModel,
-    contacts: List<Contact>,
     selectedContact: Contact?,
     forwardingActive: Boolean,
-    filterText: String,
-    forwardSmsToEmail: Boolean,
-    emailAddresses: List<String>,
     isCallActive: Boolean,
     callState: Int
 ) {
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .padding(0.dp)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ContactListBox(
-            contacts = contacts,
-            selectedContact = selectedContact,
-            onSelectContact = viewModel::toggleContactSelection,
+        // Left side: Contact selection
+        Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight(),
-            isCallActive = isCallActive
-        )
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            ContactSelectionSection(
+                selectedContact = selectedContact,
+                forwardingActive = forwardingActive,
+                isCallActive = isCallActive,
+                onSelectContact = { viewModel.launchContactPicker() },
+                onDeactivate = { viewModel.deactivateCurrentForwarding() },
+                onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
+            )
+        }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
+        // Right side: Status and controls
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            FilterAndLogo(
-                filterText = filterText,
-                onFilterTextChange = {
-                    viewModel.updateFilterText(it)
-                },
-                forwardingActive = forwardingActive,
-                onDeactivateForwarding = viewModel::deactivateForwarding
-            )
-
             CallStatusCard(callState = callState)
 
-            ForwardingStatus(
-                forwardingActive = forwardingActive,
-                selectedContact = selectedContact,
-                forwardSmsToEmail = forwardSmsToEmail,
-                emailAddresses = emailAddresses,
-                onQueryStatus = viewModel::queryForwardingStatus
-            )
+            Spacer(modifier = Modifier.weight(1f))
 
-            ControlButtons(
-                onDeactivateForwarding = viewModel::deactivateForwarding,
-                onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) },
-                isEnabled = selectedContact != null
-            )
+            // Bottom buttons
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Status Info Button
+                OutlinedButton(
+                    onClick = { viewModel.queryForwardingStatus() },
+                    enabled = !isCallActive,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Status abfragen",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Status abfragen",
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // Reset Button
+                Button(
+                    onClick = {
+                        viewModel.deactivateCurrentForwarding()
+                        emailViewModel.updateForwardSmsToEmail(false)
+                        viewModel.queryForwardingStatus()
+                    },
+                    enabled = !isCallActive,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Reset",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Alle Weiterleitungen zurücksetzen",
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
     }
 }
@@ -155,57 +184,216 @@ fun LandscapeLayout(
 @Composable
 fun PortraitLayout(
     viewModel: ContactsViewModel,
+    emailViewModel: EmailViewModel,
     testUtilsViewModel: TestUtilsViewModel,
-    contacts: List<Contact>,
     selectedContact: Contact?,
     forwardingActive: Boolean,
-    filterText: String,
-    forwardSmsToEmail: Boolean,
-    emailAddresses: List<String>,
     isCallActive: Boolean,
     callState: Int
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(4.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        FilterAndLogo(
-            filterText = filterText,
-            onFilterTextChange = {
-                viewModel.updateFilterText(it)
-            },
-            forwardingActive = forwardingActive,
-            onDeactivateForwarding = viewModel::deactivateForwarding
-        )
-
-        ContactListBox(
-            contacts = contacts,
+        // Contact selection section
+        ContactSelectionSection(
             selectedContact = selectedContact,
-            onSelectContact = viewModel::toggleContactSelection,
-            modifier = Modifier.weight(1f),
-            isCallActive = isCallActive
+            forwardingActive = forwardingActive,
+            isCallActive = isCallActive,
+            onSelectContact = { viewModel.launchContactPicker() },
+            onDeactivate = { viewModel.deactivateCurrentForwarding() },
+            onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
         )
 
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Status section
         Column(
             modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CallStatusCard(callState = callState)
-            ForwardingStatus(
-                forwardingActive = forwardingActive,
-                selectedContact = selectedContact,
-                forwardSmsToEmail = forwardSmsToEmail,
-                emailAddresses = emailAddresses,
-                onQueryStatus = viewModel::queryForwardingStatus
+
+            // Status Info Button
+            OutlinedButton(
+                onClick = { viewModel.queryForwardingStatus() },
+                enabled = !isCallActive,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Status abfragen",
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = "Status abfragen",
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            // Reset Button
+            Button(
+                onClick = {
+                    viewModel.deactivateCurrentForwarding()
+                    emailViewModel.updateForwardSmsToEmail(false)
+                    viewModel.queryForwardingStatus()
+                },
+                enabled = !isCallActive,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Reset",
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = "Alle Weiterleitungen zurücksetzen",
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Contact selection section with picker button or contact card
+ */
+@Composable
+fun ContactSelectionSection(
+    selectedContact: Contact?,
+    forwardingActive: Boolean,
+    isCallActive: Boolean,
+    onSelectContact: () -> Unit,
+    onDeactivate: () -> Unit,
+    onSendTestSms: () -> Unit
+) {
+    if (selectedContact == null || !forwardingActive) {
+        // No contact selected: Show selection button
+        Button(
+            onClick = onSelectContact,
+            enabled = !isCallActive,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            ControlButtons(
-                onDeactivateForwarding = viewModel::deactivateForwarding,
-                onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) },
-                isEnabled = selectedContact != null
-            )
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Kontakt auswählen",
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Kontakt für Weiterleitung auswählen",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    } else {
+        // Contact selected: Show contact card with action buttons
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Header
+                Text(
+                    text = "Aktive Weiterleitung",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+
+                // Contact info
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = selectedContact.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = selectedContact.phoneNumber,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                    if (selectedContact.description.isNotEmpty() &&
+                        selectedContact.description != selectedContact.phoneNumber) {
+                        Text(
+                            text = selectedContact.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+
+                // Action buttons - First row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onSelectContact,
+                        enabled = !isCallActive,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Kontakt ändern",
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onSendTestSms,
+                        enabled = !isCallActive,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Test-SMS",
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                // Deactivate button - Second row
+                Button(
+                    onClick = onDeactivate,
+                    enabled = !isCallActive,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text(
+                        text = "Deaktivieren",
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
     }
 }

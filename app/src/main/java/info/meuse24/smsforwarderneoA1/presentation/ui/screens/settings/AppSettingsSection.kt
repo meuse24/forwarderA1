@@ -37,27 +37,23 @@ fun AppSettingsSection(
     onFocusChanged: (Boolean) -> Unit,
     sectionTitleStyle: TextStyle
 ) {
-    val filterText by viewModel.filterText.collectAsState()
     val testSmsText by testUtilsViewModel.testSmsText.collectAsState()
     val testEmailText by emailViewModel.testEmailText.collectAsState()
     val topBarTitle by navigationViewModel.topBarTitle.collectAsState()
     val mailScreenVisible by viewModel.mailScreenVisible.collectAsState()
     val phoneNumberFormatting by viewModel.phoneNumberFormatting.collectAsState()
 
-    var isFilterTextFocused by remember { mutableStateOf(false) }
     var isTestSmsTextFocused by remember { mutableStateOf(false) }
     var isTestEmailTextFocused by remember { mutableStateOf(false) }
     var isTopBarTitleFocused by remember { mutableStateOf(false) }
 
     LaunchedEffect(
-        isFilterTextFocused,
         isTestSmsTextFocused,
         isTestEmailTextFocused,
         isTopBarTitleFocused
     ) {
         onFocusChanged(
-            isFilterTextFocused || isTestSmsTextFocused ||
-                    isTestEmailTextFocused || isTopBarTitleFocused
+            isTestSmsTextFocused || isTestEmailTextFocused || isTopBarTitleFocused
         )
     }
 
@@ -71,17 +67,6 @@ fun AppSettingsSection(
             style = sectionTitleStyle,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-
-        OutlinedTextField(
-            value = filterText,
-            onValueChange = { viewModel.updateFilterText(it) },
-            label = { Text("Kontakte - Suchfilter") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .onFocusChanged { isFilterTextFocused = it.isFocused }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = testSmsText,

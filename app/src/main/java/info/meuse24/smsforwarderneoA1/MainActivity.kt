@@ -45,6 +45,7 @@ import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -193,6 +194,17 @@ class MainActivity : ComponentActivity() {
     private val _loadingError = MutableStateFlow<String?>(null)
     private lateinit var permissionHandler: PermissionHandler
 
+    // Contact Picker Launcher
+    private val contactPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.PickContact()
+    ) { uri: Uri? ->
+        uri?.let {
+            lifecycleScope.launch {
+                viewModel.handleContactPickerResult(it)
+            }
+        }
+    }
+
     // Call state management for MMI codes
     private val _callState = MutableStateFlow(TelephonyManager.CALL_STATE_IDLE)
     val callState = _callState
@@ -206,6 +218,9 @@ class MainActivity : ComponentActivity() {
 
         // Set the MMI code dial callback in ViewModel
         viewModel.onDialMmiCode = { code -> dialCode(code) }
+
+        // Set the contact picker launcher callback
+        viewModel.onLaunchContactPicker = { contactPickerLauncher.launch(null) }
 
         // Set EmailViewModel callback to update service notification when forwarding state changes
         emailViewModel.onForwardingStateChanged = {
