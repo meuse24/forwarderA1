@@ -27,29 +27,37 @@ class LogViewModel(
     private val logger: Logger
 ) : ViewModel() {
 
-    // Noise Actions: Log entries that are hidden by default when filtering
+    // Relevant Actions: Only these log entries are shown when filtering is active
+    // Note: All actions ending with "ERROR" are also shown (automatic error inclusion)
     companion object {
-        private val NOISE_ACTIONS = setOf(
-            "HEARTBEAT",
-            "UPDATE_NOTIFICATION",
-            "LOAD_CONTACTS",
-            "LOAD_CONTACTS_START",
-            "CONTACTS_RELOAD",
-            "FILTER_CONTACTS",
-            "FILTER_APPLIED",
-            "GET_PREFERENCE",
-            "SET_PREFERENCE",
-            "SAVE_STATE",
-            "VALIDATE_STATE",
-            "REGISTER_OBSERVER",
-            "UNREGISTER_OBSERVER",
-            "WAKE_LOCK_ACQUIRED",
-            "WAKE_LOCK_RELEASED",
-            "LOW_MEMORY",
-            "TRIM_MEMORY",
-            "CONFIG_CHANGED",
-            "CONTACTS_CHANGED_SKIPPED",
-            "APPLY_FILTER"
+        private val RELEVANT_ACTIONS = setOf(
+            // SMS Empfangen
+            "PROCESS_SMS",
+            "FORWARD_TO_SERVICE",
+            "INVALID_SMS",
+            "PROCESS_MESSAGE_GROUP",
+
+            // SMS Senden
+            "FORWARD_SMS",
+            "SEND_SMS",
+            "SEND_TEST_SMS",
+            "TEST_SMS_SENT",
+            "TEST_SMS_FAILED",
+
+            // Email Weiterleitung
+            "EMAIL_FORWARD",
+            "ENABLE_EMAIL_FORWARDING",
+            "DISABLE_EMAIL_FORWARDING",
+
+            // Rufumleitung aktivieren/deaktivieren
+            "ACTIVATE_FORWARDING",
+            "DEACTIVATE_FORWARDING",
+            "REQUEST_ACTIVATE_FORWARDING",
+            "REQUEST_DEACTIVATE_FORWARDING",
+            "STORE_ACTIVATE_FORWARDING",
+            "STORE_DEACTIVATE_FORWARDING",
+            "TOGGLE_SUCCESS"
+            // Note: *_ERROR actions are automatically included via .endsWith("ERROR") check
         )
     }
 
@@ -60,7 +68,7 @@ class LogViewModel(
     private val _logEntries = MutableStateFlow<List<LogEntry>>(emptyList())
     val logEntries: StateFlow<List<LogEntry>> = _logEntries
 
-    private val _showAllLogs = MutableStateFlow(false)  // Default: only important logs
+    private val _showAllLogs = MutableStateFlow(true)  // Default: show all logs
     val showAllLogs: StateFlow<Boolean> = _showAllLogs.asStateFlow()
 
     /**
@@ -68,7 +76,7 @@ class LogViewModel(
      *
      * Applies current filter settings (_showAllLogs) to determine which entries to display.
      * - If showAllLogs = true: displays all log entries
-     * - If showAllLogs = false: filters out NOISE_ACTIONS for cleaner view
+     * - If showAllLogs = false: shows ONLY RELEVANT_ACTIONS (SMS/Email forwarding related)
      *
      * Updates both HTML and list representations of logs.
      */
@@ -76,23 +84,42 @@ class LogViewModel(
         viewModelScope.launch {
             try {
                 val showAll = _showAllLogs.value
-                _logEntriesHtml.value = logger.getLogEntriesHtml(
-                    filterNoise = !showAll,
-                    noiseActions = NOISE_ACTIONS
-                )
 
-                // Load all entries and filter client-side if necessary
+                // Load all entries first
                 val allEntries = logger.getLogEntriesAsList()
-                _logEntries.value = if (!showAll) {
-                    // Filter out noise actions
+
+                // Apply filter if needed
+                _logEntries.value = if (showAll) {
+                    // Show all entries
+                    allEntries
+                } else {
+                    // Show ONLY relevant actions + all errors
                     allEntries.filter { entry ->
                         val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
                         val action = actionMatch?.groupValues?.get(1)
-                        action == null || action !in NOISE_ACTIONS
+                        action != null && (action in RELEVANT_ACTIONS || action.endsWith("ERROR"))
                     }
-                } else {
-                    allEntries
                 }
+
+                // Update HTML representation
+                _logEntriesHtml.value = logger.getLogEntriesHtml(
+                    filterNoise = !showAll,
+                    noiseActions = if (!showAll) {
+                        // Invert: Remove everything NOT in RELEVANT_ACTIONS and not an error
+                        allEntries
+                            .mapNotNull { entry ->
+                                val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
+                                actionMatch?.groupValues?.get(1)
+                            }
+                            .toSet()
+                            .filterNot { action ->
+                                action in RELEVANT_ACTIONS || action.endsWith("ERROR")
+                            }
+                            .toSet()
+                    } else {
+                        emptySet()
+                    }
+                )
             } catch (e: Exception) {
                 LoggingManager.logError(
                     component = "LogViewModel",
