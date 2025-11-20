@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -42,6 +43,9 @@ class ContactsViewModel(
     var onDialMmiCode: ((String) -> Unit)? = null
     var onLaunchContactPicker: (() -> Unit)? = null
     var onErrorOccurred: ((NavigationViewModel.ErrorDialogState) -> Unit)? = null
+
+    // Call state from MainActivity
+    var callStateFlow: StateFlow<Int>? = null
 
     // State
     private val _selectedContact = MutableStateFlow<Contact?>(null)
@@ -748,6 +752,45 @@ class ContactsViewModel(
         )
 
         SnackbarManager.showInfo("Statusabfrage wird gesendet")
+    }
+
+    /**
+     * Resets forwarding and queries status after call completes.
+     * Waits for the deactivation call to finish before querying status.
+     */
+    fun resetForwardingWithStatusQuery() {
+        // Deactivate forwarding (triggers MMI call)
+        deactivateCurrentForwarding()
+
+        // Launch coroutine to wait for call completion
+        viewModelScope.launch {
+            val callState = callStateFlow
+            if (callState != null) {
+                // Wait until call is idle using Flow.first
+                callState.first { it == android.telephony.TelephonyManager.CALL_STATE_IDLE }
+
+                // Add buffer after call ends
+                kotlinx.coroutines.delay(500)
+
+                // Query status
+                queryForwardingStatus()
+
+                LoggingManager.logInfo(
+                    component = "ContactsViewModel",
+                    action = "RESET_WITH_STATUS_QUERY",
+                    message = "Reset completed, status query triggered"
+                )
+            } else {
+                // Fallback if callState not available
+                LoggingManager.logWarning(
+                    component = "ContactsViewModel",
+                    action = "RESET_WITH_STATUS_QUERY",
+                    message = "CallState not available, using fallback delay"
+                )
+                kotlinx.coroutines.delay(3000)
+                queryForwardingStatus()
+            }
+        }
     }
 
     fun resetMmiCodesToDefault() {

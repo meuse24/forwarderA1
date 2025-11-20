@@ -1,5 +1,8 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,8 +25,9 @@ import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ChangePinDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.PinDialog
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
-import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
+import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 
 @Composable
 fun SettingsScreen(
@@ -39,68 +43,84 @@ fun SettingsScreen(
     var showChangePinDialog by remember { mutableStateOf(false) }
     val sectionTitleStyle = MaterialTheme.typography.titleMedium
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scrollState)
+            .background(BackgroundGradientLight)
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            PhoneSettingsSection(
+                viewModel = viewModel,
+                onFocusChanged = { isAnyFieldFocused = it },
+                sectionTitleStyle = sectionTitleStyle
+            )
 
-        PhoneSettingsSection(
-            viewModel = viewModel,
-            onFocusChanged = { isAnyFieldFocused = it },
-            sectionTitleStyle = sectionTitleStyle)
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
+            )
 
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+            SimManagementSection(
+                viewModel = viewModel,
+                onFocusChanged = { isAnyFieldFocused = it },
+                sectionTitleStyle = sectionTitleStyle
+            )
 
-        SimManagementSection(
-            viewModel = viewModel,
-            onFocusChanged = { isAnyFieldFocused = it },
-            sectionTitleStyle = sectionTitleStyle
-        )
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
+            )
 
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+            AppSettingsSection(
+                viewModel = viewModel,
+                emailViewModel = emailViewModel,
+                testUtilsViewModel = testUtilsViewModel,
+                navigationViewModel = navigationViewModel,
+                onFocusChanged = { isAnyFieldFocused = it },
+                sectionTitleStyle = sectionTitleStyle
+            )
 
-        AppSettingsSection(
-            viewModel = viewModel,
-            emailViewModel = emailViewModel,
-            testUtilsViewModel = testUtilsViewModel,
-            navigationViewModel = navigationViewModel,
-            onFocusChanged = { isAnyFieldFocused = it },
-            sectionTitleStyle = sectionTitleStyle
-        )
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
+            )
 
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+            MmiCodeSettingsSection(
+                viewModel = viewModel,
+                onFocusChanged = { isAnyFieldFocused = it },
+                sectionTitleStyle = sectionTitleStyle
+            )
 
-        MmiCodeSettingsSection(
-            viewModel = viewModel,
-            onFocusChanged = { isAnyFieldFocused = it },
-            sectionTitleStyle = sectionTitleStyle
-        )
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
+            )
 
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+            EmailSettingsSection(
+                emailViewModel = emailViewModel,
+                sectionTitleStyle = sectionTitleStyle
+            )
 
-        EmailSettingsSection(
-            emailViewModel = emailViewModel,
-            sectionTitleStyle = sectionTitleStyle
-        )
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
+            )
 
-        // Neue Log Settings Section
-        LogSettingsSection(
-            sectionTitleStyle = sectionTitleStyle,
-            onDeleteLogs = { showPinDialog = true },
-            onChangePin = { showChangePinDialog = true }
-        )
+            LogSettingsSection(
+                sectionTitleStyle = sectionTitleStyle,
+                onDeleteLogs = { showPinDialog = true },
+                onChangePin = { showChangePinDialog = true }
+            )
 
-        // Die existierenden PIN-Dialoge aus dem LogScreen
+        }
+
+        // PIN Dialoge
         if (showPinDialog) {
             PinDialog(
                 storedPin = AppContainer.requirePrefsManager().getLogPIN(),
@@ -134,6 +154,5 @@ fun SettingsScreen(
                 onDismiss = { showChangePinDialog = false }
             )
         }
-
     }
 }

@@ -232,6 +232,9 @@ class MainActivity : ComponentActivity() {
             navigationViewModel.setErrorState(errorState)
         }
 
+        // Pass callState to ViewModel for resetForwardingWithStatusQuery
+        viewModel.callStateFlow = callState
+
         // Normale Statusleiste - kein Edge-to-Edge
         WindowCompat.setDecorFitsSystemWindows(window, true)
 

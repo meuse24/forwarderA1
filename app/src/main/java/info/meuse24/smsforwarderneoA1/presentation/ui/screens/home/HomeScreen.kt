@@ -1,8 +1,17 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.screens.home
 
 import android.telephony.TelephonyManager
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -15,11 +24,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,15 +39,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.AnimatedButton
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.AnimatedCard
@@ -48,6 +71,48 @@ import info.meuse24.smsforwarderneoA1.ui.theme.AnimationHelpers
 import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 import info.meuse24.smsforwarderneoA1.ui.theme.ErrorGradient
 import info.meuse24.smsforwarderneoA1.ui.theme.PrimaryGradient
+
+/**
+ * Animated app logo with one-time 360° rotation on screen open and on touch
+ */
+@Composable
+fun AnimatedAppLogo(modifier: Modifier = Modifier) {
+    // State to track rotation target (increments by 360° on each click)
+    var rotationTarget by remember { mutableStateOf(0f) }
+
+    // Start animation on first composition
+    LaunchedEffect(Unit) {
+        rotationTarget = 360f
+    }
+
+    // Rotation animation
+    val rotation by animateFloatAsState(
+        targetValue = rotationTarget,
+        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
+        label = "logo_rotation"
+    )
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logofwd2),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .size(112.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable {
+                    rotationTarget += 360f
+                }
+                .graphicsLayer {
+                    rotationZ = rotation
+                    scaleX = 1.3f
+                    scaleY = 1.3f
+                }
+        )
+    }
+}
 
 @Composable
 fun HomeScreen(
@@ -148,48 +213,52 @@ fun LandscapeLayout(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Bottom buttons with animations
-            Column(
+            // Bottom row: Logo (left) + Buttons (right)
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Status Info Button
-                AnimatedOutlinedButton(
-                    onClick = { viewModel.queryForwardingStatus() },
-                    enabled = !isCallActive,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Status abfragen",
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = "Status abfragen",
-                        textAlign = TextAlign.Center
-                    )
-                }
+                // Animated Logo (left)
+                AnimatedAppLogo()
 
-                // Reset Button with error gradient
-                GradientButton(
-                    onClick = {
-                        viewModel.deactivateCurrentForwarding()
-                        emailViewModel.updateForwardSmsToEmail(false)
-                        viewModel.queryForwardingStatus()
-                    },
-                    enabled = !isCallActive,
-                    modifier = Modifier.fillMaxWidth(),
-                    gradient = ErrorGradient
+                // Buttons (right)
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Reset",
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = "Alle Weiterleitungen zurücksetzen",
-                        textAlign = TextAlign.Center
-                    )
+                    // Status Info Button
+                    FloatingActionButton(
+                        onClick = { viewModel.queryForwardingStatus() },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Status abfragen",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Reset Button
+                    FloatingActionButton(
+                        onClick = {
+                            emailViewModel.updateForwardSmsToEmail(false)
+                            viewModel.resetForwardingWithStatusQuery()
+                        },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Alle Weiterleitungen zurücksetzen",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
         }
@@ -206,6 +275,7 @@ fun PortraitLayout(
     isCallActive: Boolean,
     callState: Int
 ) {
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -227,48 +297,58 @@ fun PortraitLayout(
         // Status section
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CallStatusCard(callState = callState)
 
-            // Status Info Button
-            AnimatedOutlinedButton(
-                onClick = { viewModel.queryForwardingStatus() },
-                enabled = !isCallActive,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Status abfragen",
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = "Status abfragen",
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // Reset Button with gradient
-            GradientButton(
-                onClick = {
-                    viewModel.deactivateCurrentForwarding()
-                    emailViewModel.updateForwardSmsToEmail(false)
-                    viewModel.queryForwardingStatus()
-                },
-                enabled = !isCallActive,
+            // Bottom row: Logo (left) + Buttons (right)
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                gradient = ErrorGradient
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Reset",
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = "Alle Weiterleitungen zurücksetzen",
-                    textAlign = TextAlign.Center
-                )
+                // Animated Logo (left)
+                AnimatedAppLogo()
+
+                // Buttons (right)
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Status Info Button
+                    FloatingActionButton(
+                        onClick = { viewModel.queryForwardingStatus() },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Status abfragen",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Reset Button
+                    FloatingActionButton(
+                        onClick = {
+                            emailViewModel.updateForwardSmsToEmail(false)
+                            viewModel.resetForwardingWithStatusQuery()
+                        },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Alle Weiterleitungen zurücksetzen",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -306,18 +386,20 @@ fun ContactSelectionSection(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
+                Image(
+                    painter = painterResource(id = R.drawable.officer),
                     contentDescription = "Kontakt auswählen",
                     modifier = Modifier
                         .padding(bottom = 8.dp)
-                        .size(48.dp)
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(20.dp))
                 )
                 Text(
-                    text = "Kontakt für Weiterleitung auswählen",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    text = "Kontakt auswählen",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                    color = Color.Black
                 )
             }
         }

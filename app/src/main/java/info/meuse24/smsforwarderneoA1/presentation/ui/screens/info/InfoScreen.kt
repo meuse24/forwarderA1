@@ -5,6 +5,8 @@ import android.os.Build
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import info.meuse24.smsforwarderneoA1.BuildConfig
 import info.meuse24.smsforwarderneoA1.R
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.GradientBorderCard
+import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
+import info.meuse24.smsforwarderneoA1.ui.theme.PrimaryGradient
 
 @Composable
 fun InfoScreen() {
@@ -44,97 +51,119 @@ fun InfoScreen() {
     val packageInfo = remember {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
-    Column(
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp)
+            .background(BackgroundGradientLight)
     ) {
-        // Logo-Sektion
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
+            // Logo-Sektion mit Gradient Border
+            GradientBorderCard(
+                modifier = Modifier.fillMaxWidth(),
+                borderWidth = 3.dp,
+                gradient = PrimaryGradient,
+                backgroundColor = MaterialTheme.colorScheme.surface
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logofwd2),
-                    contentDescription = "App Icon",
+                Row(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)
-                        .align(Alignment.Center)
-                )
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logofwd2),
+                            contentDescription = "App Icon",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "(C) 2025",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Günther Meusburger",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Version ${packageInfo.versionName} (${packageInfo.longVersionCode})",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Build: ${BuildConfig.BUILD_TIME}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = "(C) 2025",
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "Günther Meusburger",
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "Version ${packageInfo.versionName} (${packageInfo.longVersionCode})",
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "Build: ${BuildConfig.BUILD_TIME}",
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Start,
+            // HTML-Content Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                AndroidView(
+                    factory = { ctx ->
+                        WebView(ctx).apply {
+                            settings.apply {
+                                javaScriptEnabled = false
+                                builtInZoomControls = true
+                                displayZoomControls = false
+                            }
+                            webViewClient = WebViewClient()
+                            setBackgroundColor(if (isDarkTheme) 0xFF121212.toInt() else 0xFFFFFFFF.toInt())
+                            loadDataWithBaseURL(
+                                null,
+                                getHtmlContent(isDarkTheme, context),
+                                "text/html",
+                                "UTF-8",
+                                null
+                            )
+                        }
+                    },
+                    update = { webView ->
+                        webView.loadDataWithBaseURL(
+                            null,
+                            getHtmlContent(isDarkTheme, context),
+                            "text/html",
+                            "UTF-8",
+                            null
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // HTML-Content mit neuem Inhalt
-        AndroidView(
-            factory = { ctx ->
-                WebView(ctx).apply {
-                    settings.apply {
-                        javaScriptEnabled = false
-                        builtInZoomControls = true
-                        displayZoomControls = false
-                    }
-                    webViewClient = WebViewClient()
-                    setBackgroundColor(if (isDarkTheme) 0xFF121212.toInt() else 0xFFFFFFFF.toInt())
-                    loadDataWithBaseURL(
-                        null,
-                        getHtmlContent(isDarkTheme, context),
-                        "text/html",
-                        "UTF-8",
-                        null
-                    )
-                }
-            },
-            update = { webView ->
-                webView.loadDataWithBaseURL(
-                    null,
-                    getHtmlContent(isDarkTheme, context),
-                    "text/html",
-                    "UTF-8",
-                    null
-                )
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
 
