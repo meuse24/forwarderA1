@@ -7,9 +7,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.os.PowerManager
 import android.provider.Telephony
 import android.telephony.SmsMessage
@@ -18,6 +16,7 @@ import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.BuildConfig
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.MainActivity
+import info.meuse24.smsforwarderneoA1.PhoneNumberValidator
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.SnackbarManager
@@ -65,36 +64,6 @@ class SmsForegroundService : Service() {
     private val wakeLockMutex = Mutex()
     private val wakeLockTimeout = 5 * 60 * 1000L // 5 Minuten Maximum
     private val wakeLockTag = "${BuildConfig.APPLICATION_ID}:ForegroundService"
-    private var restartAttempts = 0
-    private var lastRestartTime = 0L
-    private val maxRestartAttemps = 3
-    private val restartCoolDownMS = 5000L  // 5 Sekunden Abkühlzeit
-    private val restartResetMS = 60000L    // Reset Zähler nach 1 Minute
-    private val serviceHandler = Handler(Looper.getMainLooper())
-    private val heartbeatRunnable = Runnable {
-        serviceScope.launch {
-            try {
-                if (isRunning) {
-                    LoggingManager.logDebug(
-                        component = "SmsForegroundService",
-                        action = "HEARTBEAT",
-                        message = "Service Heartbeat"
-                    )
-                    // Überprüfe Service-Status
-                    ensureServiceRunning()
-                    // Plane nächsten Heartbeat
-                    scheduleHeartbeat()
-                }
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "SmsForegroundService",
-                    action = "HEARTBEAT_ERROR",
-                    message = "Fehler beim Heartbeat",
-                    error = e
-                )
-            }
-        }
-    }
 
     companion object {
         private const val NOTIFICATION_ID = 1
@@ -272,9 +241,6 @@ class SmsForegroundService : Service() {
                 }
             }
 
-            // Starte Heartbeat-Monitoring
-            scheduleHeartbeat()
-
             return START_STICKY
 
         } catch (e: Exception) {
@@ -394,6 +360,18 @@ class SmsForegroundService : Service() {
                 if (prefsManager.isForwardingActive()) {
                     launch {
                         prefsManager.getSelectedPhoneNumber().let { forwardToNumber ->
+                            // Loop Protection: Verhindere Weiterleitung, wenn Absender == Zielnummer
+                            val validator = PhoneNumberValidator()
+                            if (validator.areSameNumber(sender, forwardToNumber)) {
+                                LoggingManager.logWarning(
+                                    component = "SmsForegroundService",
+                                    action = "LOOP_PROTECTION",
+                                    message = "Weiterleitung gestoppt: Absender entspricht Zielrufnummer",
+                                    details = mapOf("number" to sender)
+                                )
+                                return@launch
+                            }
+
                             val subscriptionId = parts.firstOrNull()?.subscriptionId ?: -1
                             val forwardedMessage = buildForwardedSmsMessage(sender, fullMessage, subscriptionId)
                             withContext(Dispatchers.IO) {
@@ -738,134 +716,6 @@ class SmsForegroundService : Service() {
         val notification = createNotification(initialStatus)
         startForeground(NOTIFICATION_ID, notification)
 
-        // Starte Monitoring im ServiceScope
-        serviceScope.launch {
-            monitorService()
-        }
-    }
-
-    private fun scheduleHeartbeat() {
-        serviceHandler.removeCallbacks(heartbeatRunnable) // Entferne vorherige Callbacks
-        serviceHandler.postDelayed(
-            heartbeatRunnable,
-            60_000
-        ) // Plane nächsten Heartbeat in 1 Minute
-    }
-
-    private suspend fun monitorService() {
-        while (isRunning) {
-            try {
-                ensureServiceRunning()
-                delay(60_000) // Verzögerung von 1 Minute zwischen den Checks
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) {
-                    // Normaler Shutdown - kein Logging nötig
-                    break
-                }
-                // Nur ernsthafte Fehler protokollieren
-                LoggingManager.logError(
-                    component = "SmsForegroundService",
-                    action = "MONITOR_ERROR",
-                    message = "Fehler beim Service-Monitoring",
-                    error = e
-                )
-            }
-        }
-    }
-
-    private fun ensureServiceRunning() {
-        // Einfacher Check, ob der Service noch läuft und wieder neu gestartet werden muss
-        if (!isRunning) {
-            val currentTime = System.currentTimeMillis()
-
-            // Prüfe, ob der Neustartkühldown eingehalten wurde
-            if (currentTime - lastRestartTime < restartCoolDownMS) {
-                LoggingManager.logWarning(
-                    component = "SmsForegroundService",
-                    action = "RESTART_COOLDOWN",
-                    message = "Service-Neustart wird verzögert (Cooldown läuft)",
-                    details = mapOf(
-                        "cooldown_remaining_ms" to (restartCoolDownMS - (currentTime - lastRestartTime))
-                    )
-                )
-                return
-            }
-
-            // Neustart des Service, wenn notwendig
-            restartService()
-        }
-    }
-
-    private fun restartService() {
-        try {
-            val currentTime = System.currentTimeMillis()
-
-            // Reset Zähler wenn genug Zeit vergangen ist
-            if (currentTime - lastRestartTime > restartResetMS) {
-                restartAttempts = 0
-            }
-
-            // Prüfe, ob die maximale Anzahl an Neustartversuchen erreicht wurde
-            if (restartAttempts >= maxRestartAttemps) {
-                LoggingManager.logError(
-                    component = "SmsForegroundService",
-                    action = "RESTART_FAILED",
-                    message = "Maximale Neustartversuche erreicht. Service wird gestoppt.",
-                    details = mapOf(
-                        "attempts" to restartAttempts,
-                        "cooldown_remaining_ms" to (restartResetMS - (currentTime - lastRestartTime))
-                    )
-                )
-                stopSelf() // Service wird gestoppt, da max. Neustarts erreicht sind
-                return
-            }
-
-            // Erhöhe die Anzahl der Neustartversuche
-            restartAttempts++
-            lastRestartTime = currentTime
-
-            serviceScope.launch {
-                try {
-                    // Stoppe aktuellen Service
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-
-                    // Warte kurz (Cooldown)
-                    delay(restartCoolDownMS)
-
-                    // Starte neu
-                    startForegroundService()
-
-                    LoggingManager.logInfo(
-                        component = "SmsForegroundService",
-                        action = "RESTART_SUCCESS",
-                        message = "Service erfolgreich neugestartet",
-                        details = mapOf(
-                            "attempt" to restartAttempts,
-                            "total_restarts" to restartAttempts
-                        )
-                    )
-                } catch (e: Exception) {
-                    LoggingManager.logError(
-                        component = "SmsForegroundService",
-                        action = "RESTART_ERROR",
-                        message = "Fehler beim Neustart",
-                        error = e,
-                        details = mapOf(
-                            "attempt" to restartAttempts,
-                            "error_type" to e.javaClass.simpleName
-                        )
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            LoggingManager.logError(
-                component = "SmsForegroundService",
-                action = "RESTART_CRITICAL_ERROR",
-                message = "Kritischer Fehler beim Service-Neustart",
-                error = e
-            )
-            stopSelf() // Beende Service bei kritischem Fehler
-        }
     }
 
     private fun buildServiceStatus(prefs: SharedPreferencesManager): String {
@@ -893,8 +743,6 @@ class SmsForegroundService : Service() {
 
     override fun onDestroy() {
         try {
-            serviceHandler.removeCallbacks(heartbeatRunnable)
-
             // Cancelle den Scope ohne zu warten (non-blocking)
             // cancel() beendet automatisch alle child coroutines
             serviceScope.cancel()
@@ -913,7 +761,6 @@ class SmsForegroundService : Service() {
                 error = e
             )
         } finally {
-            serviceHandler.removeCallbacksAndMessages(null)
             isRunning = false
             super.onDestroy()
         }
@@ -922,10 +769,10 @@ class SmsForegroundService : Service() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         // Prüfe ob Service weiterlaufen soll
-        if (SharedPreferencesManager(this).getKeepForwardingOnExit()) {
-            restartService()
-        } else {
+        if (!SharedPreferencesManager(this).getKeepForwardingOnExit()) {
             stopSelf()
         }
+        // Wenn keepForwardingOnExit = true, läuft der Service einfach weiter
+        // START_STICKY sorgt dafür, dass das System ihn bei Bedarf neu startet
     }
 }
