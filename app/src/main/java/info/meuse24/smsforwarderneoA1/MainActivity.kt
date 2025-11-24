@@ -1,6 +1,7 @@
 package info.meuse24.smsforwarderneoA1
 
 // Removed unsafe direct import - use AppContainer.requirePrefsManager() instead
+import android.app.AlertDialog
 import android.content.Context
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
@@ -36,6 +37,8 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
@@ -95,7 +98,7 @@ import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialog as ComposeAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -232,9 +235,6 @@ class MainActivity : ComponentActivity() {
             navigationViewModel.setErrorState(errorState)
         }
 
-        // Pass callState to ViewModel for resetForwardingWithStatusQuery
-        viewModel.callStateFlow = callState
-
         // Normale Statusleiste - kein Edge-to-Edge
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
@@ -332,6 +332,9 @@ class MainActivity : ComponentActivity() {
                         // Setup phone state listener for MMI code monitoring
                         setupPhoneStateListener()
 
+                        // Prüfe Battery Optimization Status
+                        checkBatteryOptimization()
+
                         // Füge kleine Verzögerung hinzu um sicherzustellen, dass
                         // Berechtigungen vollständig gewährt wurden
                         lifecycleScope.launch {
@@ -365,6 +368,100 @@ class MainActivity : ComponentActivity() {
                     error = e
                 )
             }
+        }
+    }
+
+    /**
+     * Prüft ob Battery Optimization für die App deaktiviert ist
+     * und zeigt bei Bedarf einen Dialog an
+     */
+    private fun checkBatteryOptimization() {
+        try {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+            if (powerManager == null) {
+                LoggingManager.logWarning(
+                    component = "MainActivity",
+                    action = "CHECK_BATTERY_OPT",
+                    message = "PowerManager nicht verfügbar"
+                )
+                return
+            }
+
+            val isIgnoring = powerManager.isIgnoringBatteryOptimizations(packageName)
+
+            LoggingManager.logInfo(
+                component = "MainActivity",
+                action = "CHECK_BATTERY_OPT",
+                message = "Battery Optimization Status geprüft",
+                details = mapOf("isIgnoring" to isIgnoring)
+            )
+
+            if (!isIgnoring) {
+                showBatteryOptimizationDialog()
+            }
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "MainActivity",
+                action = "CHECK_BATTERY_OPT",
+                message = "Fehler beim Prüfen der Battery Optimization",
+                error = e
+            )
+        }
+    }
+
+    /**
+     * Zeigt einen Dialog zum Deaktivieren der Battery Optimization
+     */
+    private fun showBatteryOptimizationDialog() {
+        lifecycleScope.launch(Dispatchers.Main) {
+            val builder = AlertDialog.Builder(this@MainActivity)
+            builder.setTitle("Akku-Optimierung deaktivieren")
+            builder.setMessage(
+                "Für eine zuverlässige SMS-Weiterleitung im Hintergrund sollte die Akku-Optimierung " +
+                "für diese App deaktiviert werden.\n\n" +
+                "Ohne diese Einstellung kann es vorkommen, dass SMS-Weiterleitungen verzögert werden " +
+                "oder nicht funktionieren."
+            )
+            builder.setPositiveButton("Einstellungen öffnen") { dialog, _ ->
+                requestBatteryOptimizationExemption()
+                dialog.dismiss()
+            }
+            builder.setNegativeButton("Später") { dialog, _ ->
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "BATTERY_OPT_DIALOG",
+                    message = "Nutzer hat Battery Optimization Dialog abgelehnt"
+                )
+                dialog.dismiss()
+            }
+            builder.setCancelable(true)
+            builder.show()
+        }
+    }
+
+    /**
+     * Öffnet die System-Einstellungen zur Deaktivierung der Battery Optimization
+     */
+    private fun requestBatteryOptimizationExemption() {
+        try {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            startActivity(intent)
+
+            LoggingManager.logInfo(
+                component = "MainActivity",
+                action = "REQUEST_BATTERY_OPT_EXEMPTION",
+                message = "Battery Optimization Einstellungen geöffnet"
+            )
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "MainActivity",
+                action = "REQUEST_BATTERY_OPT_EXEMPTION",
+                message = "Fehler beim Öffnen der Battery Optimization Einstellungen",
+                error = e
+            )
+            SnackbarManager.showError("Einstellungen konnten nicht geöffnet werden")
         }
     }
 
@@ -589,7 +686,8 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * Dial MMI code with speakerphone enabled and audio focus management
+     * Dial MMI code with speakerphone enabled and audio focus management.
+     * Automatically waits if another call is active.
      */
     fun dialCode(code: String) {
         if (code.isBlank()) {
@@ -609,6 +707,43 @@ class MainActivity : ComponentActivity() {
             code
         }
 
+        // Launch coroutine to wait if call is active
+        lifecycleScope.launch {
+            val currentCallState = callState.value
+
+            // Wait if call is active (not IDLE)
+            if (currentCallState != TelephonyManager.CALL_STATE_IDLE) {
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "DIAL_MMI_WAITING",
+                    message = "Warte bis aktueller Anruf beendet ist",
+                    details = mapOf("code" to normalizedCode, "callState" to currentCallState)
+                )
+                SnackbarManager.showInfo("Warte bis Anruf beendet ist...")
+
+                // Wait until call is idle
+                callState.first { it == TelephonyManager.CALL_STATE_IDLE }
+
+                // Add buffer after call ends
+                delay(500)
+
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "DIAL_MMI_READY",
+                    message = "Anruf beendet, wähle MMI-Code",
+                    details = mapOf("code" to normalizedCode)
+                )
+            }
+
+            // Proceed with dialing
+            dialCodeNow(normalizedCode, code)
+        }
+    }
+
+    /**
+     * Internal function to actually dial the MMI code (called after waiting if needed)
+     */
+    private fun dialCodeNow(normalizedCode: String, originalCode: String) {
         try {
             val intent = Intent(Intent.ACTION_CALL).apply {
                 data = "tel:${Uri.encode(normalizedCode)}".toUri()
@@ -688,10 +823,10 @@ class MainActivity : ComponentActivity() {
                 action = "DIAL_MMI_CODE",
                 message = "MMI-Code gewählt mit Lautsprecher",
                 details = mapOf(
-                    "original_code" to code,
+                    "original_code" to originalCode,
                     "normalized_code" to normalizedCode,
                     "speakerphone" to true,
-                    "plus_replaced" to (code != normalizedCode)
+                    "plus_replaced" to (originalCode != normalizedCode)
                 )
             )
 
@@ -703,7 +838,7 @@ class MainActivity : ComponentActivity() {
                 action = "DIAL_MMI_CODE",
                 message = "Fehler beim Wählen des MMI-Codes",
                 error = e,
-                details = mapOf("code" to code)
+                details = mapOf("code" to originalCode)
             )
             SnackbarManager.showError("Fehler beim Wählen: ${e.message}")
         }
