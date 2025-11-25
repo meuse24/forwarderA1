@@ -21,6 +21,7 @@ import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import kotlinx.coroutines.CoroutineScope
@@ -378,10 +379,12 @@ class SmsForegroundService : Service() {
                                 return@launch
                             }
 
-                            val subscriptionId = parts.firstOrNull()?.subscriptionId ?: -1
-                            val forwardedMessage = buildForwardedSmsMessage(sender, fullMessage, subscriptionId)
+                            val incomingSubscriptionId = parts.firstOrNull()?.subscriptionId ?: -1
+                            val forwardedMessage = buildForwardedSmsMessage(sender, fullMessage, incomingSubscriptionId)
                             withContext(Dispatchers.IO) {
-                                forwardSms(forwardToNumber, forwardedMessage)
+                                // Bestimme Ziel-SIM basierend auf Benutzereinstellung
+                                val targetSubscriptionId = determineTargetSubscriptionId(incomingSubscriptionId)
+                                forwardSmsWithSubscription(forwardToNumber, forwardedMessage, targetSubscriptionId)
                             }
                         }
                     }
@@ -540,7 +543,101 @@ class SmsForegroundService : Service() {
         }
     }
 
-    private fun forwardSms(targetNumber: String, message: String) {
+    /**
+     * Bestimmt die zu verwendende Subscription-ID basierend auf der Benutzereinstellung.
+     * @param incomingSubscriptionId Die Subscription-ID der eingehenden SMS
+     * @return Die zu verwendende Subscription-ID für ausgehende SMS
+     */
+    private fun determineTargetSubscriptionId(incomingSubscriptionId: Int): Int {
+        val simSelectionMode = AppContainer.requirePrefsManager().getSimSelectionMode()
+        val availableSims = PhoneSmsUtils.getAllSimInfo(applicationContext)
+
+        return when (simSelectionMode) {
+            SimSelectionMode.SAME_AS_INCOMING -> {
+                // Verwende dieselbe SIM wie Eingang
+                if (incomingSubscriptionId == -1) {
+                    // Fallback: Verwende Standard-SMS-SIM
+                    val defaultSim = PhoneSmsUtils.getDefaultSimIds(applicationContext)
+                    LoggingManager.logWarning(
+                        component = "SmsForegroundService",
+                        action = "DETERMINE_SIM",
+                        message = "Eingehende SIM unbekannt, verwende Standard-SIM",
+                        details = mapOf("default_sms_sub_id" to (defaultSim?.first ?: -1))
+                    )
+                    defaultSim?.first ?: -1
+                } else {
+                    LoggingManager.logInfo(
+                        component = "SmsForegroundService",
+                        action = "DETERMINE_SIM",
+                        message = "Using same SIM as incoming",
+                        details = mapOf("subscription_id" to incomingSubscriptionId)
+                    )
+                    incomingSubscriptionId
+                }
+            }
+            SimSelectionMode.ALWAYS_SIM_1 -> {
+                val sim1 = availableSims.getOrNull(0)
+                if (sim1 == null) {
+                    LoggingManager.logWarning(
+                        component = "SmsForegroundService",
+                        action = "DETERMINE_SIM",
+                        message = "SIM 1 nicht verfügbar, verwende Standard-SIM",
+                        details = mapOf("available_sims" to availableSims.size)
+                    )
+                    SnackbarManager.showWarning("SIM 1 nicht verfügbar, verwende Standard-SIM")
+                    -1 // Fallback: Standard-SIM
+                } else {
+                    LoggingManager.logInfo(
+                        component = "SmsForegroundService",
+                        action = "DETERMINE_SIM",
+                        message = "Using SIM 1",
+                        details = mapOf(
+                            "subscription_id" to sim1.subscriptionId,
+                            "slot_index" to sim1.slotIndex
+                        )
+                    )
+                    sim1.subscriptionId
+                }
+            }
+            SimSelectionMode.ALWAYS_SIM_2 -> {
+                val sim2 = availableSims.getOrNull(1)
+                if (sim2 == null) {
+                    LoggingManager.logWarning(
+                        component = "SmsForegroundService",
+                        action = "DETERMINE_SIM",
+                        message = "SIM 2 nicht verfügbar, verwende Fallback",
+                        details = mapOf("available_sims" to availableSims.size)
+                    )
+                    SnackbarManager.showWarning("SIM 2 nicht verfügbar, verwende Standard-SIM")
+                    // Fallback: Verwende SIM 1 wenn vorhanden, sonst Standard-SIM
+                    availableSims.getOrNull(0)?.subscriptionId ?: -1
+                } else {
+                    LoggingManager.logInfo(
+                        component = "SmsForegroundService",
+                        action = "DETERMINE_SIM",
+                        message = "Using SIM 2",
+                        details = mapOf(
+                            "subscription_id" to sim2.subscriptionId,
+                            "slot_index" to sim2.slotIndex
+                        )
+                    )
+                    sim2.subscriptionId
+                }
+            }
+        }
+    }
+
+    /**
+     * Sendet SMS mit spezifischer SIM-Auswahl.
+     * @param targetNumber Die Zieltelefonnummer
+     * @param message Die zu sendende Nachricht
+     * @param subscriptionId Die zu verwendende Subscription-ID
+     */
+    private fun forwardSmsWithSubscription(
+        targetNumber: String,
+        message: String,
+        subscriptionId: Int
+    ) {
         try {
             // Max 10 Parts × 153 Zeichen (GSM-7) = 1530 Zeichen
             val maxSmsLength = 1530
@@ -551,14 +648,20 @@ class SmsForegroundService : Service() {
                     message = "Nachricht zu lang für Weiterleitung",
                     details = mapOf(
                         "length" to message.length,
-                        "max_length" to maxSmsLength
+                        "max_length" to maxSmsLength,
+                        "subscription_id" to subscriptionId
                     )
                 )
                 SnackbarManager.showWarning("Nachricht zu lang für SMS-Weiterleitung (max. $maxSmsLength Zeichen)")
                 return
             }
 
-            PhoneSmsUtils.sendSms(applicationContext, targetNumber, message)
+            PhoneSmsUtils.sendSmsWithSubscription(
+                applicationContext,
+                targetNumber,
+                message,
+                subscriptionId
+            )
 
             LoggingManager.logInfo(
                 component = "SmsForegroundService",
@@ -567,6 +670,7 @@ class SmsForegroundService : Service() {
                 details = mapOf(
                     "target" to targetNumber,
                     "length" to message.length,
+                    "subscription_id" to subscriptionId,
                     "is_multipart" to (message.length > 160)
                 )
             )
@@ -581,7 +685,8 @@ class SmsForegroundService : Service() {
                 error = e,
                 details = mapOf(
                     "target" to targetNumber,
-                    "message_length" to message.length
+                    "message_length" to message.length,
+                    "subscription_id" to subscriptionId
                 )
             )
             throw e

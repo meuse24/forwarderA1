@@ -278,6 +278,169 @@ class PhoneSmsUtils private constructor() {
         }
 
         /**
+         * Sendet eine SMS mit spezifischer SIM-Karte (Subscription ID).
+         * Diese Funktion wird für die SMS-Weiterleitung verwendet, wenn der Benutzer
+         * eine bestimmte SIM auswählt.
+         *
+         * @param context Der Anwendungskontext
+         * @param phoneNumber Die Zieltelefonnummer
+         * @param text Der zu sendende Text
+         * @param subscriptionId Die Subscription-ID der zu verwendenden SIM (-1 = Standard-SIM)
+         */
+        fun sendSmsWithSubscription(
+            context: Context,
+            phoneNumber: String,
+            text: String,
+            subscriptionId: Int
+        ) {
+            if (!PermissionHelper.hasPermission(context, Manifest.permission.SEND_SMS)) {
+                LoggingManager.logError(
+                    component = "PhoneSmsUtils",
+                    action = "SEND_SMS_WITH_SUBSCRIPTION",
+                    message = "SMS permission not granted"
+                )
+                throw SecurityException("SMS permission not granted")
+            }
+
+            val smsManager = if (subscriptionId != -1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                // Verwende spezifische SIM
+                @Suppress("DEPRECATION")
+                SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+            } else {
+                // Fallback: Standard-SIM
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    context.getSystemService(SmsManager::class.java) ?: run {
+                        LoggingManager.logError(
+                            component = "PhoneSmsUtils",
+                            action = "SEND_SMS_WITH_SUBSCRIPTION",
+                            message = "SmsManager nicht verfügbar"
+                        )
+                        throw SecurityException("SmsManager nicht verfügbar")
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    SmsManager.getDefault()
+                }
+            }
+
+            val (encodedText, smsLength) = Gsm7BitEncoder.encode(text)
+            val maxLength = if (smsLength <= 160) 160 else 153
+
+            try {
+                if (encodedText.length > maxLength) {
+                    // Multi-part SMS
+                    val parts = smsManager.divideMessage(encodedText)
+                    val sentIntents = ArrayList<PendingIntent>()
+                    val deliveredIntents = ArrayList<PendingIntent>()
+
+                    for (i in parts.indices) {
+                        val sentIntent = PendingIntent.getBroadcast(
+                            context,
+                            System.currentTimeMillis().toInt() + i,
+                            Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
+                                putExtra("part_index", i)
+                                putExtra("total_parts", parts.size)
+                                putExtra("recipient", phoneNumber)
+                                putExtra("subscription_id", subscriptionId)
+                            },
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
+                        sentIntents.add(sentIntent)
+
+                        val deliveredIntent = PendingIntent.getBroadcast(
+                            context,
+                            System.currentTimeMillis().toInt() + i + 1000,
+                            Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
+                                putExtra("part_index", i)
+                                putExtra("total_parts", parts.size)
+                                putExtra("recipient", phoneNumber)
+                                putExtra("subscription_id", subscriptionId)
+                            },
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
+                        deliveredIntents.add(deliveredIntent)
+                    }
+
+                    smsManager.sendMultipartTextMessage(
+                        phoneNumber,
+                        null,
+                        parts,
+                        sentIntents,
+                        deliveredIntents
+                    )
+
+                    LoggingManager.logInfo(
+                        component = "PhoneSmsUtils",
+                        action = "SEND_SMS_WITH_SUBSCRIPTION",
+                        message = "Multi-part SMS sent",
+                        details = mapOf(
+                            "recipient" to phoneNumber,
+                            "parts" to parts.size,
+                            "subscription_id" to subscriptionId,
+                            "sms_length" to smsLength
+                        )
+                    )
+                } else {
+                    // Single SMS
+                    val sentIntent = PendingIntent.getBroadcast(
+                        context,
+                        System.currentTimeMillis().toInt(),
+                        Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
+                            putExtra("part_index", -1)
+                            putExtra("total_parts", 1)
+                            putExtra("recipient", phoneNumber)
+                            putExtra("subscription_id", subscriptionId)
+                        },
+                        PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    val deliveredIntent = PendingIntent.getBroadcast(
+                        context,
+                        System.currentTimeMillis().toInt() + 1000,
+                        Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
+                            putExtra("part_index", -1)
+                            putExtra("total_parts", 1)
+                            putExtra("recipient", phoneNumber)
+                            putExtra("subscription_id", subscriptionId)
+                        },
+                        PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    smsManager.sendTextMessage(
+                        phoneNumber,
+                        null,
+                        encodedText,
+                        sentIntent,
+                        deliveredIntent
+                    )
+
+                    LoggingManager.logInfo(
+                        component = "PhoneSmsUtils",
+                        action = "SEND_SMS_WITH_SUBSCRIPTION",
+                        message = "Single SMS sent",
+                        details = mapOf(
+                            "recipient" to phoneNumber,
+                            "subscription_id" to subscriptionId,
+                            "sms_length" to smsLength
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                LoggingManager.logError(
+                    component = "PhoneSmsUtils",
+                    action = "SEND_SMS_WITH_SUBSCRIPTION",
+                    message = "Failed to send SMS",
+                    details = mapOf(
+                        "recipient" to phoneNumber,
+                        "subscription_id" to subscriptionId,
+                        "error" to e.message.toString()
+                    )
+                )
+                throw e
+            }
+        }
+
+        /**
          * Sendet einen USSD-Code.
          * @param context Der Anwendungskontext
          * @param ussdCode Der zu sendende USSD-Code

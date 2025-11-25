@@ -7,6 +7,7 @@ import androidx.security.crypto.MasterKey
 import info.meuse24.smsforwarderneoA1.LogLevel
 import info.meuse24.smsforwarderneoA1.LogMetadata
 import info.meuse24.smsforwarderneoA1.LoggingManager
+import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import java.io.File
 
 /**
@@ -477,6 +478,36 @@ class SharedPreferencesManager(private val context: Context) {
         setMmiStatusCode(DEFAULT_MMI_STATUS_CODE)
     }
 
+    fun resetMmiCodesToGeneric() {
+        setMmiActivatePrefix(GENERIC_MMI_ACTIVATE_PREFIX)
+        setMmiActivateSuffix(GENERIC_MMI_ACTIVATE_SUFFIX)
+        setMmiDeactivateCode(GENERIC_MMI_DEACTIVATE_CODE)
+        setMmiStatusCode(GENERIC_MMI_STATUS_CODE)
+    }
+
+    /**
+     * Speichert den SIM-Auswahl-Modus für SMS-Weiterleitung.
+     * @param mode Der gewünschte SIM-Auswahl-Modus
+     */
+    fun setSimSelectionMode(mode: SimSelectionMode) {
+        setPreference(KEY_SIM_SELECTION_MODE, mode.name)
+        LoggingManager.logInfo(
+            component = "SharedPreferencesManager",
+            action = "SET_SIM_SELECTION_MODE",
+            message = "SIM-Auswahl-Modus gespeichert",
+            details = mapOf("mode" to mode.name)
+        )
+    }
+
+    /**
+     * Liest den gespeicherten SIM-Auswahl-Modus.
+     * @return Der gespeicherte Modus oder SAME_AS_INCOMING als Standard
+     */
+    fun getSimSelectionMode(): SimSelectionMode {
+        val value = getPreference(KEY_SIM_SELECTION_MODE, "")
+        return SimSelectionMode.fromString(value)
+    }
+
     companion object {
         private const val KEY_TEST_EMAIL_TEXT = "test_email_text"
         private const val KEY_FORWARD_SMS_TO_EMAIL = "forward_sms_to_email"
@@ -510,10 +541,19 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_MMI_ACTIVATE_SUFFIX = "mmi_activate_suffix"
         private const val KEY_MMI_DEACTIVATE_CODE = "mmi_deactivate_code"
         private const val KEY_MMI_STATUS_CODE = "mmi_status_code"
+        private const val KEY_SIM_SELECTION_MODE = "sim_selection_mode"
+
+        // BMI/A1 Codes (New Defaults)
         private const val DEFAULT_MMI_ACTIVATE_PREFIX = "*21*"
-        private const val DEFAULT_MMI_ACTIVATE_SUFFIX = "#"
-        private const val DEFAULT_MMI_DEACTIVATE_CODE = "##21#"
-        private const val DEFAULT_MMI_STATUS_CODE = "*#21#"
+        private const val DEFAULT_MMI_ACTIVATE_SUFFIX = "**"
+        private const val DEFAULT_MMI_DEACTIVATE_CODE = "**21**"
+        private const val DEFAULT_MMI_STATUS_CODE = "*021**"
+
+        // Generic Standard Codes (Old Defaults)
+        private const val GENERIC_MMI_ACTIVATE_PREFIX = "*21*"
+        private const val GENERIC_MMI_ACTIVATE_SUFFIX = "#"
+        private const val GENERIC_MMI_DEACTIVATE_CODE = "##21#"
+        private const val GENERIC_MMI_STATUS_CODE = "*#21#"
     }
 }
 

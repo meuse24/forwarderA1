@@ -77,6 +77,16 @@ fun SettingsScreen(
                 thickness = 1.dp
             )
 
+            SimSelectionSection(
+                viewModel = viewModel,
+                sectionTitleStyle = sectionTitleStyle
+            )
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
+            )
+
             AppSettingsSection(
                 viewModel = viewModel,
                 emailViewModel = emailViewModel,

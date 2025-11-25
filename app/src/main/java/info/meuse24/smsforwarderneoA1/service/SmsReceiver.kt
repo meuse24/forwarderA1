@@ -3,6 +3,7 @@ package info.meuse24.smsforwarderneoA1.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.Telephony
 import android.util.Log
 import info.meuse24.smsforwarderneoA1.LoggingManager
@@ -61,6 +62,13 @@ class SmsReceiver : BroadcastReceiver() {
      * Wenn die Weiterleitung aktiviert ist, werden die Nachrichten zusammengeführt und weitergeleitet.
      */
     private fun handleSmsReceived(context: Context, intent: Intent) {
+        // Extrahiere Subscription ID (Multi-SIM-Support)
+        val subscriptionId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            intent.extras?.getInt("subscription", -1) ?: -1
+        } else {
+            -1
+        }
+
         val serviceIntent = Intent(context, SmsForegroundService::class.java).apply {
             action = "PROCESS_SMS"
             // Kopiere alle SMS-relevanten Extras
@@ -69,6 +77,8 @@ class SmsReceiver : BroadcastReceiver() {
             }
             // Füge die Original-Action hinzu
             putExtra("original_action", intent.action)
+            // WICHTIG: Subscription ID explizit weitergeben
+            putExtra("subscription", subscriptionId)
             flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
         }
 
@@ -78,7 +88,8 @@ class SmsReceiver : BroadcastReceiver() {
             message = "SMS-Daten an Service übergeben",
             details = mapOf(
                 "has_extras" to (intent.extras != null),
-                "extras_count" to (intent.extras?.size() ?: 0)
+                "extras_count" to (intent.extras?.size() ?: 0),
+                "subscription_id" to subscriptionId
             )
         )
         context.startForegroundService(serviceIntent)

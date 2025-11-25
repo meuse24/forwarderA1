@@ -13,8 +13,11 @@ import androidx.lifecycle.viewModelScope
 import info.meuse24.smsforwarderneoA1.data.local.Logger
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
+import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
+import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 import info.meuse24.smsforwarderneoA1.service.SmsForegroundService
+import info.meuse24.smsforwarderneoA1.PhoneNumberValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,9 +46,6 @@ class ContactsViewModel(
     var onDialMmiCode: ((String) -> Unit)? = null
     var onLaunchContactPicker: (() -> Unit)? = null
     var onErrorOccurred: ((NavigationViewModel.ErrorDialogState) -> Unit)? = null
-
-    // Call state from MainActivity
-    var callStateFlow: StateFlow<Int>? = null
 
     // State
     private val _selectedContact = MutableStateFlow<Contact?>(null)
@@ -89,6 +89,16 @@ class ContactsViewModel(
 
     private val _keepForwardingOnExit = MutableStateFlow(false)
 
+    // SIM Selection StateFlows
+    private val _simSelectionMode = MutableStateFlow(SimSelectionMode.SAME_AS_INCOMING)
+    val simSelectionMode: StateFlow<SimSelectionMode> = _simSelectionMode.asStateFlow()
+
+    private val _availableSimCards = MutableStateFlow<List<SimInfo>>(emptyList())
+    val availableSimCards: StateFlow<List<SimInfo>> = _availableSimCards.asStateFlow()
+
+    private val _defaultSmsSubscriptionId = MutableStateFlow(-1)
+    val defaultSmsSubscriptionId: StateFlow<Int> = _defaultSmsSubscriptionId.asStateFlow()
+
     class Factory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ContactsViewModel::class.java)) {
@@ -125,6 +135,9 @@ class ContactsViewModel(
 
                 // Load saved state
                 loadSavedState()
+
+                // Initialize SIM selection
+                initializeSimSelection()
 
                 LoggingManager.logInfo(
                     component = "ContactsViewModel",
@@ -436,6 +449,25 @@ class ContactsViewModel(
     }
 
     private suspend fun activateForwardingInternal(contact: Contact): ForwardingResult {
+        // Loop Protection: Check if target number matches any known SIM number
+        val ownNumbers = prefsManager.getSimPhoneNumbers().values
+        val validator = PhoneNumberValidator()
+
+        for (ownNumber in ownNumbers) {
+            if (validator.areSameNumber(contact.phoneNumber, ownNumber)) {
+                LoggingManager.logWarning(
+                    component = "ContactsViewModel",
+                    action = "ACTIVATE_FORWARDING_BLOCKED",
+                    message = "Aktivierung blockiert: Ziel entspricht eigener Nummer",
+                    details = mapOf(
+                        "target" to contact.phoneNumber,
+                        "own_number" to ownNumber
+                    )
+                )
+                return ForwardingResult.Error("Fehler: Zielnummer darf nicht die eigene Nummer sein (Loop-Gefahr).")
+            }
+        }
+
         val activateCode = "${prefsManager.getMmiActivatePrefix()}${contact.phoneNumber}${prefsManager.getMmiActivateSuffix()}"
 
         onDialMmiCode?.invoke(activateCode) ?: run {
@@ -755,42 +787,18 @@ class ContactsViewModel(
     }
 
     /**
-     * Resets forwarding and queries status after call completes.
-     * Waits for the deactivation call to finish before querying status.
+     * Resets all forwarding (call forwarding via MMI, SMS, and email).
+     * Status can be queried separately using the Info button.
      */
-    fun resetForwardingWithStatusQuery() {
-        // Deactivate forwarding (triggers MMI call)
+    fun resetAllForwarding() {
+        // Deactivate call forwarding via MMI code
         deactivateCurrentForwarding()
 
-        // Launch coroutine to wait for call completion
-        viewModelScope.launch {
-            val callState = callStateFlow
-            if (callState != null) {
-                // Wait until call is idle using Flow.first
-                callState.first { it == android.telephony.TelephonyManager.CALL_STATE_IDLE }
-
-                // Add buffer after call ends
-                kotlinx.coroutines.delay(500)
-
-                // Query status
-                queryForwardingStatus()
-
-                LoggingManager.logInfo(
-                    component = "ContactsViewModel",
-                    action = "RESET_WITH_STATUS_QUERY",
-                    message = "Reset completed, status query triggered"
-                )
-            } else {
-                // Fallback if callState not available
-                LoggingManager.logWarning(
-                    component = "ContactsViewModel",
-                    action = "RESET_WITH_STATUS_QUERY",
-                    message = "CallState not available, using fallback delay"
-                )
-                kotlinx.coroutines.delay(3000)
-                queryForwardingStatus()
-            }
-        }
+        LoggingManager.logInfo(
+            component = "ContactsViewModel",
+            action = "RESET_ALL_FORWARDING",
+            message = "All forwarding deactivated (call, SMS, email)"
+        )
     }
 
     fun resetMmiCodesToDefault() {
@@ -805,13 +813,91 @@ class ContactsViewModel(
         LoggingManager.logInfo(
             component = "ContactsViewModel",
             action = "RESET_MMI_CODES",
-            message = "MMI-Codes auf Standardwerte zurückgesetzt",
+            message = "MMI-Codes auf Standardwerte (BMI/A1) zurückgesetzt",
             details = mapOf(
                 "activate_prefix" to _mmiActivatePrefix.value,
                 "activate_suffix" to _mmiActivateSuffix.value,
                 "deactivate_code" to _mmiDeactivateCode.value
             )
         )
+    }
+
+    fun resetMmiCodesToGeneric() {
+        _mmiActivatePrefix.value = prefsManager.run {
+            resetMmiCodesToGeneric()
+            getMmiActivatePrefix()
+        }
+        _mmiActivateSuffix.value = prefsManager.getMmiActivateSuffix()
+        _mmiDeactivateCode.value = prefsManager.getMmiDeactivateCode()
+        _mmiStatusCode.value = prefsManager.getMmiStatusCode()
+
+        LoggingManager.logInfo(
+            component = "ContactsViewModel",
+            action = "RESET_MMI_CODES_GENERIC",
+            message = "MMI-Codes auf generische Standardwerte zurückgesetzt",
+            details = mapOf(
+                "activate_prefix" to _mmiActivatePrefix.value,
+                "activate_suffix" to _mmiActivateSuffix.value,
+                "deactivate_code" to _mmiDeactivateCode.value
+            )
+        )
+    }
+
+    // ==================== SIM Selection Functions ====================
+
+    /**
+     * Initialisiert die SIM-Auswahl: Lädt gespeicherten Modus und ermittelt verfügbare SIMs.
+     */
+    private suspend fun initializeSimSelection() {
+        withContext(Dispatchers.IO) {
+            try {
+                // Lade gespeicherten SIM-Auswahl-Modus
+                _simSelectionMode.value = prefsManager.getSimSelectionMode()
+
+                // Ermittle verfügbare SIM-Karten
+                val sims = PhoneSmsUtils.getAllSimInfo(application)
+                _availableSimCards.value = sims
+
+                // Ermittle Standard-SMS-SIM
+                val defaultSims = PhoneSmsUtils.getDefaultSimIds(application)
+                _defaultSmsSubscriptionId.value = defaultSims?.first ?: -1
+
+                LoggingManager.logInfo(
+                    component = "ContactsViewModel",
+                    action = "INIT_SIM_SELECTION",
+                    message = "SIM-Auswahl initialisiert",
+                    details = mapOf(
+                        "mode" to _simSelectionMode.value.name,
+                        "available_sims" to sims.size,
+                        "default_sms_sub_id" to _defaultSmsSubscriptionId.value
+                    )
+                )
+            } catch (e: Exception) {
+                LoggingManager.logError(
+                    component = "ContactsViewModel",
+                    action = "INIT_SIM_SELECTION",
+                    message = "Fehler bei SIM-Auswahl-Initialisierung",
+                    error = e
+                )
+            }
+        }
+    }
+
+    /**
+     * Setzt den SIM-Auswahl-Modus und speichert ihn persistent.
+     */
+    fun setSimSelectionMode(mode: SimSelectionMode) {
+        viewModelScope.launch(Dispatchers.IO) {
+            prefsManager.setSimSelectionMode(mode)
+            _simSelectionMode.value = mode
+
+            LoggingManager.logInfo(
+                component = "ContactsViewModel",
+                action = "SET_SIM_SELECTION",
+                message = "SIM-Auswahl-Modus geändert",
+                details = mapOf("mode" to mode.name)
+            )
+        }
     }
 
     fun updateServiceNotification() {
