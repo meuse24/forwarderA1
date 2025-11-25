@@ -69,9 +69,15 @@ class SmsForegroundService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "MY_CHANNEL_ID"
         private const val DEFAULT_NOTIFICATION_TEXT = "TEL/SMS Forwarder läuft im Hintergrund."
+        private const val MAX_RETRIES = 3
+        private const val INITIAL_RETRY_DELAY = 5000L  // 5 Sekunden
 
         @Volatile
         private var isRunning = false
+
+        // Retry-Counter für fehlerhafte SMS-Verarbeitungen
+        private val retryCounter = mutableMapOf<String, Int>()
+
         fun startService(context: Context) {
             if (!isRunning) {
                 val intent = Intent(context, SmsForegroundService::class.java)
@@ -452,9 +458,64 @@ class SmsForegroundService : Service() {
     }
 
     private fun scheduleRetry(sender: String, parts: List<SmsMessagePart>) {
+        // Eindeutiger Key für diese SMS-Gruppe
+        val retryKey = "${sender}_${parts.hashCode()}"
+
+        // Aktueller Retry-Count für diese Nachricht
+        val currentRetryCount = retryCounter.getOrDefault(retryKey, 0) + 1
+
+        if (currentRetryCount > MAX_RETRIES) {
+            LoggingManager.logError(
+                component = "SmsForegroundService",
+                action = "MAX_RETRIES_REACHED",
+                message = "Maximale Anzahl an Wiederholungsversuchen erreicht, gebe auf",
+                details = mapOf(
+                    "sender" to sender,
+                    "parts_count" to parts.size,
+                    "retry_count" to currentRetryCount
+                )
+            )
+            retryCounter.remove(retryKey)
+            SnackbarManager.showError("SMS von $sender konnte nach $MAX_RETRIES Versuchen nicht verarbeitet werden")
+            return
+        }
+
+        // Speichere aktuellen Retry-Count
+        retryCounter[retryKey] = currentRetryCount
+
+        // Exponentielles Backoff: 5s, 10s, 15s
+        val delayMs = INITIAL_RETRY_DELAY * currentRetryCount
+
+        LoggingManager.logInfo(
+            component = "SmsForegroundService",
+            action = "SCHEDULE_RETRY",
+            message = "SMS-Verarbeitung wird wiederholt",
+            details = mapOf(
+                "sender" to sender,
+                "retry_attempt" to currentRetryCount,
+                "max_retries" to MAX_RETRIES,
+                "delay_ms" to delayMs
+            )
+        )
+
         serviceScope.launch {
-            delay(5000) // 5 Sekunden Wartezeit
-            processMessageGroup(sender, parts)
+            delay(delayMs)
+            try {
+                processMessageGroup(sender, parts)
+                // Bei Erfolg: Counter zurücksetzen
+                retryCounter.remove(retryKey)
+            } catch (e: Exception) {
+                LoggingManager.logError(
+                    component = "SmsForegroundService",
+                    action = "RETRY_FAILED",
+                    message = "Retry-Versuch fehlgeschlagen",
+                    error = e,
+                    details = mapOf(
+                        "sender" to sender,
+                        "retry_attempt" to currentRetryCount
+                    )
+                )
+            }
         }
     }
 
@@ -481,17 +542,19 @@ class SmsForegroundService : Service() {
 
     private fun forwardSms(targetNumber: String, message: String) {
         try {
-            if (message.length > 1600) {
+            // Max 10 Parts × 153 Zeichen (GSM-7) = 1530 Zeichen
+            val maxSmsLength = 1530
+            if (message.length > maxSmsLength) {
                 LoggingManager.logWarning(
                     component = "SmsForegroundService",
                     action = "FORWARD_SMS",
                     message = "Nachricht zu lang für Weiterleitung",
                     details = mapOf(
                         "length" to message.length,
-                        "max_length" to 1600
+                        "max_length" to maxSmsLength
                     )
                 )
-                SnackbarManager.showWarning("Nachricht zu lang für SMS-Weiterleitung")
+                SnackbarManager.showWarning("Nachricht zu lang für SMS-Weiterleitung (max. $maxSmsLength Zeichen)")
                 return
             }
 

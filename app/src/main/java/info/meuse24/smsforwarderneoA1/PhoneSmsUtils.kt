@@ -183,14 +183,22 @@ class PhoneSmsUtils private constructor() {
                     for (i in parts.indices) {
                         val sentIntent = PendingIntent.getBroadcast(
                             context,
-                            0,
-                            Intent("SMS_SENT"),
+                            System.currentTimeMillis().toInt() + i,  // Eindeutiger requestCode
+                            Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
+                                putExtra("part_index", i)
+                                putExtra("total_parts", parts.size)
+                                putExtra("recipient", phoneNumber)
+                            },
                             PendingIntent.FLAG_IMMUTABLE
                         )
                         val deliveredIntent = PendingIntent.getBroadcast(
                             context,
-                            0,
-                            Intent("SMS_DELIVERED"),
+                            System.currentTimeMillis().toInt() + i + 1000,  // Eindeutiger requestCode
+                            Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
+                                putExtra("part_index", i)
+                                putExtra("total_parts", parts.size)
+                                putExtra("recipient", phoneNumber)
+                            },
                             PendingIntent.FLAG_IMMUTABLE
                         )
                         sentIntents.add(sentIntent)
@@ -218,14 +226,22 @@ class PhoneSmsUtils private constructor() {
                 } else {
                     val sentIntent = PendingIntent.getBroadcast(
                         context,
-                        0,
-                        Intent("SMS_SENT"),
+                        System.currentTimeMillis().toInt(),  // Eindeutiger requestCode
+                        Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
+                            putExtra("part_index", -1)  // Single SMS = -1
+                            putExtra("total_parts", 1)
+                            putExtra("recipient", phoneNumber)
+                        },
                         PendingIntent.FLAG_IMMUTABLE
                     )
                     val deliveredIntent = PendingIntent.getBroadcast(
                         context,
-                        0,
-                        Intent("SMS_DELIVERED"),
+                        System.currentTimeMillis().toInt() + 1000,  // Eindeutiger requestCode
+                        Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
+                            putExtra("part_index", -1)  // Single SMS = -1
+                            putExtra("total_parts", 1)
+                            putExtra("recipient", phoneNumber)
+                        },
                         PendingIntent.FLAG_IMMUTABLE
                     )
                     smsManager.sendTextMessage(

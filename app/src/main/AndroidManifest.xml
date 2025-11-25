@@ -61,6 +61,22 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".service.SmsSentReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="info.meuse24.smsforwarderneoA1.SMS_SENT" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".service.SmsDeliveredReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="info.meuse24.smsforwarderneoA1.SMS_DELIVERED" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
