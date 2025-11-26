@@ -59,9 +59,19 @@ fun AppSettingsSection(
     val mailScreenVisible by viewModel.mailScreenVisible.collectAsState()
     val phoneNumberFormatting by viewModel.phoneNumberFormatting.collectAsState()
 
+    // SMTP settings for validation
+    val smtpHost by emailViewModel.smtpHost.collectAsState()
+    val smtpUsername by emailViewModel.smtpUsername.collectAsState()
+    val smtpPassword by emailViewModel.smtpPassword.collectAsState()
+
     var isTestSmsTextFocused by remember { mutableStateOf(false) }
     var isTestEmailTextFocused by remember { mutableStateOf(false) }
     var isTopBarTitleFocused by remember { mutableStateOf(false) }
+
+    // Check if SMTP settings are complete
+    val smtpSettingsComplete = remember(smtpHost, smtpUsername, smtpPassword) {
+        smtpHost.isNotBlank() && smtpUsername.isNotBlank() && smtpPassword.isNotBlank()
+    }
 
     LaunchedEffect(
         isTestSmsTextFocused,
@@ -128,17 +138,37 @@ fun AppSettingsSection(
             ) {
                 Text(
                     text = "Mail-Tab anzeigen",
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (smtpSettingsComplete)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Text(
-                    text = "Zeigt den Mail-Tab in der unteren Navigation an",
+                    text = if (smtpSettingsComplete)
+                        "Zeigt den Mail-Tab in der unteren Navigation an"
+                    else
+                        "SMTP-Einstellungen müssen vollständig sein",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (smtpSettingsComplete)
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    else
+                        MaterialTheme.colorScheme.error
                 )
             }
             Switch(
                 checked = mailScreenVisible,
-                onCheckedChange = { viewModel.updateMailScreenVisibility(it) }
+                enabled = smtpSettingsComplete,
+                onCheckedChange = { checked ->
+                    if (smtpSettingsComplete) {
+                        viewModel.updateMailScreenVisibility(checked)
+                    } else {
+                        SnackbarManager.showWarning(
+                            "Bitte konfigurieren Sie zuerst die SMTP-Einstellungen " +
+                            "(Server, Benutzername, Passwort) im Abschnitt 'E-Mail-Einstellungen'"
+                        )
+                    }
+                }
             )
         }
 

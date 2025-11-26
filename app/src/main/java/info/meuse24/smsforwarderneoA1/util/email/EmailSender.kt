@@ -5,6 +5,7 @@ import kotlinx.coroutines.withContext
 import java.util.Properties
 import javax.mail.Authenticator
 import javax.mail.Message
+import javax.mail.MessagingException
 import javax.mail.PasswordAuthentication
 import javax.mail.Session
 import javax.mail.Transport
@@ -20,10 +21,15 @@ sealed class EmailResult {
 }
 
 /**
- * SMTP email sender with authentication.
+ * SMTP email sender with authentication and enhanced TLS security.
  *
- * Sends emails using JavaMail API with STARTTLS encryption.
+ * Sends emails using JavaMail API with enforced STARTTLS encryption.
  * Supports multiple recipients and UTF-8 encoding.
+ *
+ * Security features:
+ * - STARTTLS required (prevents downgrade attacks)
+ * - TLS 1.2+ only (blocks deprecated protocols)
+ * - Hostname verification enabled (prevents MITM attacks)
  *
  * @param host SMTP server hostname
  * @param port SMTP server port (typically 587 for TLS)
@@ -37,10 +43,24 @@ class EmailSender(
     private val password: String
 ) {
     private val properties = Properties().apply {
+        // Authentication
         put("mail.smtp.auth", "true")
+
+        // STARTTLS - Required (prevents downgrade attacks)
         put("mail.smtp.starttls.enable", "true")
+        put("mail.smtp.starttls.required", "true")
+
+        // SSL/TLS Protocol versions - TLS 1.2+ only
+        put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3")
+
+        // Hostname verification - Prevents MITM attacks
+        put("mail.smtp.ssl.checkserveridentity", "true")
+
+        // Server configuration
         put("mail.smtp.host", host)
         put("mail.smtp.port", port)
+
+        // Timeouts
         put("mail.smtp.timeout", "10000")
         put("mail.smtp.connectiontimeout", "10000")
     }
@@ -84,8 +104,29 @@ class EmailSender(
             Transport.send(message)
             EmailResult.Success
 
+        } catch (e: MessagingException) {
+            // Enhanced error handling for SSL/TLS specific errors
+            val errorMessage = when {
+                e.message?.contains("STARTTLS", ignoreCase = true) == true ->
+                    "Server unterstützt keine sichere TLS-Verbindung"
+
+                e.message?.contains("certificate", ignoreCase = true) == true ||
+                e.message?.contains("SSL", ignoreCase = true) == true ->
+                    "Zertifikatsfehler: Server-Identität konnte nicht verifiziert werden"
+
+                e.message?.contains("authentication failed", ignoreCase = true) == true ->
+                    "Authentifizierung fehlgeschlagen: Benutzername oder Passwort falsch"
+
+                e.message?.contains("connection", ignoreCase = true) == true ->
+                    "Verbindung zum Server fehlgeschlagen"
+
+                else ->
+                    "Fehler beim E-Mail-Versand: ${e.message}"
+            }
+            EmailResult.Error(errorMessage)
+
         } catch (e: Exception) {
-            EmailResult.Error("Fehler beim E-Mail-Versand: ${e.message}")
+            EmailResult.Error("Unerwarteter Fehler beim E-Mail-Versand: ${e.message}")
         }
     }
 }

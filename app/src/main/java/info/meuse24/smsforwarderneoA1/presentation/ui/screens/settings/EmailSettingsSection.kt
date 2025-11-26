@@ -85,33 +85,31 @@ fun EmailSettingsSection(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (!smtpHost.equals("smtp.world4you.com", ignoreCase = true)) {
-            OutlinedTextField(
-                value = smtpPassword,
-                onValueChange = { emailViewModel.updateSmtpSettings(smtpHost, smtpPort, smtpUsername, it) },
-                label = { Text("Passwort") },
-                visualTransformation = if (isPasswordVisible)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                trailingIcon = {
-                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                        Icon(
-                            imageVector = if (isPasswordVisible)
-                                Icons.Default.Visibility
-                            else
-                                Icons.Default.VisibilityOff,
-                            contentDescription = if (isPasswordVisible)
-                                "Passwort verbergen"
-                            else
-                                "Passwort anzeigen"
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+        OutlinedTextField(
+            value = smtpPassword,
+            onValueChange = { emailViewModel.updateSmtpSettings(smtpHost, smtpPort, smtpUsername, it) },
+            label = { Text("Passwort") },
+            visualTransformation = if (isPasswordVisible)
+                VisualTransformation.None
+            else
+                PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                    Icon(
+                        imageVector = if (isPasswordVisible)
+                            Icons.Default.Visibility
+                        else
+                            Icons.Default.VisibilityOff,
+                        contentDescription = if (isPasswordVisible)
+                            "Passwort verbergen"
+                        else
+                            "Passwort anzeigen"
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
