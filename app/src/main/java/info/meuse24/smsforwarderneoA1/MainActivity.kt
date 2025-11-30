@@ -645,6 +645,33 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+            // Zeige Hinweis für 4 Sekunden vor dem Wählen
+            SnackbarManager.showInfo(
+                message = """
+                ⏳ Wählvorgang wird gestartet...
+
+                    ═════════════
+                  ⚠️  BITTE WARTEN  ⚠️
+                     NICHT BEDIENEN!
+                    ═════════════
+
+                ► Den Wählvorgang abwarten
+                ► Nichts antippen
+                ► App kehrt automatisch zurück
+                """.trimIndent(),
+                duration = SnackbarManager.Duration.LONG
+            )
+
+            LoggingManager.logInfo(
+                component = "MainActivity",
+                action = "DIAL_MMI_PREPARING",
+                message = "Zeige Benutzer-Hinweis vor Wählvorgang",
+                details = mapOf("code" to normalizedCode, "delay_ms" to 4000)
+            )
+
+            // Warte 4 Sekunden, damit Benutzer die Nachricht lesen kann
+            delay(4000)
+
             // Proceed with dialing
             dialCodeNow(normalizedCode, code)
         }
