@@ -1,0 +1,35 @@
+Nr;Datum;Zeit;Eintrag
+29;2025-11-25;16:53:16; [SmsForegroundService; WAKE_LOCK_RELEASED | WakeLock freigegeben
+28;2025-11-25;16:53:16; [SmsForegroundService; PROCESS_SMS | messages_count=1, groups_count=1, subscription_id=2 | SMS-Verarbeitung abgeschlossen
+27;2025-11-25;16:53:16; [SmsForegroundService; UPDATE_NOTIFICATION | text=SMS-Weiterleitung aktiv zu +43 6644440286, success=true | Notification aktualisiert
+26;2025-11-25;16:53:16; [SmsForegroundService; FORWARD_SMS | target=+43 6644440286, length=73, is_multipart=false | SMS erfolgreich weitergeleitet
+25;2025-11-25;16:53:16; [PhoneSmsUtils; SEND_SMS | recipient=+43 6644440286, text=Von: +4368120261353 Zeit: 25.11.2025 16:53:16 SIM: Slot 2 Nachricht: Test | Single SMS sent
+24;2025-11-25;16:53:15; [SmsForegroundService; PROCESS_MESSAGE_GROUP | sender=+4368120261353, parts_count=1, total_length=4, is_multipart=false, subscription_id=2 | Verarbeite SMS-Gruppe
+23;2025-11-25;16:53:15; [SmsForegroundService; WAKE_LOCK_ACQUIRED | timeout_ms=120000 | WakeLock aktiviert
+22;2025-11-25;16:53:15; [SmsReceiver; FORWARD_TO_SERVICE | has_extras=true, extras_count=7 | SMS-Daten an Service uebergeben
+21;2025-11-25;16:44:26; [MainActivity; SHARE_LOGS | filename=sms_forwarder_log_20251125_164426.csv, size=2954 | CSV-Log-Datei wurde zum Teilen erstellt
+20;2025-11-25;16:44:12; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
+19;2025-11-25;16:44:12; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
+18;2025-11-25;16:44:12; [ContactsViewModel; RESTORE_CONTACT | contact=Dani, number=+43 6644440286, forwarding_active=true | Gespeicherter Kontakt wiederhergestellt
+17;2025-11-25;16:44:12; [MainActivity; CHECK_SIM_NUMBERS | total_sims=2, missing_numbers=0, auto_detected=1 | SIM-Nummern-Pruefung abgeschlossen
+16;2025-11-25;16:44:12; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=2, slot=1, carrier=A1 AT | Telefonnummer konnte nicht automatisch ermittelt werden
+15;2025-11-25;16:44:12; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=1, slot=0, method=subscription_info | Telefonnummer ueber Subscription Info ermittelt
+14;2025-11-25;16:44:12; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
+13;2025-11-25;16:44:12; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
+12;2025-11-25;16:44:12; [ContactsViewModel; RESTORE_CONTACT | contact=Dani, number=+43 6644440286, forwarding_active=true | Gespeicherter Kontakt wiederhergestellt
+11;2025-11-25;16:44:11; [MainActivity; CALL_STATE_CHANGED | state=IDLE | Telefonstatus geaendert
+10;2025-11-25;16:44:11; [SmsForegroundService; START | Service started successfully
+9;2025-11-25;16:44:11; [MainActivity; CHECK_BATTERY_OPT | isIgnoring=true | Battery Optimization Status geprueft
+8;2025-11-25;16:44:11; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
+7;2025-11-25;16:44:11; [ContactsViewModel; RESTORE_CONTACT | contact=Dani, number=+43 6644440286, forwarding_active=true | Gespeicherter Kontakt wiederhergestellt
+6;2025-11-25;16:44:11; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
+5;2025-11-25;16:44:11; [BootReceiver; BOOT_COMPLETED | Geraet wurde neu gestartet - starte SMS Foreground Service
+4;2025-11-25;16:44:11; [Application; INIT | Base components initialized successfully
+3;2025-11-25;16:44:11; [BootReceiver; SERVICE_STARTED | SMS Foreground Service erfolgreich nach Neustart gestartet
+2;2025-11-25;16:44:11; [LoggingManager; INIT | Logging system initialized
+1;2025-11-25;16:44:10; [Logger; INIT | Logger initialized. Device: samsung SM-A536B, Android: 16 (API 36)
+1;2025-11-25;16:44:10; [Logger; INIT | Logger initialized. Device: samsung SM-A536B, Android: 16 (API 36)
+38;2025-11-25;16:41:52; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
+37;2025-11-25;16:41:52; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
+36;2025-11-25;16:41:52; [ContactsViewModel; RESTORE_CONTACT | contact=Dani, number=+43 6644440286, forwarding_active=true | Gespeicherter Kontakt wiederhergestellt
+35;2025-11-25;16:41:48; [SettingsScreen; CLEAR_LOGS | Log-Eintraege wurden geloescht

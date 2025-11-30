@@ -1,0 +1,489 @@
+package info.meuse24.smsforwarderneoA1
+
+import android.annotation.SuppressLint
+import android.app.Application
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.ComponentCallbacks2
+import android.content.Context
+import android.os.Build
+import android.util.Log
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import info.meuse24.smsforwarderneoA1.data.local.Logger
+import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
+import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
+
+// Type aliases for backward compatibility
+typealias LogLevel = Logger.LogLevel
+typealias LogMetadata = Logger.LogMetadata
+
+object AppContainer {
+    private lateinit var application: SmsForwarderApplication
+    private var activity: MainActivity? = null // Optional statt lateinit
+
+    private val _isBasicInitialized = MutableStateFlow(false)
+    val isBasicInitialized = _isBasicInitialized.asStateFlow() // Public StateFlow
+
+    private val _isFullyInitialized = MutableStateFlow(false)
+    val isInitialized = _isFullyInitialized.asStateFlow()
+
+
+    lateinit var logger: Logger
+        private set
+
+    lateinit var prefsManager: SharedPreferencesManager
+        private set
+
+    lateinit var permissionHandler: PermissionHandler
+        private set
+
+    private lateinit var phoneUtils: PhoneSmsUtils.Companion
+
+    fun initializeCritical(app: SmsForwarderApplication) {
+        Log.d("AppContainer", "Starting critical initialization")
+        application = app
+        logger = Logger(app)
+        prefsManager = SharedPreferencesManager(app)
+        PhoneSmsUtils.initialize()
+        phoneUtils = PhoneSmsUtils
+        _isBasicInitialized.value = true
+        Log.d("AppContainer", "Critical initialization complete")
+    }
+
+    fun initializeWithActivity(mainActivity: MainActivity) {
+        Log.d("AppContainer", "Starting activity-dependent initialization")
+        try {
+            activity = mainActivity
+            permissionHandler = PermissionHandler(mainActivity)
+            _isFullyInitialized.value = true
+            Log.d("AppContainer", "Full initialization complete")
+        } catch (e: Exception) {
+            Log.e("AppContainer", "Error in activity initialization", e)
+            throw e
+        }
+    }
+
+    // Hilfsmethode zum Prüfen des Initialisierungsstatus
+    fun isBasicInitialized() = _isBasicInitialized.value
+
+    // Sichere Zugriffsmethoden mit Initialisierungsprüfung
+    fun getLoggerSafe(): Logger? {
+        return if (::logger.isInitialized) logger else null
+    }
+
+    fun getPrefsManagerSafe(): SharedPreferencesManager? {
+        return if (::prefsManager.isInitialized) prefsManager else null
+    }
+
+    fun getPermissionHandlerSafe(): PermissionHandler? {
+        return if (::permissionHandler.isInitialized) permissionHandler else null
+    }
+
+    // Blocking-Zugriff für kritische Operationen (wirft Exception wenn nicht initialisiert)
+    fun requireLogger(): Logger {
+        if (!::logger.isInitialized) {
+            throw IllegalStateException("Logger not initialized. Call initializeCritical() first.")
+        }
+        return logger
+    }
+
+    fun requirePrefsManager(): SharedPreferencesManager {
+        if (!::prefsManager.isInitialized) {
+            throw IllegalStateException("PrefsManager not initialized. Call initializeCritical() first.")
+        }
+        return prefsManager
+    }
+
+    fun requirePermissionHandler(): PermissionHandler {
+        if (!::permissionHandler.isInitialized) {
+            throw IllegalStateException("PermissionHandler not initialized. Call initializeWithActivity() first.")
+        }
+        return permissionHandler
+    }
+
+    fun getApplication(): SmsForwarderApplication = application
+}
+
+class SmsForwarderApplication : Application() {
+    private val applicationScope = CoroutineScope(Job() + Dispatchers.Default)
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        createNotificationChannel()
+        // Nur Basis-Initialisierung
+        initializeCriticalComponents()
+        initializeBaseComponents()  // Add this call
+    }
+
+    @SuppressLint("ObsoleteSdkInt")
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(NotificationManager::class.java)
+
+            // Existenzprüfung vor try-catch Block
+            val existingChannel = notificationManager?.getNotificationChannel("MY_CHANNEL_ID")
+            if (existingChannel != null) {
+                return
+            }
+
+            try {
+                val channel = NotificationChannel(
+                    "MY_CHANNEL_ID",
+                    "SMS Weiterleitung",
+                    NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "Zeigt den Status der SMS/Anruf-Weiterleitung an"
+                    setShowBadge(true)
+                    enableLights(false)
+                    enableVibration(false)
+                    vibrationPattern = null
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                }
+
+                notificationManager?.createNotificationChannel(channel)
+
+            } catch (e: Exception) {
+                LoggingManager.logError(
+                    component = "SmsForwarderApplication",
+                    action = "CREATE_NOTIFICATION_CHANNEL",
+                    message = "Fehler beim Erstellen des Notification Channels",
+                    error = e
+                )
+            }
+        }
+    }
+
+    private fun initializeCriticalComponents() {
+        try {
+            AppContainer.initializeCritical(this)
+        } catch (e: Exception) {
+            Log.e("SmsForwarderApplication", "Critical initialization failed", e)
+            throw e
+        }
+    }
+
+    private fun initializeBaseComponents() {
+        try {
+            // Initialize LoggingManager with Application context
+            LoggingManager.initialize(this)  // 'this' ist der Application context
+
+            // Add initial log entry after proper initialization
+            LoggingManager.logInfo(
+                component = "Application",
+                action = "INIT",
+                message = "Base components initialized successfully"
+            )
+        } catch (e: Exception) {
+            Log.e("SmsForwarderApplication", "Base initialization failed", e)
+            throw e
+        }
+    }
+
+
+    override fun onTerminate() {
+        super.onTerminate()
+        applicationScope.cancel()
+        LoggingManager.logInfo(
+            component = "Application",
+            action = "TERMINATE",
+            message = "Application is terminating"
+        )
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        LoggingManager.logWarning(
+            component = "Application",
+            action = "LOW_MEMORY",
+            message = "System reports low memory",
+            details = mapOf(
+                "free_memory" to Runtime.getRuntime().freeMemory(),
+                "total_memory" to Runtime.getRuntime().totalMemory()
+            )
+        )
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        // Moderne Alternative zu TRIM_MEMORY_MODERATE
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE) {
+            LoggingManager.logWarning(
+                component = "Application",
+                action = "TRIM_MEMORY",
+                message = "System requests memory trim",
+                details = mapOf("level" to level)
+            )
+        }
+    }
+
+    companion object {
+        @Volatile
+        private var instance: SmsForwarderApplication? = null
+
+    }
+}
+
+object LoggingManager {
+    private lateinit var logger: Logger
+    private val initialized = AtomicBoolean(false)
+
+    fun initialize(context: Context) {
+        logger = Logger(context)
+        initialized.set(true)
+
+        logInfo(
+            component = "LoggingManager",
+            action = "INIT",
+            message = "Logging system initialized"
+        )
+    }
+    fun log(
+        level: LogLevel,
+        metadata: LogMetadata,
+        message: String,
+        throwable: Throwable? = null
+    ) {
+        if (!initialized.get()) {
+            Log.e("LoggingManager", "Logging before initialization: $message")
+            return
+        }
+
+        try {
+            logger.log(level, metadata, message, throwable)
+        } catch (e: Exception) {
+            Log.e("LoggingManager", "Logging error: ${e.message}", e)
+        }
+    }
+
+    fun logInfo(
+        component: String,
+        action: String,
+        message: String,
+        details: Map<String, Any?> = emptyMap()
+    ) {
+        if (!initialized.get()) {
+            Log.e("LoggingManager", "Logging before initialization: $message")
+            return
+        }
+
+        logger.log(
+            Logger.LogLevel.INFO,
+            Logger.LogMetadata(component, action, details),
+            message
+        )
+    }
+
+    fun logWarning(
+        component: String,
+        action: String,
+        message: String,
+        details: Map<String, Any?> = emptyMap()
+    ) {
+        if (!initialized.get()) return
+
+        logger.log(
+            Logger.LogLevel.WARNING,
+            Logger.LogMetadata(component, action, details),
+            message
+        )
+    }
+
+    fun logError(
+        component: String,
+        action: String,
+        message: String,
+        error: Throwable? = null,
+        details: Map<String, Any?> = emptyMap()
+    ) {
+        if (!initialized.get()) return
+
+        logger.log(
+            Logger.LogLevel.ERROR,
+            Logger.LogMetadata(component, action, details),
+            message,
+            error
+        )
+    }
+
+    fun logDebug(
+        component: String,
+        action: String,
+        message: String,
+        details: Map<String, Any?> = emptyMap()
+    ) {
+        if (!initialized.get()) return
+
+        logger.log(
+            Logger.LogLevel.DEBUG,
+            Logger.LogMetadata(component, action, details),
+            message
+        )
+    }
+}
+
+object SnackbarManager {
+
+        private var snackbarHostState: SnackbarHostState? = null
+        private var coroutineScope: CoroutineScope? = null
+        private val pendingMessages = mutableListOf<SnackbarConfig>()
+        private val lock = Any()
+
+        enum class SnackbarType {
+            INFO,
+            SUCCESS,
+            WARNING,
+            ERROR
+        }
+
+        enum class Duration(val composeDuration: SnackbarDuration) {
+            SHORT(SnackbarDuration.Short),
+            LONG(SnackbarDuration.Long),
+        }
+
+        data class SnackbarConfig(
+            val message: String,
+            val type: SnackbarType = SnackbarType.INFO,
+            val duration: Duration = Duration.SHORT,
+            val actionText: String? = null,
+            val action: (() -> Unit)? = null
+        )
+
+        fun setSnackbarState(hostState: SnackbarHostState, scope: CoroutineScope) {
+            synchronized(lock) {
+                snackbarHostState = hostState
+                coroutineScope = scope
+
+                // Zeige ausstehende Nachrichten
+                if (pendingMessages.isNotEmpty()) {
+                    scope.launch {
+                        pendingMessages.toList().forEach { config ->
+                            showMessage(config)
+                            pendingMessages.remove(config)
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun showMessage(config: SnackbarConfig) {
+            synchronized(lock) {
+                val hostState = snackbarHostState
+                val scope = coroutineScope
+
+                if (hostState == null || scope == null) {
+
+                    pendingMessages.add(config)
+                    return
+                }
+
+                scope.launch {
+                    try {
+                        val result = hostState.showSnackbar(
+                            message = config.message,
+                            actionLabel = config.actionText,
+                            duration = config.duration.composeDuration,
+                            withDismissAction = true
+                        )
+
+                        when (result) {
+                            SnackbarResult.ActionPerformed -> {
+                                config.action?.invoke()
+                            }
+                            SnackbarResult.Dismissed -> {
+                                // Snackbar wurde geschlossen
+                            }
+                        }
+                    } catch (e: Exception) {
+                        LoggingManager.logError(
+                            component = "SnackbarManager",
+                            action = "SHOW_MESSAGE_ERROR",
+                            message = "Fehler beim Anzeigen der Snackbar",
+                            error = e
+                        )
+                    }
+                }
+            }
+        }
+
+    // Helper methods
+    fun showInfo(
+        message: String,
+        duration: Duration = Duration.SHORT,
+        actionText: String? = null,
+        action: (() -> Unit)? = null
+    ) {
+        showMessage(
+            SnackbarConfig(
+                message = message,
+                type = SnackbarType.INFO,
+                duration = duration,
+                actionText = actionText,
+                action = action
+            )
+        )
+    }
+
+    fun showSuccess(
+        message: String,
+        duration: Duration = Duration.SHORT,
+        actionText: String? = null,
+        action: (() -> Unit)? = null
+    ) {
+        showMessage(
+            SnackbarConfig(
+                message = message,
+                type = SnackbarType.SUCCESS,
+                duration = duration,
+                actionText = actionText,
+                action = action
+            )
+        )
+    }
+
+    fun showWarning(
+        message: String,
+        duration: Duration = Duration.LONG,
+        actionText: String? = null,
+        action: (() -> Unit)? = null
+    ) {
+        showMessage(
+            SnackbarConfig(
+                message = message,
+                type = SnackbarType.WARNING,
+                duration = duration,
+                actionText = actionText,
+                action = action
+            )
+        )
+    }
+
+    fun showError(
+        message: String,
+        duration: Duration = Duration.LONG,
+        actionText: String? = null,
+        action: (() -> Unit)? = null
+    ) {
+        showMessage(
+            SnackbarConfig(
+                message = message,
+                type = SnackbarType.ERROR,
+                duration = duration,
+                actionText = actionText,
+                action = action
+            )
+        )
+    }
+}
+
