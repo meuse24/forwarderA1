@@ -213,7 +213,7 @@ ui/theme/
 
 ## 📊 Refactoring-Historie
 
-### Phase 4: UI Decomposition (2025-11-17)
+### Phase 4: UI Decomposition (2025-01-17)
 **Ziel**: MainActivity in modulare Screens aufteilen
 
 | Metrik | Vorher | Nachher | Reduktion |
@@ -227,7 +227,7 @@ ui/theme/
 - Screen-basierte Organisation
 - Bessere Wartbarkeit
 
-### Phase 5: ViewModel Decomposition (2025-11-18)
+### Phase 5: ViewModel Decomposition (2025-01-18)
 **Ziel**: Low-Risk ViewModels aus ContactsViewModel extrahieren
 
 | Metrik | Vorher | Nachher | Reduktion |
