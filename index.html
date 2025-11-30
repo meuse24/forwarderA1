@@ -2,11 +2,14 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="SMS/TEL Forwarder Neo - Zuverlässige Weiterleitung von SMS und Anrufen via SMS & Email. Open Source Android App.">
+    <meta name="keywords" content="SMS Forwarding, Call Forwarding, Android, Open Source, Email Forwarding">
+    <meta name="author" content="Günther Meusburger">
     <title>SMS/TEL Forwarder Neo - Download</title>
     <style>
         :root {
-            --primary-color: #2e7d32; /* Android Green */
+            --primary-color: #2e7d32;
             --primary-hover: #1b5e20;
             --github-color: #24292e;
             --github-hover: #000000;
@@ -17,49 +20,57 @@
             --accent-bg: #e8f5e9;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             line-height: 1.6;
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 0;
             min-height: 100vh;
         }
 
         .container {
             background-color: var(--card-bg);
             width: 100%;
-            max-width: 900px;
-            border-radius: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
         }
 
         .header {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
             color: white;
-            padding: 40px;
+            padding: clamp(20px, 5vw, 40px);
             text-align: center;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 2.5rem;
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
             font-weight: 700;
+            word-wrap: break-word;
         }
 
         .header p {
             margin-top: 10px;
-            opacity: 0.9;
-            font-size: 1.1rem;
+            opacity: 0.95;
+            font-size: clamp(0.95rem, 3vw, 1.1rem);
         }
 
         .content {
-            padding: 40px;
+            padding: clamp(16px, 4vw, 40px);
+        }
+
+        .intro {
+            font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+            line-height: 1.7;
+            margin-bottom: 30px;
+            text-align: center;
         }
 
         .actions {
@@ -67,23 +78,36 @@
             gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 40px;
+            margin-bottom: clamp(20px, 5vw, 40px);
         }
 
         .btn {
             display: inline-flex;
             align-items: center;
-            padding: 12px 28px;
+            justify-content: center;
+            padding: clamp(10px, 2vw, 12px) clamp(20px, 4vw, 28px);
             border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
+            font-size: clamp(0.875rem, 2vw, 1rem);
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-height: 44px;
+            text-align: center;
         }
 
-        .btn:hover {
+        .btn:hover,
+        .btn:focus {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            outline: 2px solid rgba(0,0,0,0.1);
+        }
+
+        .btn svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            flex-shrink: 0;
         }
 
         .btn-download {
@@ -106,100 +130,241 @@
 
         .section-title {
             color: var(--primary-color);
-            border-bottom: 2px solid var(--accent-bg);
+            border-bottom: 3px solid var(--accent-bg);
             padding-bottom: 10px;
-            margin-bottom: 20px;
-            margin-top: 0;
+            margin-bottom: 25px;
+            margin-top: clamp(20px, 5vw, 40px);
+            font-size: clamp(1.3rem, 4vw, 1.75rem);
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+            gap: clamp(15px, 3vw, 20px);
             margin-bottom: 30px;
         }
 
         .feature-item {
             background-color: #fafafa;
-            padding: 20px;
+            padding: clamp(16px, 3vw, 20px);
             border-radius: 10px;
             border-left: 5px solid var(--primary-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
         }
 
         .feature-item h3 {
             margin-top: 0;
+            margin-bottom: 12px;
             color: var(--text-main);
+            font-size: clamp(1rem, 3vw, 1.15rem);
+            word-wrap: break-word;
         }
 
         .feature-item ul {
             margin: 10px 0 0 0;
-            padding-left: 20px;
+            padding-left: clamp(16px, 4vw, 20px);
             color: var(--text-secondary);
+        }
+
+        .feature-item li {
+            margin-bottom: 8px;
+            font-size: clamp(0.875rem, 2vw, 0.95rem);
+            line-height: 1.5;
+        }
+
+        .info-box,
+        .warning-box {
+            padding: clamp(16px, 3vw, 20px);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            line-height: 1.6;
         }
 
         .info-box {
             background-color: #e3f2fd;
             border: 1px solid #bbdefb;
             color: #0d47a1;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
         }
 
         .warning-box {
             background-color: #fff3cd;
             border: 1px solid #ffeeba;
             color: #856404;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
         }
-        
-        .new-badge {
-            background-color: #ff9800;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            vertical-align: middle;
-            margin-left: 8px;
+
+        .info-box ul,
+        .warning-box ul {
+            margin: 10px 0 0 0;
+            padding-left: clamp(16px, 4vw, 20px);
+        }
+
+        .info-box li,
+        .warning-box li {
+            margin-bottom: 8px;
+            font-size: clamp(0.875rem, 2vw, 0.95rem);
         }
 
         footer {
             background-color: #f9f9f9;
-            padding: 20px;
+            padding: clamp(16px, 3vw, 20px);
             text-align: center;
-            font-size: 0.9rem;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
             color: var(--text-secondary);
             border-top: 1px solid #eee;
         }
 
         code {
             background-color: #eee;
-            padding: 2px 5px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-family: monospace;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                border-radius: 0;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .feature-item ul ul {
+                padding-left: 16px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .content {
+                padding: 16px;
+            }
+
+            code {
+                font-size: 0.75em;
+            }
+        }
+
+        /* High DPI / Retina displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .btn {
+                box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .actions {
+                display: none;
+            }
+
+            .feature-item {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --card-bg: #1e1e1e;
+                --text-main: #e0e0e0;
+                --text-secondary: #b0b0b0;
+                --accent-bg: #2e7d32;
+            }
+
+            .feature-item {
+                background-color: #2a2a2a;
+            }
+
+            .info-box {
+                background-color: #1a2332;
+                border-color: #2d3e50;
+                color: #64b5f6;
+            }
+
+            .warning-box {
+                background-color: #332a1a;
+                border-color: #4d3d20;
+                color: #ffb74d;
+            }
+
+            footer {
+                background-color: #1a1a1a;
+                border-top-color: #333;
+            }
+
+            code {
+                background-color: #333;
+                color: #e0e0e0;
+            }
+        }
+
+        /* Accessibility: Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus visible for keyboard navigation */
+        *:focus-visible {
+            outline: 3px solid var(--primary-color);
+            outline-offset: 2px;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="header">
+        <header class="header">
             <h1>SMS/TEL Forwarder Neo</h1>
             <p>Version: Anchovy (v3)</p>
-        </div>
+        </header>
 
-        <div class="content">
+        <main class="content">
             <div class="actions">
-                <a href="https://meuse24.info/forwarder/TelSmsForwarderNeoV3.apk" class="btn btn-download" target="_blank">
-                    <svg style="width:24px;height:24px;margin-right:8px" viewBox="0 0 24 24">
+                <a href="https://meuse24.info/forwarder/TelSmsForwarderNeoV3.apk" class="btn btn-download" target="_blank" rel="noopener noreferrer" aria-label="APK herunterladen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
                     </svg>
                     APK Herunterladen
                 </a>
-                <a href="https://github.com/meuse24/forwarderA1" class="btn btn-github" target="_blank">
-                    <svg style="width:24px;height:24px;margin-right:8px" viewBox="0 0 24 24">
+                <a href="https://github.com/meuse24/forwarderA1" class="btn btn-github" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository öffnen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z" />
                     </svg>
                     GitHub Repository
@@ -207,14 +372,14 @@
             </div>
 
             <p class="intro">
-                Diese App ermöglicht die zuverlässige Weiterleitung von SMS und Anrufen an andere Telefonnummern oder E-Mail-Adressen. 
+                Diese App ermöglicht die zuverlässige Weiterleitung von SMS und Anrufen an andere Telefonnummern oder E-Mail-Adressen.
                 Ideal für "stationäre Smartphones" oder temporäre Erreichbarkeit unter anderer Nummer.
             </p>
 
             <h2 class="section-title">Features</h2>
 
             <div class="features-grid">
-                <div class="feature-item">
+                <article class="feature-item">
                     <h3>📞 Anrufweiterleitung</h3>
                     <ul>
                         <li><strong>Anpassbare MMI-Codes:</strong> Wählbar zwischen Standard-Codes und A1-spezifischen Codes
@@ -229,21 +394,21 @@
                         <li><strong>Internationale Vorwahl:</strong> Konfigurierbare Dial-Präfixe (Standard: "00" für Österreich)</li>
                         <li><strong>Benutzerführung:</strong> Automatische Anleitung bei MMI-Code-Wählvorgängen</li>
                     </ul>
-                </div>
+                </article>
 
-                <div class="feature-item">
+                <article class="feature-item">
                     <h3>💬 SMS-Weiterleitung</h3>
                     <ul>
                         <li><strong>Automatische Weiterleitung:</strong> Empfangene SMS werden sofort weitergeleitet</li>
-                        <li><strong>Multi-Part SMS Support:</strong> Intelligente Rekonstruktion langer Nachrichten (>160 Zeichen)</li>
+                        <li><strong>Multi-Part SMS Support:</strong> Intelligente Rekonstruktion langer Nachrichten (&gt;160 Zeichen)</li>
                         <li><strong>Parallele Zustellung:</strong> SMS + E-Mail gleichzeitig (optional)</li>
                         <li><strong>Loop-Detection:</strong> Verhindert Weiterleitungsschleifen</li>
                         <li><strong>Foreground Service:</strong> Zuverlässige Hintergrundverarbeitung mit WakeLock</li>
                         <li><strong>Test-SMS Funktion:</strong> Einfaches Testen der Weiterleitung direkt in der App</li>
                     </ul>
-                </div>
+                </article>
 
-                <div class="feature-item">
+                <article class="feature-item">
                     <h3>📧 E-Mail Integration</h3>
                     <ul>
                         <li><strong>SMTP-Konfiguration:</strong> Unterstützung für alle SMTP-Server (Gmail, Outlook, etc.)</li>
@@ -252,9 +417,9 @@
                         <li><strong>Detaillierte Logs:</strong> Nachvollziehbare Zustellberichte</li>
                         <li><strong>Test-Funktion:</strong> E-Mail-Konfiguration direkt testen</li>
                     </ul>
-                </div>
+                </article>
 
-                <div class="feature-item">
+                <article class="feature-item">
                     <h3>🎯 Benutzerfreundlichkeit</h3>
                     <ul>
                         <li><strong>Android Contact Picker:</strong> Einfache Kontaktauswahl aus dem Telefonbuch</li>
@@ -263,10 +428,10 @@
                         <li><strong>Ein-Klick-Aktionen:</strong> Schneller Zugriff auf alle Funktionen</li>
                         <li><strong>Status-Indikatoren:</strong> Klare Anzeige des Weiterleitungsstatus</li>
                     </ul>
-                </div>
+                </article>
 
-                <div class="feature-item">
-                    <h3>🔒 Sicherheit & Datenschutz</h3>
+                <article class="feature-item">
+                    <h3>🔒 Sicherheit &amp; Datenschutz</h3>
                     <ul>
                         <li><strong>Verschlüsselte Präferenzen:</strong> Alle Einstellungen werden verschlüsselt gespeichert</li>
                         <li><strong>Keine Cloud-Synchronisation:</strong> Alle Daten bleiben lokal auf dem Gerät</li>
@@ -274,10 +439,10 @@
                         <li><strong>Keine Tracking-Dienste:</strong> Keinerlei Datensammlung oder Analytics</li>
                         <li><strong>Minimale Berechtigungen:</strong> Nur notwendige Berechtigungen werden angefordert</li>
                     </ul>
-                </div>
+                </article>
 
-                <div class="feature-item">
-                    <h3>📊 Logging & Debugging</h3>
+                <article class="feature-item">
+                    <h3>📊 Logging &amp; Debugging</h3>
                     <ul>
                         <li><strong>Strukturiertes XML-Logging:</strong> Detaillierte Aufzeichnung aller Ereignisse</li>
                         <li><strong>Log-Rotation:</strong> Automatische Verwaltung alter Log-Dateien</li>
@@ -285,9 +450,9 @@
                         <li><strong>Filterbare Ansicht:</strong> Einfaches Durchsuchen der Logs</li>
                         <li><strong>Fehlerdiagnose:</strong> Hilfreiche Informationen bei Problemen</li>
                     </ul>
-                </div>
+                </article>
 
-                <div class="feature-item">
+                <article class="feature-item">
                     <h3>⚙️ Technische Highlights</h3>
                     <ul>
                         <li><strong>Clean Architecture:</strong> Klare Trennung von Data/Domain/Presentation</li>
@@ -297,9 +462,9 @@
                         <li><strong>SharedPreferences + Encryption:</strong> Sichere Datenspeicherung</li>
                         <li><strong>Android 10+ Support:</strong> Target SDK 34, Min SDK 29</li>
                     </ul>
-                </div>
+                </article>
 
-                <div class="feature-item">
+                <article class="feature-item">
                     <h3>🔧 SIM-Management</h3>
                     <ul>
                         <li><strong>Multi-SIM Support:</strong> Automatische Erkennung mehrerer SIM-Karten</li>
@@ -307,12 +472,12 @@
                         <li><strong>SIM-Info-Anzeige:</strong> Carrier-Name, Nummer, Status</li>
                         <li><strong>Slot-Zuordnung:</strong> Klare Unterscheidung zwischen SIM 1 und SIM 2</li>
                     </ul>
-                </div>
+                </article>
             </div>
 
-            <h2 class="section-title">Wichtige Hinweise & Best Practices</h2>
-            <div class="info-box">
-                <p>Um eine reibungslose Funktionalität der App zu gewährleisten, beachten Sie bitte folgende Punkte:</p>
+            <h2 class="section-title">Wichtige Hinweise &amp; Best Practices</h2>
+            <div class="info-box" role="complementary">
+                <p><strong>Um eine reibungslose Funktionalität der App zu gewährleisten, beachten Sie bitte folgende Punkte:</strong></p>
                 <ul>
                     <li><strong>Berechtigungen:</strong> Stellen Sie sicher, dass alle angeforderten Berechtigungen (SMS, Kontakte, Telefonstatus) erteilt wurden.</li>
                     <li><strong>Batterieoptimierung:</strong> Deaktivieren Sie die Batterieoptimierung für diese App in den Android-Einstellungen, um eine zuverlässige Hintergrundverarbeitung zu gewährleisten.</li>
@@ -322,9 +487,9 @@
                 </ul>
             </div>
 
-            <div class="warning-box">
+            <div class="warning-box" role="alert">
                 <strong>Hinweis zur Installation:</strong>
-                Da diese App tiefgreifende Systemrechte (SMS/Anrufe) benötigt, ist sie nicht im Play Store verfügbar. 
+                Da diese App tiefgreifende Systemrechte (SMS/Anrufe) benötigt, ist sie nicht im Play Store verfügbar.
                 Bitte aktivieren Sie "Installation aus unbekannten Quellen" in Ihren Android-Einstellungen.
             </div>
 
@@ -333,7 +498,7 @@
                 Android 10.0 (API Level 29) oder höher. Getestet auf Android 16.
             </div>
 
-        </div>
+        </main>
 
         <footer>
             <p>&copy; 2025 Meuse24. Open Source Software.</p>
