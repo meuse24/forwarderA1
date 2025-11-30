@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS/TEL Forwarder Neo - Download</title>
+    <style>
+        :root {
+            --primary-color: #2e7d32; /* Android Green */
+            --primary-hover: #1b5e20;
+            --github-color: #24292e;
+            --github-hover: #000000;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-secondary: #5f6368;
+            --accent-bg: #e8f5e9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 900px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            margin-top: 10px;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn-download {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-download:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-github {
+            background-color: var(--github-color);
+            color: white;
+        }
+
+        .btn-github:hover {
+            background-color: var(--github-hover);
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--accent-bg);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            margin-top: 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .feature-item {
+            background-color: #fafafa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .feature-item h3 {
+            margin-top: 0;
+            color: var(--text-main);
+        }
+
+        .feature-item ul {
+            margin: 10px 0 0 0;
+            padding-left: 20px;
+            color: var(--text-secondary);
+        }
+
+        .info-box {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #0d47a1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .new-badge {
+            background-color: #ff9800;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-top: 1px solid #eee;
+        }
+
+        code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>SMS/TEL Forwarder Neo</h1>
+            <p>Version: Anchovy (v3)</p>
+        </div>
+
+        <div class="content">
+            <div class="actions">
+                <a href="https://meuse24.info/forwarder/TelSmsForwarderNeoV3.apk" class="btn btn-download" target="_blank">
+                    <svg style="width:24px;height:24px;margin-right:8px" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+                    </svg>
+                    APK Herunterladen
+                </a>
+                <a href="https://github.com/meuse24/forwarderA1" class="btn btn-github" target="_blank">
+                    <svg style="width:24px;height:24px;margin-right:8px" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z" />
+                    </svg>
+                    GitHub Repository
+                </a>
+            </div>
+
+            <p class="intro">
+                Diese App ermöglicht die zuverlässige Weiterleitung von SMS und Anrufen an andere Telefonnummern oder E-Mail-Adressen. 
+                Ideal für "stationäre Smartphones" oder temporäre Erreichbarkeit unter anderer Nummer.
+            </p>
+
+            <h2 class="section-title">Features</h2>
+
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h3>📞 Anrufweiterleitung</h3>
+                    <ul>
+                        <li><strong>Anpassbare MMI-Codes:</strong> Wählbar zwischen Standard-Codes und A1-spezifischen Codes
+                            <ul style="margin-top: 8px; font-size: 0.95em;">
+                                <li>Standard: <code>*21*Nummer#</code> (Aktivieren), <code>*#21#</code> (Status), <code>##002#</code> (Reset)</li>
+                                <li>A1 Österreich: <code>**21*Nummer#</code> (Aktivieren), <code>*#21#</code> (Status), <code>##002#</code> (Reset)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Carrier-native Weiterleitung:</strong> Nutzt die Rufumleitung des Mobilfunkanbieters</li>
+                        <li><strong>Statusabfrage:</strong> Echtzeit-Überprüfung aktiver Weiterleitungen</li>
+                        <li><strong>Reset-Funktion:</strong> Ein-Klick-Deaktivierung aller Weiterleitungen</li>
+                        <li><strong>Internationale Vorwahl:</strong> Konfigurierbare Dial-Präfixe (Standard: "00" für Österreich)</li>
+                        <li><strong>Benutzerführung:</strong> Automatische Anleitung bei MMI-Code-Wählvorgängen</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h3>💬 SMS-Weiterleitung</h3>
+                    <ul>
+                        <li><strong>Automatische Weiterleitung:</strong> Empfangene SMS werden sofort weitergeleitet</li>
+                        <li><strong>Multi-Part SMS Support:</strong> Intelligente Rekonstruktion langer Nachrichten (>160 Zeichen)</li>
+                        <li><strong>Parallele Zustellung:</strong> SMS + E-Mail gleichzeitig (optional)</li>
+                        <li><strong>Loop-Detection:</strong> Verhindert Weiterleitungsschleifen</li>
+                        <li><strong>Foreground Service:</strong> Zuverlässige Hintergrundverarbeitung mit WakeLock</li>
+                        <li><strong>Test-SMS Funktion:</strong> Einfaches Testen der Weiterleitung direkt in der App</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h3>📧 E-Mail Integration</h3>
+                    <ul>
+                        <li><strong>SMTP-Konfiguration:</strong> Unterstützung für alle SMTP-Server (Gmail, Outlook, etc.)</li>
+                        <li><strong>Sichere Speicherung:</strong> Verschlüsselte Passwort-Speicherung (androidx.security.crypto)</li>
+                        <li><strong>Parallele Zustellung:</strong> SMS per E-Mail + SMS gleichzeitig</li>
+                        <li><strong>Detaillierte Logs:</strong> Nachvollziehbare Zustellberichte</li>
+                        <li><strong>Test-Funktion:</strong> E-Mail-Konfiguration direkt testen</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h3>🎯 Benutzerfreundlichkeit</h3>
+                    <ul>
+                        <li><strong>Android Contact Picker:</strong> Einfache Kontaktauswahl aus dem Telefonbuch</li>
+                        <li><strong>Material Design:</strong> Moderne UI mit Jetpack Compose</li>
+                        <li><strong>Kontakt-Karte:</strong> Übersichtliche Anzeige mit Name, Nummer und Typ</li>
+                        <li><strong>Ein-Klick-Aktionen:</strong> Schneller Zugriff auf alle Funktionen</li>
+                        <li><strong>Status-Indikatoren:</strong> Klare Anzeige des Weiterleitungsstatus</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h3>🔒 Sicherheit & Datenschutz</h3>
+                    <ul>
+                        <li><strong>Verschlüsselte Präferenzen:</strong> Alle Einstellungen werden verschlüsselt gespeichert</li>
+                        <li><strong>Keine Cloud-Synchronisation:</strong> Alle Daten bleiben lokal auf dem Gerät</li>
+                        <li><strong>Open Source:</strong> Vollständig transparenter Quellcode auf GitHub</li>
+                        <li><strong>Keine Tracking-Dienste:</strong> Keinerlei Datensammlung oder Analytics</li>
+                        <li><strong>Minimale Berechtigungen:</strong> Nur notwendige Berechtigungen werden angefordert</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h3>📊 Logging & Debugging</h3>
+                    <ul>
+                        <li><strong>Strukturiertes XML-Logging:</strong> Detaillierte Aufzeichnung aller Ereignisse</li>
+                        <li><strong>Log-Rotation:</strong> Automatische Verwaltung alter Log-Dateien</li>
+                        <li><strong>Export-Funktion:</strong> Logs können exportiert werden</li>
+                        <li><strong>Filterbare Ansicht:</strong> Einfaches Durchsuchen der Logs</li>
+                        <li><strong>Fehlerdiagnose:</strong> Hilfreiche Informationen bei Problemen</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h3>⚙️ Technische Highlights</h3>
+                    <ul>
+                        <li><strong>Clean Architecture:</strong> Klare Trennung von Data/Domain/Presentation</li>
+                        <li><strong>Jetpack Compose:</strong> Moderne Android UI (100% Compose)</li>
+                        <li><strong>Kotlin Coroutines:</strong> Asynchrone Verarbeitung ohne Blocking</li>
+                        <li><strong>ViewModel Pattern:</strong> Zustandsverwaltung mit Factory Pattern</li>
+                        <li><strong>SharedPreferences + Encryption:</strong> Sichere Datenspeicherung</li>
+                        <li><strong>Android 10+ Support:</strong> Target SDK 34, Min SDK 29</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h3>🔧 SIM-Management</h3>
+                    <ul>
+                        <li><strong>Multi-SIM Support:</strong> Automatische Erkennung mehrerer SIM-Karten</li>
+                        <li><strong>SIM-Auswahl:</strong> Wahl der SIM für ausgehende SMS</li>
+                        <li><strong>SIM-Info-Anzeige:</strong> Carrier-Name, Nummer, Status</li>
+                        <li><strong>Slot-Zuordnung:</strong> Klare Unterscheidung zwischen SIM 1 und SIM 2</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="section-title">Wichtige Hinweise & Best Practices</h2>
+            <div class="info-box">
+                <p>Um eine reibungslose Funktionalität der App zu gewährleisten, beachten Sie bitte folgende Punkte:</p>
+                <ul>
+                    <li><strong>Berechtigungen:</strong> Stellen Sie sicher, dass alle angeforderten Berechtigungen (SMS, Kontakte, Telefonstatus) erteilt wurden.</li>
+                    <li><strong>Batterieoptimierung:</strong> Deaktivieren Sie die Batterieoptimierung für diese App in den Android-Einstellungen, um eine zuverlässige Hintergrundverarbeitung zu gewährleisten.</li>
+                    <li><strong>Hintergrunddienst:</strong> Die App läuft als Foreground-Dienst. Dies stellt sicher, dass SMS- und Anrufweiterleitungen auch bei geschlossener App zuverlässig funktionieren. Überprüfen Sie den Status in der Benachrichtigungsleiste.</li>
+                    <li><strong>E-Mail-Konfiguration:</strong> Falls Sie die E-Mail-Weiterleitung nutzen möchten, konfigurieren Sie die SMTP-Einstellungen im "Mail"-Tab der App.</li>
+                    <li><strong>Logs:</strong> Überprüfen Sie regelmäßig die Logs in der App, um den Status der Weiterleitungen zu überwachen und eventuelle Probleme zu identifizieren.</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <strong>Hinweis zur Installation:</strong>
+                Da diese App tiefgreifende Systemrechte (SMS/Anrufe) benötigt, ist sie nicht im Play Store verfügbar. 
+                Bitte aktivieren Sie "Installation aus unbekannten Quellen" in Ihren Android-Einstellungen.
+            </div>
+
+            <div class="info-box">
+                <strong>Systemanforderungen:</strong>
+                Android 10.0 (API Level 29) oder höher. Getestet auf Android 16.
+            </div>
+
+        </div>
+
+        <footer>
+            <p>&copy; 2025 Meuse24. Open Source Software.</p>
+        </footer>
+    </div>
+
+</body>
+</html>
