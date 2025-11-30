@@ -67,10 +67,10 @@ git clone https://github.com/meuse24/forwarderA1.git
 cd forwarderA1
 ```
 
-### 2. Branch wechseln
+### 2. Projekt öffnen
 ```bash
-# Nutze den stabilen Branch (nicht main!)
-git checkout backup-broken-stand
+# Der main Branch ist der stabile Produktions-Branch
+# Kein Branch-Wechsel erforderlich
 ```
 
 ### 3. Build-Umgebung vorbereiten
@@ -384,8 +384,7 @@ val myViewModel: MyViewModel by viewModels {
 ## Git-Workflow
 
 ### Branches
-- **`backup-broken-stand`**: Stabiler Entwicklungsbranch (empfohlen)
-- **`main`**: Enthält fehlgeschlagenes Hilt DI-Experiment (nicht verwenden!)
+- **`main`**: Stabiler Produktions-Branch (empfohlen)
 
 ### Commits
 ```bash
@@ -395,7 +394,7 @@ git commit -m "feat: Neue Feature-Beschreibung"
 
 # Push mit PAT
 source .env
-git push https://meuse24:$GITHUB_TOKEN@github.com/meuse24/forwarderA1.git backup-broken-stand
+git push https://meuse24:$GITHUB_TOKEN@github.com/meuse24/forwarderA1.git main
 ```
 
 ### Commit-Konventionen
@@ -485,4 +484,11 @@ Dieses Projekt ist für den privaten Gebrauch bestimmt. Alle Rechte vorbehalten.
 
 **Version**: Anchovy (versionCode 3)
 **Build**: Debug/Release
-**Letzte Aktualisierung**: 2025-11-19
+**Letzte Aktualisierung**: 2025-01-30
+
+### Neueste Änderungen (2025-01-30)
+- ✅ Verbesserte Benutzerführung bei MMI-Code-Wählvorgängen
+- ✅ 4-Sekunden-Warnung vor jedem Wählvorgang mit zentrierter Formatierung
+- ✅ Deutliche Warnung: "⚠️ BITTE WARTEN ⚠️ - NICHT BEDIENEN!"
+- ✅ Klare Anweisungen zum Abwarten des Wählvorgangs
+- ✅ Automatische Rückkehr zum Hauptbildschirm
