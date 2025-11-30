@@ -1,15 +1,17 @@
 # 📊 SMS Forwarder Neo A1 - Projektstruktur
 
-> **Stand**: 2025-11-18 | **Nach Phase 5 Refactoring**
+> **Stand**: 2025-01-30 | **Produktionsreife Version**
 
 ## 📈 Gesamtstatistik
 
 | Metrik | Wert |
 |--------|------|
-| **Gesamt Zeilen** | 11,914 |
+| **Gesamt Zeilen** | ~12,000 |
 | **Kotlin Dateien** | 48 |
 | **Packages** | 15 |
-| **ViewModels** | 4 (1 Haupt + 3 Feature) |
+| **ViewModels** | 6 (ContactsViewModel + 5 Feature ViewModels) |
+| **Architektur** | Clean Architecture (Data/Domain/Presentation) |
+| **UI Framework** | Jetpack Compose + Material 3 |
 
 ---
 
@@ -41,36 +43,42 @@ info.meuse24.smsforwarderneoA1/
 
 ## 📂 Hauptkomponenten
 
-### Core Application Files (5,654 Zeilen)
+### Core Application Files (~5,800 Zeilen)
 
 | Datei | Zeilen | Beschreibung |
 |-------|--------|--------------|
-| `ContactsViewModel.kt` | 1,956 | Haupt-ViewModel für Kontakte & Weiterleitung |
-| `PhoneSmsUtils.kt` | 1,360 | SMS/Phone Utility Funktionen |
-| `SmsReceiver.kt` | 1,009 | BroadcastReceiver für SMS-Empfang |
-| `MainActivity.kt` | 840 | Hauptaktivität (Compose UI) |
-| `SmsForwarderApplication.kt` | 489 | App-Initialisierung & DI Container |
+| `PhoneSmsUtils.kt` | ~1,380 | SMS/Phone Utility Funktionen |
+| `SmsForegroundService.kt` | ~1,100 | Foreground Service mit WakeLock & Multi-Part SMS |
+| `ContactsViewModel.kt` | ~850 | Kontaktauswahl & Weiterleitung (mit Contact Picker) |
+| `MainActivity.kt` | ~835 | Hauptaktivität mit MMI-Code-Handling |
+| `SmsForwarderApplication.kt` | ~489 | App-Initialisierung & AppContainer |
+| `SmsReceiver.kt` | ~150 | BroadcastReceiver für SMS-Empfang |
 
 **Reduktion durch Refactoring**:
-- ✅ ContactsViewModel: **2,341 → 1,956** (-385 Zeilen, -16.5%)
-- ✅ MainActivity: **3,870 → 840** (-3,030 Zeilen, -79%)
+- ✅ ContactsViewModel: **2,341 → 850** (-1,491 Zeilen, -64%)
+- ✅ MainActivity: **3,870 → 835** (-3,035 Zeilen, -78%)
+- ✅ ContactsRepositoryImpl entfernt: **-582 Zeilen** (durch Android Contact Picker ersetzt)
 
 ---
 
-## 🎯 ViewModels (614 Zeilen)
+## 🎯 ViewModels (~1,500 Zeilen)
 
-> **Phase 5**: Low-Risk ViewModel Extraction abgeschlossen
+> **Alle ViewModels extrahiert und produktionsbereit**
 
 | ViewModel | Zeilen | Verantwortung | Status |
 |-----------|--------|---------------|--------|
-| `EmailViewModel.kt` | 376 | Email-Management & SMTP | ✅ Phase 5.2 |
-| `LogViewModel.kt` | 133 | Logging & Log-Filtering | ✅ Phase 5.1 |
-| `SimManagementViewModel.kt` | 105 | SIM-Nummern Verwaltung | ✅ Phase 5.3 |
+| `ContactsViewModel.kt` | ~850 | Kontaktauswahl, MMI-Codes, Weiterleitung | ✅ Refactored |
+| `EmailViewModel.kt` | ~376 | Email-Management & SMTP | ✅ Extracted |
+| `LogViewModel.kt` | ~133 | Logging & Log-Filtering | ✅ Extracted |
+| `SimManagementViewModel.kt` | ~105 | SIM-Nummern Verwaltung | ✅ Extracted |
+| `TestUtilsViewModel.kt` | ~80 | Test-SMS Funktionalität | ✅ Extracted |
+| `NavigationViewModel.kt` | ~60 | Navigation & Error State | ✅ Extracted |
 
 **Benefits**:
 - Zero Coupling zwischen ViewModels
 - Independently testable
 - Manual Factory Pattern (kein Hilt)
+- Klare Verantwortlichkeiten
 
 ---
 
@@ -95,15 +103,18 @@ info.meuse24.smsforwarderneoA1/
 
 ### 📱 Screens (2,985 Zeilen)
 
-#### Home Screen (705 Zeilen)
+#### Home Screen (~450 Zeilen - vereinfacht)
 ```
 screens/home/
-├── HomeScreen.kt                 201 lines  # Main screen composable
-├── FilterAndLogo.kt              164 lines  # Search filter & logo
-├── ForwardingStatus.kt            97 lines  # Status indicator
-├── ControlButtons.kt              92 lines  # Action buttons
-├── ContactList.kt                 89 lines  # Contact list & items
-└── CallStatusCard.kt              62 lines  # Call state display
+├── HomeScreen.kt                ~350 lines  # Main screen mit Contact Picker
+├── CallStatusCard.kt             ~62 lines  # Call state display
+└── ContactCard.kt                ~40 lines  # Selected contact display
+
+**Entfernt** (durch Contact Picker ersetzt):
+✗ FilterAndLogo.kt              # Suchfilter nicht mehr benötigt
+✗ ForwardingStatus.kt           # In HomeScreen integriert
+✗ ControlButtons.kt             # In ContactCard integriert
+✗ ContactList.kt                # Durch Android Contact Picker ersetzt
 ```
 
 #### Settings Screen (1,146 Zeilen)
@@ -318,4 +329,62 @@ ui/theme/
 
 ---
 
-**Generiert**: 2025-11-18 | **Tool**: Claude Code
+---
+
+## 🆕 Neueste Änderungen (2025-01-30)
+
+### Verbesserte MMI-Code-Benutzerführung
+- ✅ **4-Sekunden-Warnung** vor jedem MMI-Code-Wählvorgang
+- ✅ **Zentrierte Formatierung** mit visuellen Trennlinien
+- ✅ **Deutliche Warnung**: "⚠️ BITTE WARTEN ⚠️ - NICHT BEDIENEN!"
+- ✅ Gilt für: Aktivieren, Deaktivieren, Status abfragen, Reset
+
+```kotlin
+// MainActivity.kt - Zeilen 648-673
+SnackbarManager.showInfo(
+    message = """
+    ⏳ Wählvorgang wird gestartet...
+
+        ═════════════
+      ⚠️  BITTE WARTEN  ⚠️
+         NICHT BEDIENEN!
+        ═════════════
+
+    ► Den Wählvorgang abwarten
+    ► Nichts antippen
+    ► App kehrt automatisch zurück
+    """.trimIndent(),
+    duration = SnackbarManager.Duration.LONG
+)
+delay(4000)  // 4 Sekunden Warnung
+```
+
+### Contact Picker Integration (2025-01-20)
+- ✅ **Ersetzt Kontaktliste** durch Android Contact Picker
+- ✅ **Entfernt**: ContactsRepositoryImpl (~582 Zeilen)
+- ✅ **Entfernt**: 4 UI-Komponenten (FilterAndLogo, ContactList, ControlButtons, ForwardingStatus)
+- ✅ **Netto-Reduktion**: -1,249 Zeilen Code
+- ✅ **Neue Features**: Reset-Button, Status-Abfrage, Test-SMS
+
+### Internationale Anschaltziffer (2025-01-29)
+- ✅ **Konfigurierbare Anschaltziffer** in App-Einstellungen (Standard: "00" für Österreich)
+- ✅ **Gilt für**: MMI-Codes und SMS-Versand
+- ✅ **Ersetzt "+"** durch konfigurierte Anschaltziffer
+- ✅ **Loop-Erkennung** normalisiert mit Anschaltziffer
+
+---
+
+## 📊 Repository-Status
+
+| Aspekt | Status |
+|--------|--------|
+| **GitHub**: https://github.com/meuse24/forwarderA1 | ✅ Aktuell |
+| **Branch** | main (stabil) |
+| **Produktionsstatus** | ✅ Produktionsreif |
+| **Dokumentation** | ✅ README.md vorhanden |
+| **Clean Architecture** | ✅ Vollständig implementiert |
+| **Tests** | 🔄 In Planung |
+
+---
+
+**Generiert**: 2025-01-30 | **Tool**: Claude Code
