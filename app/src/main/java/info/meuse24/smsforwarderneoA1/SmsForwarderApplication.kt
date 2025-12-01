@@ -241,13 +241,23 @@ object LoggingManager {
     private val initialized = AtomicBoolean(false)
 
     fun initialize(context: Context) {
-        logger = Logger(context)
+        // Read max log size from preferences (with fallback to default 5MB)
+        val prefs = try {
+            SharedPreferencesManager(context)
+        } catch (e: Exception) {
+            Log.w("LoggingManager", "Could not read preferences, using default log size", e)
+            null
+        }
+        val maxLogSizeMB = prefs?.getMaxLogSizeMB() ?: 5
+
+        logger = Logger(context, maxLogSizeMB)
         initialized.set(true)
 
         logInfo(
             component = "LoggingManager",
             action = "INIT",
-            message = "Logging system initialized"
+            message = "Logging system initialized",
+            details = mapOf("max_log_size_mb" to maxLogSizeMB)
         )
     }
     fun log(

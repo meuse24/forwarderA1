@@ -125,7 +125,9 @@ fun SettingsScreen(
             LogSettingsSection(
                 sectionTitleStyle = sectionTitleStyle,
                 onDeleteLogs = { showPinDialog = true },
-                onChangePin = { showChangePinDialog = true }
+                onChangePin = { showChangePinDialog = true },
+                viewModel = viewModel,
+                onFocusChanged = { isAnyFieldFocused = it }
             )
 
         }

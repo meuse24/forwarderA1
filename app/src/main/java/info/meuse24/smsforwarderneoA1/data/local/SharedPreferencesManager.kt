@@ -530,6 +530,22 @@ class SharedPreferencesManager(private val context: Context) {
     fun isMmiWarningEnabled(): Boolean =
         getPreference(KEY_MMI_WARNING_ENABLED, DEFAULT_MMI_WARNING_ENABLED)
 
+    /**
+     * Setzt die maximale Log-Dateigröße in MB.
+     * @param sizeMB Größe in MB (1-20, Standard: 5)
+     */
+    fun setMaxLogSizeMB(sizeMB: Int) {
+        val validSize = sizeMB.coerceIn(1, 20)
+        setPreference(KEY_MAX_LOG_SIZE_MB, validSize)
+    }
+
+    /**
+     * Liest die maximale Log-Dateigröße in MB.
+     * @return Größe in MB (Standard: 5)
+     */
+    fun getMaxLogSizeMB(): Int =
+        getPreference(KEY_MAX_LOG_SIZE_MB, DEFAULT_MAX_LOG_SIZE_MB)
+
     companion object {
         private const val KEY_TEST_EMAIL_TEXT = "test_email_text"
         private const val KEY_FORWARD_SMS_TO_EMAIL = "forward_sms_to_email"
@@ -563,6 +579,7 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_SIM_SELECTION_MODE = "sim_selection_mode"
         private const val KEY_INTERNATIONAL_DIAL_PREFIX = "international_dial_prefix"
         private const val KEY_MMI_WARNING_ENABLED = "mmi_warning_enabled"
+        private const val KEY_MAX_LOG_SIZE_MB = "max_log_size_mb"
 
         // BMI/A1 Codes (New Defaults)
         private const val DEFAULT_MMI_ACTIVATE_PREFIX = "*21*"
@@ -581,6 +598,9 @@ class SharedPreferencesManager(private val context: Context) {
 
         // MMI Warning (Default: enabled)
         private const val DEFAULT_MMI_WARNING_ENABLED = true
+
+        // Log Settings (Default: 5MB)
+        private const val DEFAULT_MAX_LOG_SIZE_MB = 5
     }
 }
 

@@ -25,15 +25,17 @@ import javax.xml.transform.stream.StreamResult
  *
  * Features:
  * - Structured logging with component, action, and details
- * - XML file storage with rotation
+ * - XML file storage with rotation (configurable size)
  * - HTML/CSV export
  * - Highlight patterns for important events
  * - Coroutine-based async writing
+ * - Append-only mode for optimal performance
  */
 class Logger(
     context: Context,
-    private val maxFileSize: Long = 5 * 1024 * 1024 // 5MB
+    maxFileSizeMB: Int = 5 // Default 5MB if not specified
 ) {
+    private val maxFileSize: Long = (maxFileSizeMB * 1024 * 1024).toLong()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val logMutex = Mutex()
     private val baseLogDir: File = context.getExternalFilesDir("logs")
@@ -124,25 +126,42 @@ class Logger(
         }
     }
 
+    /**
+     * Append-only mode: Directly appends XML entry without parsing entire file.
+     * This is MUCH faster than parsing + transforming the whole document.
+     */
     private fun appendToLogFile(timestamp: String, entry: String, entryNumber: Int) {
         try {
-            val document = DocumentBuilderFactory.newInstance()
-                .newDocumentBuilder()
-                .parse(mainLogFile)
-
-            val root = document.documentElement
             val sanitizedEntry = sanitizeXmlText(entry)
-            val newEntry = document.createElement("logEntry").apply {
-                appendChild(document.createElement("number").apply { textContent = entryNumber.toString() })
-                appendChild(document.createElement("time").apply { textContent = timestamp })
-                appendChild(document.createElement("text").apply { textContent = sanitizedEntry })
-            }
-            root.appendChild(newEntry)
 
-            TransformerFactory.newInstance().newTransformer().transform(
-                DOMSource(document),
-                StreamResult(mainLogFile)
-            )
+            // Build XML entry string directly
+            val xmlEntry = buildString {
+                append("    <logEntry>\n")
+                append("        <number>$entryNumber</number>\n")
+                append("        <time>$timestamp</time>\n")
+                append("        <text>$sanitizedEntry</text>\n")
+                append("    </logEntry>\n")
+            }
+
+            // Read current content
+            val content = mainLogFile.readText()
+
+            // Find closing tag and insert before it
+            val closingTag = "</logEntries>"
+            val insertPosition = content.lastIndexOf(closingTag)
+
+            if (insertPosition == -1) {
+                // File is corrupted, recreate it
+                Log.w(TAG, "Log file corrupted, recreating...")
+                createEmptyLogFile()
+                appendToLogFile(timestamp, entry, entryNumber)
+                return
+            }
+
+            // Insert new entry before closing tag
+            val newContent = content.substring(0, insertPosition) + xmlEntry + closingTag + "\n"
+            mainLogFile.writeText(newContent)
+
         } catch (e: Exception) {
             Log.e(TAG, "Failed to append log entry", e)
         }

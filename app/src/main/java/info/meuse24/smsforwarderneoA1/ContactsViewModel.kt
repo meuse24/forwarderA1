@@ -81,6 +81,9 @@ class ContactsViewModel(
     private val _mmiWarningEnabled = MutableStateFlow(prefsManager.isMmiWarningEnabled())
     val mmiWarningEnabled: StateFlow<Boolean> = _mmiWarningEnabled.asStateFlow()
 
+    private val _maxLogSizeMB = MutableStateFlow(prefsManager.getMaxLogSizeMB())
+    val maxLogSizeMB: StateFlow<Int> = _maxLogSizeMB.asStateFlow()
+
     private val _keepForwardingOnExit = MutableStateFlow(false)
 
     // SIM Selection StateFlows
@@ -743,6 +746,20 @@ class ContactsViewModel(
             message = "MMI-Warnung ${if (enabled) "aktiviert" else "deaktiviert"}",
             details = mapOf(
                 "enabled" to enabled
+            )
+        )
+    }
+
+    fun updateMaxLogSizeMB(sizeMB: Int) {
+        _maxLogSizeMB.value = sizeMB
+        prefsManager.setMaxLogSizeMB(sizeMB)
+
+        LoggingManager.logInfo(
+            component = "ContactsViewModel",
+            action = "UPDATE_MAX_LOG_SIZE",
+            message = "Maximale Log-Größe geändert",
+            details = mapOf(
+                "size_mb" to sizeMB
             )
         )
     }
