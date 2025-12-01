@@ -53,6 +53,7 @@ import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupErrorDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupProgressDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CriticalPermissionsDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ExitDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoadingScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.SimNumbersDialog
@@ -100,6 +101,10 @@ class MainActivity : ComponentActivity() {
     private val _isLoading = MutableStateFlow(true)
     private val _loadingError = MutableStateFlow<String?>(null)
     private lateinit var permissionHandler: PermissionHandler
+
+    // State für kritischen Berechtigungs-Dialog
+    private val _showCriticalPermissionsDialog = MutableStateFlow(false)
+    private val _missingPermissions = MutableStateFlow<List<String>>(emptyList())
 
     // Contact Picker Launcher
     private val contactPickerLauncher = registerForActivityResult(
@@ -224,6 +229,35 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Führt die Initialisierung nach erfolgreicher Berechtigungserteilung durch.
+     * Wird sowohl beim ersten Start als auch nach Nachforderung von Berechtigungen aufgerufen.
+     */
+    private fun completeInitializationAfterPermissions() {
+        // Starte Services und weitere Initialisierungen
+        SmsForegroundService.startService(this@MainActivity)
+
+        // Setup phone state listener for MMI code monitoring
+        setupPhoneStateListener()
+
+        // Prüfe Battery Optimization Status
+        checkBatteryOptimization()
+
+        // Füge kleine Verzögerung hinzu um sicherzustellen, dass
+        // Berechtigungen vollständig gewährt wurden
+        lifecycleScope.launch {
+            delay(500) // 500ms Verzögerung
+
+            // Prüfe und erfasse SIM-Telefonnummern
+            checkAndRequestSimPhoneNumbers()
+
+            viewModel.initialize() // Dies lädt nun die Kontakte
+        }
+
+        // Verstecke LoadingScreen
+        _isLoading.value = false
+    }
+
     private fun initializeApp() {
         lifecycleScope.launch {
             try {
@@ -235,36 +269,25 @@ class MainActivity : ComponentActivity() {
                 // Prüfe und fordere Berechtigungen an
                 permissionHandler.checkPermissions(
                     onGranted = {
-                        // Starte Services und weitere Initialisierungen
-                        SmsForegroundService.startService(this@MainActivity)
-
-                        // Setup phone state listener for MMI code monitoring
-                        setupPhoneStateListener()
-
-                        // Prüfe Battery Optimization Status
-                        checkBatteryOptimization()
-
-                        // Füge kleine Verzögerung hinzu um sicherzustellen, dass
-                        // Berechtigungen vollständig gewährt wurden
-                        lifecycleScope.launch {
-                            delay(500) // 500ms Verzögerung
-
-                            // Prüfe und erfasse SIM-Telefonnummern
-                            checkAndRequestSimPhoneNumbers()
-
-                            viewModel.initialize() // Dies lädt nun die Kontakte
-                        }
-
-                        // Verstecke LoadingScreen
-                        _isLoading.value = false
+                        completeInitializationAfterPermissions()
                     },
                     onDenied = {
-                        _loadingError.value = "Erforderliche Berechtigungen wurden nicht erteilt"
+                        val missing = permissionHandler.getMissingPermissions()
+
                         LoggingManager.logWarning(
                             component = "MainActivity",
                             action = "PERMISSIONS_DENIED",
-                            message = "Berechtigungen verweigert"
+                            message = "Kritische Berechtigungen wurden beim App-Start verweigert",
+                            details = mapOf(
+                                "missing_count" to missing.size,
+                                "missing_permissions" to missing.joinToString()
+                            )
                         )
+
+                        // Verstecke LoadingScreen und zeige kritischen Dialog
+                        _isLoading.value = false
+                        _missingPermissions.value = missing
+                        _showCriticalPermissionsDialog.value = true
                     }
                 )
 
@@ -403,11 +426,41 @@ class MainActivity : ComponentActivity() {
             val storedNumbers = prefsManager.getSimPhoneNumbers()
             val missingSims = mutableListOf<SimInfo>()
 
+            LoggingManager.logInfo(
+                component = "MainActivity",
+                action = "CHECK_SIM_NUMBERS_DEBUG",
+                message = "SIM-Nummern-Prüfung gestartet",
+                details = mapOf(
+                    "stored_numbers" to storedNumbers.toString(),
+                    "sim_count" to simInfoList.size
+                )
+            )
+
             // Prüfe jede SIM auf fehlende Telefonnummern
             simInfoList.forEach { simInfo ->
                 val stored = storedNumbers[simInfo.subscriptionId]
+
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "CHECK_SIM_DEBUG",
+                    message = "Prüfe SIM-Karte",
+                    details = mapOf(
+                        "subscription_id" to simInfo.subscriptionId,
+                        "slot" to simInfo.slotIndex,
+                        "auto_detected" to (simInfo.phoneNumber ?: "null"),
+                        "stored" to (stored ?: "null"),
+                        "carrier" to (simInfo.carrierName ?: "Unknown")
+                    )
+                )
+
                 if (stored.isNullOrEmpty() && simInfo.phoneNumber.isNullOrEmpty()) {
                     missingSims.add(simInfo)
+                    LoggingManager.logInfo(
+                        component = "MainActivity",
+                        action = "SIM_MISSING",
+                        message = "SIM-Nummer fehlt - Dialog wird angezeigt",
+                        details = mapOf("subscription_id" to simInfo.subscriptionId)
+                    )
                 } else if (!simInfo.phoneNumber.isNullOrEmpty() && stored != simInfo.phoneNumber) {
                     // Auto-erkannte Nummer in Preferences speichern
                     prefsManager.setSimPhoneNumber(simInfo.subscriptionId, simInfo.phoneNumber)
@@ -645,32 +698,41 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            // Zeige Hinweis für 4 Sekunden vor dem Wählen
-            SnackbarManager.showInfo(
-                message = """
-                ⏳ Wählvorgang wird gestartet...
+            // Zeige Hinweis für 4 Sekunden vor dem Wählen (wenn aktiviert)
+            if (prefsManager.isMmiWarningEnabled()) {
+                SnackbarManager.showInfo(
+                    message = """
+                    ⏳ Wählvorgang wird gestartet...
 
-                    ═════════════
-                  ⚠️  BITTE WARTEN  ⚠️
-                     NICHT BEDIENEN!
-                    ═════════════
+                        ═════════════
+                      ⚠️  BITTE WARTEN  ⚠️
+                         NICHT BEDIENEN!
+                        ═════════════
 
-                ► Den Wählvorgang abwarten
-                ► Nichts antippen
-                ► App kehrt automatisch zurück
-                """.trimIndent(),
-                duration = SnackbarManager.Duration.LONG
-            )
+                    ► Den Wählvorgang abwarten
+                    ► Nichts antippen
+                    ► App kehrt automatisch zurück
+                    """.trimIndent(),
+                    duration = SnackbarManager.Duration.LONG
+                )
 
-            LoggingManager.logInfo(
-                component = "MainActivity",
-                action = "DIAL_MMI_PREPARING",
-                message = "Zeige Benutzer-Hinweis vor Wählvorgang",
-                details = mapOf("code" to normalizedCode, "delay_ms" to 4000)
-            )
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "DIAL_MMI_PREPARING",
+                    message = "Zeige Benutzer-Hinweis vor Wählvorgang",
+                    details = mapOf("code" to normalizedCode, "delay_ms" to 4000)
+                )
 
-            // Warte 4 Sekunden, damit Benutzer die Nachricht lesen kann
-            delay(4000)
+                // Warte 4 Sekunden, damit Benutzer die Nachricht lesen kann
+                delay(4000)
+            } else {
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "DIAL_MMI_PREPARING_SKIPPED",
+                    message = "MMI-Warnung übersprungen (deaktiviert in Einstellungen)",
+                    details = mapOf("code" to normalizedCode)
+                )
+            }
 
             // Proceed with dialing
             dialCodeNow(normalizedCode, code)
@@ -779,6 +841,38 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Prüft Berechtigungen bei jedem Resume der Activity.
+     * Wichtig: Erkennt wenn User Berechtigungen während der Laufzeit widerruft.
+     */
+    override fun onResume() {
+        super.onResume()
+
+        // Nur prüfen wenn App vollständig initialisiert ist UND nicht mehr im Loading-State
+        if (!AppContainer.isInitialized.value || !::permissionHandler.isInitialized || _isLoading.value) {
+            return
+        }
+
+        // Prüfe ob alle Berechtigungen noch vorhanden sind
+        if (!permissionHandler.hasAllPermissions()) {
+            val missing = permissionHandler.getMissingPermissions()
+
+            LoggingManager.logWarning(
+                component = "MainActivity",
+                action = "PERMISSIONS_REVOKED",
+                message = "Berechtigungen wurden während der Laufzeit widerrufen",
+                details = mapOf(
+                    "missing_count" to missing.size,
+                    "missing_permissions" to missing.joinToString()
+                )
+            )
+
+            // Zeige kritischen Dialog
+            _missingPermissions.value = missing
+            _showCriticalPermissionsDialog.value = true
+        }
+    }
+
     override fun onDestroy() {
         //viewModel.deactivateForwarding()
         //viewModel.saveCurrentState() // Neue Methode, die wir im ViewModel hinzufügen werden
@@ -825,6 +919,10 @@ class MainActivity : ComponentActivity() {
         val missingSims by simManagementViewModel.missingSims.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
         val coroutineScope = rememberCoroutineScope()
+
+        // Critical Permissions Dialog State
+        val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
+        val missingPermissions by _missingPermissions.collectAsState()
 
         // Cleanup Effect
         LaunchedEffect(Unit) {
@@ -962,6 +1060,52 @@ class MainActivity : ComponentActivity() {
                     },
                     onDismiss = {
                         navigationViewModel.clearErrorState()
+                    }
+                )
+            }
+
+            // Critical Permissions Dialog
+            if (showCriticalPermissionsDialog) {
+                CriticalPermissionsDialog(
+                    missingPermissions = missingPermissions,
+                    onRequestPermissions = {
+                        _showCriticalPermissionsDialog.value = false
+                        permissionHandler.recheckAndRequest(
+                            onAllGranted = {
+                                LoggingManager.logInfo(
+                                    component = "MainActivity",
+                                    action = "PERMISSIONS_REGRANTED",
+                                    message = "Berechtigungen wurden erfolgreich wieder erteilt"
+                                )
+                                SnackbarManager.showSuccess("Alle Berechtigungen erteilt")
+
+                                // Führe vollständige Initialisierung durch (inkl. Battery Optimization)
+                                completeInitializationAfterPermissions()
+                            },
+                            onStillMissing = { stillMissing ->
+                                LoggingManager.logError(
+                                    component = "MainActivity",
+                                    action = "PERMISSIONS_FINAL_DENY",
+                                    message = "App wird beendet - kritische Berechtigungen verweigert",
+                                    details = mapOf(
+                                        "missing_permissions" to stillMissing.joinToString()
+                                    )
+                                )
+                                SnackbarManager.showError("App wird beendet - Berechtigungen fehlen")
+                                lifecycleScope.launch {
+                                    delay(2000) // Zeige Snackbar für 2 Sekunden
+                                    finish()
+                                }
+                            }
+                        )
+                    },
+                    onExitApp = {
+                        LoggingManager.logInfo(
+                            component = "MainActivity",
+                            action = "USER_EXIT_NO_PERMISSIONS",
+                            message = "User hat App beendet wegen fehlender Berechtigungen"
+                        )
+                        finish()
                     }
                 )
             }

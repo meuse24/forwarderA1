@@ -56,7 +56,6 @@ fun AppSettingsSection(
     val testSmsText by testUtilsViewModel.testSmsText.collectAsState()
     val testEmailText by emailViewModel.testEmailText.collectAsState()
     val mailScreenVisible by viewModel.mailScreenVisible.collectAsState()
-    val phoneNumberFormatting by viewModel.phoneNumberFormatting.collectAsState()
     val internationalDialPrefix by viewModel.internationalDialPrefix.collectAsState()
 
     // SMTP settings for validation
@@ -178,33 +177,6 @@ fun AppSettingsSection(
                         )
                     }
                 }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Phone Number Formatting Toggle
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "Telefonnummern formatieren",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    text = "Formatiert Telefonnummern beim Einlesen der Kontakte",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(
-                checked = phoneNumberFormatting,
-                onCheckedChange = { viewModel.updatePhoneNumberFormatting(it) }
             )
         }
 

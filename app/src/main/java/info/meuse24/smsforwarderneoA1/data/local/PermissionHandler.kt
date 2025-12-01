@@ -49,6 +49,46 @@ class PermissionHandler(private val activity: MainActivity) {
         }
     }
 
+    /**
+     * Öffentliche Methode zum Prüfen ob alle Berechtigungen erteilt sind.
+     * Kann von außen aufgerufen werden (z.B. in onResume()).
+     */
+    fun hasAllPermissions(): Boolean {
+        return hasPermissions()
+    }
+
+    /**
+     * Gibt eine Liste aller fehlenden Berechtigungen zurück.
+     */
+    fun getMissingPermissions(): List<String> {
+        return requiredPermissions.filter { permission ->
+            ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    /**
+     * Prüft Berechtigungen erneut und fordert fehlende an.
+     * Wird verwendet wenn Berechtigungen während der Laufzeit widerrufen wurden.
+     */
+    fun recheckAndRequest(
+        onAllGranted: () -> Unit,
+        onStillMissing: (List<String>) -> Unit
+    ) {
+        val missing = getMissingPermissions()
+        if (missing.isEmpty()) {
+            onAllGranted()
+        } else {
+            permissionCallback = { granted ->
+                if (granted) {
+                    onAllGranted()
+                } else {
+                    onStillMissing(getMissingPermissions())
+                }
+            }
+            requestPermissions()
+        }
+    }
+
     private fun requestPermissions() {
         try {
             requestLauncher.launch(requiredPermissions)

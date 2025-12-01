@@ -63,9 +63,6 @@ class ContactsViewModel(
     private val _mailScreenVisible = MutableStateFlow(prefsManager.isMailScreenVisible())
     val mailScreenVisible: StateFlow<Boolean> = _mailScreenVisible.asStateFlow()
 
-    private val _phoneNumberFormatting = MutableStateFlow(prefsManager.isPhoneNumberFormattingEnabled())
-    val phoneNumberFormatting: StateFlow<Boolean> = _phoneNumberFormatting.asStateFlow()
-
     private val _mmiActivatePrefix = MutableStateFlow(prefsManager.getMmiActivatePrefix())
     val mmiActivatePrefix: StateFlow<String> = _mmiActivatePrefix.asStateFlow()
 
@@ -80,6 +77,9 @@ class ContactsViewModel(
 
     private val _internationalDialPrefix = MutableStateFlow(prefsManager.getInternationalDialPrefix())
     val internationalDialPrefix: StateFlow<String> = _internationalDialPrefix.asStateFlow()
+
+    private val _mmiWarningEnabled = MutableStateFlow(prefsManager.isMmiWarningEnabled())
+    val mmiWarningEnabled: StateFlow<Boolean> = _mmiWarningEnabled.asStateFlow()
 
     private val _keepForwardingOnExit = MutableStateFlow(false)
 
@@ -663,20 +663,6 @@ class ContactsViewModel(
         )
     }
 
-    fun updatePhoneNumberFormatting(enabled: Boolean) {
-        _phoneNumberFormatting.value = enabled
-        prefsManager.setPhoneNumberFormatting(enabled)
-
-        LoggingManager.logInfo(
-            component = "ContactsViewModel",
-            action = if (enabled) "ENABLE_PHONE_FORMATTING" else "DISABLE_PHONE_FORMATTING",
-            message = "Telefonnummern-Formatierung ${if (enabled) "aktiviert" else "deaktiviert"}",
-            details = mapOf(
-                "phone_formatting_enabled" to enabled
-            )
-        )
-    }
-
     fun updateInternationalDialPrefix(prefix: String) {
         _internationalDialPrefix.value = prefix
         prefsManager.setInternationalDialPrefix(prefix)
@@ -743,6 +729,20 @@ class ContactsViewModel(
             message = "MMI Statusabfrage-Code geändert",
             details = mapOf(
                 "new_code" to code
+            )
+        )
+    }
+
+    fun updateMmiWarningEnabled(enabled: Boolean) {
+        _mmiWarningEnabled.value = enabled
+        prefsManager.setMmiWarningEnabled(enabled)
+
+        LoggingManager.logInfo(
+            component = "ContactsViewModel",
+            action = "UPDATE_MMI_WARNING_ENABLED",
+            message = "MMI-Warnung ${if (enabled) "aktiviert" else "deaktiviert"}",
+            details = mapOf(
+                "enabled" to enabled
             )
         )
     }

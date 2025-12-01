@@ -433,13 +433,6 @@ class SharedPreferencesManager(private val context: Context) {
     fun isMailScreenVisible(): Boolean =
         getPreference(KEY_MAIL_SCREEN_VISIBLE, false) // standardmäßig ausgeblendet
 
-    fun setPhoneNumberFormatting(enabled: Boolean) {
-        setPreference(KEY_PHONE_NUMBER_FORMATTING, enabled)
-    }
-
-    fun isPhoneNumberFormattingEnabled(): Boolean =
-        getPreference(KEY_PHONE_NUMBER_FORMATTING, false) // standardmäßig deaktiviert
-
     // MMI Code Funktionen
     fun setMmiActivatePrefix(prefix: String) =
         setPreference(KEY_MMI_ACTIVATE_PREFIX, prefix)
@@ -523,6 +516,20 @@ class SharedPreferencesManager(private val context: Context) {
     fun getInternationalDialPrefix(): String =
         getPreference(KEY_INTERNATIONAL_DIAL_PREFIX, DEFAULT_INTERNATIONAL_DIAL_PREFIX)
 
+    /**
+     * Aktiviert/deaktiviert die 4-Sekunden-Warnung vor MMI-Code-Wahl.
+     * @param enabled true = Warnung anzeigen, false = Warnung überspringen
+     */
+    fun setMmiWarningEnabled(enabled: Boolean) =
+        setPreference(KEY_MMI_WARNING_ENABLED, enabled)
+
+    /**
+     * Prüft, ob die MMI-Warnung aktiviert ist.
+     * @return true wenn Warnung angezeigt werden soll (Standard), false zum Überspringen
+     */
+    fun isMmiWarningEnabled(): Boolean =
+        getPreference(KEY_MMI_WARNING_ENABLED, DEFAULT_MMI_WARNING_ENABLED)
+
     companion object {
         private const val KEY_TEST_EMAIL_TEXT = "test_email_text"
         private const val KEY_FORWARD_SMS_TO_EMAIL = "forward_sms_to_email"
@@ -549,13 +556,13 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_CONTACT_NAME = "contact_name"
         private const val KEY_KEEP_FORWARDING_ON_EXIT = "keep_forwarding_on_exit"
         private const val KEY_MAIL_SCREEN_VISIBLE = "mail_screen_visible"
-        private const val KEY_PHONE_NUMBER_FORMATTING = "phone_number_formatting"
         private const val KEY_MMI_ACTIVATE_PREFIX = "mmi_activate_prefix"
         private const val KEY_MMI_ACTIVATE_SUFFIX = "mmi_activate_suffix"
         private const val KEY_MMI_DEACTIVATE_CODE = "mmi_deactivate_code"
         private const val KEY_MMI_STATUS_CODE = "mmi_status_code"
         private const val KEY_SIM_SELECTION_MODE = "sim_selection_mode"
         private const val KEY_INTERNATIONAL_DIAL_PREFIX = "international_dial_prefix"
+        private const val KEY_MMI_WARNING_ENABLED = "mmi_warning_enabled"
 
         // BMI/A1 Codes (New Defaults)
         private const val DEFAULT_MMI_ACTIVATE_PREFIX = "*21*"
@@ -571,6 +578,9 @@ class SharedPreferencesManager(private val context: Context) {
 
         // International Dial Prefix (Default für Österreich)
         private const val DEFAULT_INTERNATIONAL_DIAL_PREFIX = "00"
+
+        // MMI Warning (Default: enabled)
+        private const val DEFAULT_MMI_WARNING_ENABLED = true
     }
 }
 

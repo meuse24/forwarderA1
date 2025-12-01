@@ -1369,11 +1369,6 @@ class PhoneSmsUtils private constructor() {
     }
 }
 
-data class PhoneNumberResult(
-    val formattedNumber: String?,
-    val carrierInfo: String?
-)
-
 class PhoneNumberFormatter {
     private val phoneUtil = PhoneNumberUtil.getInstance()
     private val austrianMobileTrie = CarrierTrie()
@@ -1497,66 +1492,5 @@ class PhoneNumberFormatter {
             swissMobileTrie.insert(prefix, carrier)
         }
     }
-
-    fun formatPhoneNumber(phoneNumber: String, defaultRegion: String = "AT"): PhoneNumberResult {
-        try {
-            val numberProto = phoneUtil.parse(phoneNumber, defaultRegion)
-            val countryCode = numberProto.countryCode
-            val nationalNumber = numberProto.nationalNumber.toString()
-            val extension = numberProto.extension
-
-            // Bestimme Carrier und Prefix mit Trie
-            val (carrier, prefix) = when (countryCode) {
-                43 -> getAustrianCarrierInfo(nationalNumber)
-                49 -> getGermanCarrierInfo(nationalNumber)
-                41 -> getSwissCarrierInfo(nationalNumber)
-                else -> null to nationalNumber.take(3)
-            }
-
-            // Erstelle formatierte Nummer
-            val mainNumber = nationalNumber.substring(prefix.length)
-            val formattedNumber = buildString {
-                append("+").append(countryCode)
-                append(" ").append(prefix)
-                append(" ").append(mainNumber)
-                if (!extension.isNullOrEmpty()) {
-                    append("-").append(extension)
-                }
-            }
-
-            // Erstelle Carrier-Info-String
-            val carrierInfo = when (countryCode) {
-                43 -> carrier?.let { "AT/$it" }
-                49 -> carrier?.let { "DE/$it" }
-                41 -> carrier?.let { "CH/$it" }
-                else -> null
-            }
-
-            return PhoneNumberResult(formattedNumber, carrierInfo)
-        } catch (e: Exception) {
-            return PhoneNumberResult(null, null)
-        }
-    }
-
-    private fun getAustrianCarrierInfo(nationalNumber: String): Pair<String?, String> {
-        // Prüfe zuerst auf Mobile Vorwahlen mit Trie
-        val (carrier, prefix) = austrianMobileTrie.findLongestPrefix(nationalNumber)
-        if (carrier != null) {
-            return carrier to prefix
-        }
-
-        // Wenn keine Mobile Vorwahl gefunden wurde, prüfe auf Festnetz (Vorarlberg)
-        if (nationalNumber.startsWith("5")) {
-            return "Festnetz" to nationalNumber.take(4)
-        }
-
-        return null to nationalNumber.take(3)
-    }
-
-    private fun getGermanCarrierInfo(nationalNumber: String): Pair<String?, String> =
-        germanMobileTrie.findLongestPrefix(nationalNumber)
-
-    private fun getSwissCarrierInfo(nationalNumber: String): Pair<String?, String> =
-        swissMobileTrie.findLongestPrefix(nationalNumber)
 
 }

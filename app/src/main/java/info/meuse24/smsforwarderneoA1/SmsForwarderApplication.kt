@@ -122,9 +122,10 @@ class SmsForwarderApplication : Application() {
         super.onCreate()
         instance = this
         createNotificationChannel()
-        // Nur Basis-Initialisierung
+        // Initialisiere LoggingManager ZUERST, bevor andere Komponenten loggen wollen
+        initializeBaseComponents()
+        // Dann kritische Komponenten (die nun loggen können)
         initializeCriticalComponents()
-        initializeBaseComponents()  // Add this call
     }
 
     @SuppressLint("ObsoleteSdkInt")

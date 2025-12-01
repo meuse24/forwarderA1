@@ -1,5 +1,6 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs
 
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -110,12 +111,18 @@ fun LoadingScreen(
                         modifier = Modifier.padding(top = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        listOf(
-                            "Kontakte - Für die Auswahl des Weiterleitungsziels",
-                            "SMS - Zum Empfangen und Weiterleiten von Nachrichten",
-                            "Telefon - Für die Anrufweiterleitung",
-                            "Batterieoptimierung - Für Stabilität im Hintergrund"
-                        ).forEach { permission ->
+                        buildList {
+                            add("Kontakte - Für die Auswahl des Weiterleitungsziels")
+                            add("SMS senden - Zum Weiterleiten von Nachrichten")
+                            add("SMS empfangen - Zum Empfangen eingehender Nachrichten")
+                            add("Telefon - Für die Anrufweiterleitung (MMI-Codes)")
+                            add("Telefonzustand - Zum Lesen von SIM-Informationen")
+                            add("Telefonnummern - Zum Erkennen der eigenen Nummer")
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                add("Benachrichtigungen - Für den Hintergrunddienst")
+                            }
+                            add("Batterieoptimierung - Für zuverlässige Hintergrundausführung")
+                        }.forEach { permission ->
                             androidx.compose.foundation.layout.Row(
                                 horizontalArrangement = Arrangement.Start,
                                 verticalAlignment = Alignment.CenterVertically,

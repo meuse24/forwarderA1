@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
@@ -38,6 +40,7 @@ fun MmiCodeSettingsSection(
     val mmiActivateSuffix by viewModel.mmiActivateSuffix.collectAsState()
     val mmiDeactivateCode by viewModel.mmiDeactivateCode.collectAsState()
     val mmiStatusCode by viewModel.mmiStatusCode.collectAsState()
+    val mmiWarningEnabled by viewModel.mmiWarningEnabled.collectAsState()
 
     var isActivateFocused by remember { mutableStateOf(false) }
     var isActivateSuffixFocused by remember { mutableStateOf(false) }
@@ -128,6 +131,31 @@ fun MmiCodeSettingsSection(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Standard")
             }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // MMI Warning Toggle
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "4-Sekunden-Warnung vor Wählvorgang",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Zeigt Hinweis vor MMI-Code-Ausführung",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = mmiWarningEnabled,
+                onCheckedChange = { viewModel.updateMmiWarningEnabled(it) }
+            )
         }
     }
 }
