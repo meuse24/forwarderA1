@@ -56,6 +56,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.Cleanup
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CriticalPermissionsDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ExitDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoadingScreen
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.MmiWarningDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.SimNumbersDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.CustomTopAppBar
@@ -105,6 +106,9 @@ class MainActivity : ComponentActivity() {
     // State für kritischen Berechtigungs-Dialog
     private val _showCriticalPermissionsDialog = MutableStateFlow(false)
     private val _missingPermissions = MutableStateFlow<List<String>>(emptyList())
+
+    // State für MMI Warning Dialog
+    private val _showMmiWarningDialog = MutableStateFlow(false)
 
     // Contact Picker Launcher
     private val contactPickerLauncher = registerForActivityResult(
@@ -698,38 +702,24 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            // Zeige Hinweis für 4 Sekunden vor dem Wählen (wenn aktiviert)
+            // Show warning dialog BEFORE dialing (if enabled)
             if (prefsManager.isMmiWarningEnabled()) {
-                SnackbarManager.showInfo(
-                    message = """
-                    ⏳ Wählvorgang wird gestartet...
-
-                        ═════════════
-                      ⚠️  BITTE WARTEN  ⚠️
-                         NICHT BEDIENEN!
-                        ═════════════
-
-                    ► Den Wählvorgang abwarten
-                    ► Nichts antippen
-                    ► App kehrt automatisch zurück
-                    """.trimIndent(),
-                    duration = SnackbarManager.Duration.LONG
-                )
-
                 LoggingManager.logInfo(
                     component = "MainActivity",
                     action = "DIAL_MMI_PREPARING",
-                    message = "Zeige Benutzer-Hinweis vor Wählvorgang",
+                    message = "Zeige Benutzer-Warnung vor Wählvorgang",
                     details = mapOf("code" to normalizedCode, "delay_ms" to 4000)
                 )
 
-                // Warte 4 Sekunden, damit Benutzer die Nachricht lesen kann
+                // Show in-app dialog for 4 seconds
+                _showMmiWarningDialog.value = true
                 delay(4000)
+                _showMmiWarningDialog.value = false
             } else {
                 LoggingManager.logInfo(
                     component = "MainActivity",
-                    action = "DIAL_MMI_PREPARING_SKIPPED",
-                    message = "MMI-Warnung übersprungen (deaktiviert in Einstellungen)",
+                    action = "DIAL_MMI_NO_WARNING",
+                    message = "MMI-Warnung deaktiviert in Einstellungen",
                     details = mapOf("code" to normalizedCode)
                 )
             }
@@ -924,6 +914,9 @@ class MainActivity : ComponentActivity() {
         val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
         val missingPermissions by _missingPermissions.collectAsState()
 
+        // MMI Warning Dialog State
+        val showMmiWarningDialog by _showMmiWarningDialog.collectAsState()
+
         // Cleanup Effect
         LaunchedEffect(Unit) {
             viewModel.cleanupCompleted.collect {
@@ -1106,6 +1099,15 @@ class MainActivity : ComponentActivity() {
                             message = "User hat App beendet wegen fehlender Berechtigungen"
                         )
                         finish()
+                    }
+                )
+            }
+
+            // MMI Warning Dialog - Beautiful overlay shown before dialing MMI codes
+            if (showMmiWarningDialog) {
+                MmiWarningDialog(
+                    onDismiss = {
+                        _showMmiWarningDialog.value = false
                     }
                 )
             }
