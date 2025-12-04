@@ -63,9 +63,8 @@ android {
 
     buildTypes {
         debug {
-            // Build-Zeit wird bei jedem Build neu generiert
-            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            buildConfigField("String", "BUILD_TIME", "\"${sdf.format(Date())}\"")
+            // Static build time for debug builds to enable build cache
+            buildConfigField("String", "BUILD_TIME", "\"dev-build\"")
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
             buildConfigField("String", "BUILD_TYPE", "\"debug\"")
         }
@@ -75,7 +74,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Build-Zeit wird bei jedem Build neu generiert
+            // Build time generated at build time for release builds
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             buildConfigField("String", "BUILD_TIME", "\"${sdf.format(Date())}\"")
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
@@ -83,9 +82,7 @@ android {
         }
     }
 
-    buildFeatures {
-        compose = true
-    }
+    // Duplicate buildFeatures block removed - already defined at line 30-33
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -93,12 +90,9 @@ android {
     }
 }
 
-// Task zum Erzwingen der BuildConfig-Regeneration bei jedem Build
-tasks.whenTaskAdded {
-    if (name == "generateDebugBuildConfig" || name == "generateReleaseBuildConfig") {
-        outputs.upToDateWhen { false }
-    }
-}
+// Removed: Task override that disabled BuildConfig caching
+// Debug builds now use static BUILD_TIME for better caching
+// Release builds still generate BUILD_TIME dynamically
 
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -113,7 +107,7 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.room.common)
+    // Removed: androidx.room.common - not used in codebase
     implementation(libs.androidx.security.crypto)
     implementation(libs.libphonenumber)
     implementation(libs.androidx.espresso.core)
@@ -122,7 +116,7 @@ dependencies {
     implementation(libs.android.activation)
     implementation(libs.compose.icons.core)
     implementation(libs.compose.icons.extended)
-    implementation(libs.androidx.datastore.core.android)
+    // Removed: androidx.datastore.core.android - not used in codebase
 
     // Animation & Visual Effects
     implementation("com.airbnb.android:lottie-compose:6.7.1")
