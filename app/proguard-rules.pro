@@ -5,17 +5,42 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Preserve line numbers for debugging
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep annotations
+-keepattributes *Annotation*,Signature,Exception
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Ignore missing compile-time annotations
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**
+-dontwarn javax.annotation.concurrent.**
+-dontwarn javax.mail.**
+-dontwarn javax.activation.**
+
+# Keep JavaMail classes (used for email sending)
+-keep class javax.mail.** { *; }
+-keep class javax.activation.** { *; }
+-keep class com.sun.mail.** { *; }
+
+# Keep libphonenumber (used for phone number validation)
+-keep class com.google.i18n.phonenumbers.** { *; }
+
+# Keep app model classes
+-keep class info.meuse24.smsforwarderneoA1.domain.model.** { *; }
+
+# Keep ViewModels
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+
+# Keep Composable functions
+-keep @androidx.compose.runtime.Composable class * { *; }
+
+# Remove logging in release
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}

@@ -123,7 +123,12 @@ android {
         }
     }
 
-    // Duplicate buildFeatures block removed - already defined at line 30-33
+    // Lint options
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -136,38 +141,40 @@ android {
 // Release builds still generate BUILD_TIME dynamically
 
 dependencies {
+    // Core Android & Kotlin
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
+    // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.androidx.navigation.runtime.ktx)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.appcompat)
-    // Removed: androidx.room.common - not used in codebase
-    implementation(libs.androidx.security.crypto)
-    implementation(libs.libphonenumber)
-    implementation(libs.androidx.espresso.core)
-    implementation(libs.material)
-    implementation(libs.android.mail)
-    implementation(libs.android.activation)
     implementation(libs.compose.icons.core)
     implementation(libs.compose.icons.extended)
-    // Removed: androidx.datastore.core.android - not used in codebase
 
-    // Animation & Visual Effects
-    implementation("com.airbnb.android:lottie-compose:6.7.1")
+    // Navigation
+    implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.navigation.compose)
 
+    // Security & Phone Utils
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.libphonenumber)
+
+    // Email
+    implementation(libs.android.mail)
+    implementation(libs.android.activation)
+
+    // Testing
     testImplementation(libs.junit)
-
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    // Debug
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 

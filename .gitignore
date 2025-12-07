@@ -55,3 +55,6 @@ CLAUDE.md
 # UI backups and temporary files
 backup_ui_versions/
 wallpaper.png
+
+# Kotlin compiler sessions
+.kotlin/
