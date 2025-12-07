@@ -2,11 +2,20 @@ import com.android.Version
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+}
+
+// Load keystore properties
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -22,19 +31,39 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = false
     }
     kotlinOptions {
         jvmTarget = "17"
+        // Kotlin compiler optimizations
+        freeCompilerArgs += listOf(
+            "-opt-in=kotlin.RequiresOptIn",
+            "-Xjvm-default=all"
+        )
     }
 
     buildFeatures {
         compose = true
-        buildConfig = true  // Hier hinzufügen
+        buildConfig = true
+        // Disable unused features for faster builds
+        aidl = false
+        renderScript = false
+        shaders = false
     }
-
 
     namespace = "info.meuse24.smsforwarderneoA1"
     compileSdk = 36
+
+    signingConfigs {
+        create("release") {
+            if (keystoreProperties.containsKey("storeFile")) {
+                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
 
     defaultConfig {
         applicationId = "info.meuse24.smsforwarderneoA1"
@@ -67,9 +96,21 @@ android {
             buildConfigField("String", "BUILD_TIME", "\"dev-build\"")
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
             buildConfigField("String", "BUILD_TYPE", "\"debug\"")
+
+            // Debug optimizations
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = true
         }
         release {
-            isMinifyEnabled = false
+            // Enable R8 optimization for release builds
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+
+            // Apply signing configuration
+            signingConfig = signingConfigs.getByName("release")
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory
 import android.util.Base64
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,12 +27,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import info.meuse24.smsforwarderneoA1.R
-import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 import java.io.ByteArrayOutputStream
 
 @Composable
@@ -51,10 +53,15 @@ fun HelpScreen(onNavigateBack: () -> Unit = {}) {
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGradientLight)
+        modifier = Modifier.fillMaxSize()
     ) {
+        // Wallpaper background
+        Image(
+            painter = painterResource(id = R.drawable.wallpaper),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -62,7 +69,9 @@ fun HelpScreen(onNavigateBack: () -> Unit = {}) {
                 .padding(16.dp)
         ) {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.8f },
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),

@@ -1,6 +1,6 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.screens.logs
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,10 +22,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
-import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 
 /**
  * Main Log Screen showing application logs with filtering and sharing capabilities.
@@ -47,10 +50,15 @@ fun LogScreen(logViewModel: LogViewModel) {
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGradientLight)
+        modifier = Modifier.fillMaxSize()
     ) {
+        // Wallpaper background
+        Image(
+            painter = painterResource(id = R.drawable.wallpaper),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,7 +76,8 @@ fun LogScreen(logViewModel: LogViewModel) {
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight(),
+                            .fillMaxHeight()
+                            .graphicsLayer { alpha = 0.8f },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
                         ),
@@ -79,6 +88,7 @@ fun LogScreen(logViewModel: LogViewModel) {
 
                     // Button Column
                     Card(
+                        modifier = Modifier.graphicsLayer { alpha = 0.8f },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
                         ),
@@ -104,7 +114,8 @@ fun LogScreen(logViewModel: LogViewModel) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f),
+                            .weight(1f)
+                            .graphicsLayer { alpha = 0.8f },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
                         ),
@@ -115,7 +126,9 @@ fun LogScreen(logViewModel: LogViewModel) {
 
                     // Button Row Card
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer { alpha = 0.8f },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
                         ),

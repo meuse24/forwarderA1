@@ -87,12 +87,6 @@ fun AppSettingsSection(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text(
-            text = "App-Einstellungen",
-            style = sectionTitleStyle,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         OutlinedTextField(
             value = testSmsText,
             onValueChange = { testUtilsViewModel.updateTestSmsText(it) },

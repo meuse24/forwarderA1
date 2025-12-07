@@ -2,7 +2,6 @@ package info.meuse24.smsforwarderneoA1.presentation.ui.screens.info
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,9 +22,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -40,16 +38,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import info.meuse24.smsforwarderneoA1.BuildConfig
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.GradientBorderCard
-import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 import info.meuse24.smsforwarderneoA1.ui.theme.PrimaryGradient
 
 @Composable
@@ -62,10 +60,15 @@ fun InfoScreen() {
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGradientLight)
+        modifier = Modifier.fillMaxSize()
     ) {
+        // Wallpaper background
+        Image(
+            painter = painterResource(id = R.drawable.wallpaper),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -75,7 +78,9 @@ fun InfoScreen() {
         ) {
             // Logo-Sektion mit Gradient Border
             GradientBorderCard(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.8f },
                 borderWidth = 3.dp,
                 gradient = PrimaryGradient,
                 backgroundColor = MaterialTheme.colorScheme.surface
@@ -135,7 +140,9 @@ fun InfoScreen() {
 
             // Links-Sektion
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.8f },
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
@@ -183,7 +190,9 @@ fun InfoScreen() {
 
             // HTML-Content Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.8f },
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
@@ -533,7 +542,7 @@ private fun LinkItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                 context.startActivity(intent)
             }
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
@@ -566,7 +575,7 @@ private fun LinkItem(
         }
 
         Icon(
-            imageVector = Icons.Outlined.OpenInNew,
+            imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
             contentDescription = "Öffnen",
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)

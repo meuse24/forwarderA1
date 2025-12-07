@@ -33,12 +33,6 @@ fun PhoneSettingsSection(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Telefon-Einstellungen",
-            style = sectionTitleStyle,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         Column {
             Text(
                 text = "Erkannte Ländervorwahl",

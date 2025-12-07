@@ -1,33 +1,58 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.LoggingManager
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ChangePinDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.PinDialog
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
-import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 
 @Composable
 fun SettingsScreen(
@@ -37,99 +62,229 @@ fun SettingsScreen(
     navigationViewModel: NavigationViewModel
 ) {
     val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
     LocalFocusManager.current
     var isAnyFieldFocused by remember { mutableStateOf(false) }
     var showPinDialog by remember { mutableStateOf(false) }
     var showChangePinDialog by remember { mutableStateOf(false) }
     val sectionTitleStyle = MaterialTheme.typography.titleMedium
 
+    // Position tracking for each section
+    var phoneSettingsPosition by remember { mutableStateOf(0f) }
+    var simManagementPosition by remember { mutableStateOf(0f) }
+    var simSelectionPosition by remember { mutableStateOf(0f) }
+    var appSettingsPosition by remember { mutableStateOf(0f) }
+    var mmiCodeSettingsPosition by remember { mutableStateOf(0f) }
+    var emailSettingsPosition by remember { mutableStateOf(0f) }
+    var logSettingsPosition by remember { mutableStateOf(0f) }
+
+    // Expansion states for each section - alle geschlossen beim Start
+    var phoneSettingsExpanded by remember { mutableStateOf(false) }
+    var simManagementExpanded by remember { mutableStateOf(false) }
+    var simSelectionExpanded by remember { mutableStateOf(false) }
+    var appSettingsExpanded by remember { mutableStateOf(false) }
+    var mmiCodeSettingsExpanded by remember { mutableStateOf(false) }
+    var emailSettingsExpanded by remember { mutableStateOf(false) }
+    var logSettingsExpanded by remember { mutableStateOf(false) }
+
+    // Accordion-Funktion: Schließt alle anderen Sections
+    fun collapseAllExcept(section: String) {
+        if (section != "phone") phoneSettingsExpanded = false
+        if (section != "simManagement") simManagementExpanded = false
+        if (section != "simSelection") simSelectionExpanded = false
+        if (section != "app") appSettingsExpanded = false
+        if (section != "mmi") mmiCodeSettingsExpanded = false
+        if (section != "email") emailSettingsExpanded = false
+        if (section != "log") logSettingsExpanded = false
+    }
+
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGradientLight)
+        modifier = Modifier.fillMaxSize()
     ) {
+        // Wallpaper background
+        Image(
+            painter = painterResource(id = R.drawable.wallpaper),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            PhoneSettingsSection(
-                viewModel = viewModel,
-                onFocusChanged = { isAnyFieldFocused = it },
-                sectionTitleStyle = sectionTitleStyle
-            )
+            // Section 1: Phone Settings
+            ExpandableSection(
+                title = "Telefon-Einstellungen",
+                expanded = phoneSettingsExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("phone")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(phoneSettingsPosition.toInt())
+                        }
+                    }
+                    phoneSettingsExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    phoneSettingsPosition = coordinates.positionInParent().y
+                }
+            ) {
+                PhoneSettingsSection(
+                    viewModel = viewModel,
+                    onFocusChanged = { isAnyFieldFocused = it },
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
+            // Section 2: SIM Management
+            ExpandableSection(
+                title = "SIM-Karten Verwaltung",
+                expanded = simManagementExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("simManagement")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(simManagementPosition.toInt())
+                        }
+                    }
+                    simManagementExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    simManagementPosition = coordinates.positionInParent().y
+                }
+            ) {
+                SimManagementSection(
+                    viewModel = viewModel,
+                    onFocusChanged = { isAnyFieldFocused = it },
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
 
-            SimManagementSection(
-                viewModel = viewModel,
-                onFocusChanged = { isAnyFieldFocused = it },
-                sectionTitleStyle = sectionTitleStyle
-            )
+            // Section 3: SIM Selection
+            ExpandableSection(
+                title = "SMS-Weiterleitung - SIM-Auswahl",
+                expanded = simSelectionExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("simSelection")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(simSelectionPosition.toInt())
+                        }
+                    }
+                    simSelectionExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    simSelectionPosition = coordinates.positionInParent().y
+                }
+            ) {
+                SimSelectionSection(
+                    viewModel = viewModel,
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
+            // Section 4: App Settings
+            ExpandableSection(
+                title = "App-Einstellungen",
+                expanded = appSettingsExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("app")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(appSettingsPosition.toInt())
+                        }
+                    }
+                    appSettingsExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    appSettingsPosition = coordinates.positionInParent().y
+                }
+            ) {
+                AppSettingsSection(
+                    viewModel = viewModel,
+                    emailViewModel = emailViewModel,
+                    testUtilsViewModel = testUtilsViewModel,
+                    navigationViewModel = navigationViewModel,
+                    onFocusChanged = { isAnyFieldFocused = it },
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
 
-            SimSelectionSection(
-                viewModel = viewModel,
-                sectionTitleStyle = sectionTitleStyle
-            )
+            // Section 5: MMI Code Settings
+            ExpandableSection(
+                title = "MMI-Code Einstellungen",
+                expanded = mmiCodeSettingsExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("mmi")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(mmiCodeSettingsPosition.toInt())
+                        }
+                    }
+                    mmiCodeSettingsExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    mmiCodeSettingsPosition = coordinates.positionInParent().y
+                }
+            ) {
+                MmiCodeSettingsSection(
+                    viewModel = viewModel,
+                    onFocusChanged = { isAnyFieldFocused = it },
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
+            // Section 6: Email Settings
+            ExpandableSection(
+                title = "Email-Einstellungen",
+                expanded = emailSettingsExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("email")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(emailSettingsPosition.toInt())
+                        }
+                    }
+                    emailSettingsExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    emailSettingsPosition = coordinates.positionInParent().y
+                }
+            ) {
+                EmailSettingsSection(
+                    emailViewModel = emailViewModel,
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
 
-            AppSettingsSection(
-                viewModel = viewModel,
-                emailViewModel = emailViewModel,
-                testUtilsViewModel = testUtilsViewModel,
-                navigationViewModel = navigationViewModel,
-                onFocusChanged = { isAnyFieldFocused = it },
-                sectionTitleStyle = sectionTitleStyle
-            )
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
-
-            MmiCodeSettingsSection(
-                viewModel = viewModel,
-                onFocusChanged = { isAnyFieldFocused = it },
-                sectionTitleStyle = sectionTitleStyle
-            )
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
-
-            EmailSettingsSection(
-                emailViewModel = emailViewModel,
-                sectionTitleStyle = sectionTitleStyle
-            )
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
-
-            LogSettingsSection(
-                sectionTitleStyle = sectionTitleStyle,
-                onDeleteLogs = { showPinDialog = true },
-                onChangePin = { showChangePinDialog = true },
-                viewModel = viewModel,
-                onFocusChanged = { isAnyFieldFocused = it }
-            )
-
+            // Section 7: Log Settings
+            ExpandableSection(
+                title = "Logs & Sicherheit",
+                expanded = logSettingsExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("log")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(logSettingsPosition.toInt())
+                        }
+                    }
+                    logSettingsExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    logSettingsPosition = coordinates.positionInParent().y
+                }
+            ) {
+                LogSettingsSection(
+                    sectionTitleStyle = sectionTitleStyle,
+                    onDeleteLogs = { showPinDialog = true },
+                    onChangePin = { showChangePinDialog = true },
+                    viewModel = viewModel,
+                    onFocusChanged = { isAnyFieldFocused = it }
+                )
+            }
         }
 
         // PIN Dialoge
@@ -165,6 +320,66 @@ fun SettingsScreen(
                 },
                 onDismiss = { showChangePinDialog = false }
             )
+        }
+    }
+}
+
+@Composable
+private fun ExpandableSection(
+    title: String,
+    expanded: Boolean,
+    onExpandChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .graphicsLayer { alpha = 0.8f },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column {
+            // Header (always visible)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onExpandChange(!expanded) }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Einklappen" else "Ausklappen",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Content (expandable)
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        thickness = 1.dp
+                    )
+                    Box(modifier = Modifier.padding(16.dp)) {
+                        content()
+                    }
+                }
+            }
         }
     }
 }

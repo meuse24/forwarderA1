@@ -122,7 +122,7 @@ class PhoneSmsUtils private constructor() {
                         "encoding" to "GSM-7"
                     )
                 )
-                SnackbarManager.showSuccess("Test-SMS wurde an $phoneNumber gesendet")
+                // Meldung entfernt - Status ist im Log sichtbar
                           true
             } catch (e: Exception) {
                 LoggingManager.logError(
@@ -272,7 +272,7 @@ class PhoneSmsUtils private constructor() {
                             "text" to encodedText)
                     )
                 }
-                SnackbarManager.showSuccess("SMS wurde an $normalizedPhoneNumber gesendet ($message).")
+                // Meldung entfernt - Status ist im Log sichtbar
             } catch (e: Exception) {
                 message = "Error sending SMS"
                 LoggingManager.logError(

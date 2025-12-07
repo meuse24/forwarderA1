@@ -56,12 +56,6 @@ fun MmiCodeSettingsSection(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text(
-            text = "MMI-Codes (Anrufweiterleitung)",
-            style = sectionTitleStyle,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         OutlinedTextField(
             value = mmiActivatePrefix,
             onValueChange = { viewModel.updateMmiActivatePrefix(it) },

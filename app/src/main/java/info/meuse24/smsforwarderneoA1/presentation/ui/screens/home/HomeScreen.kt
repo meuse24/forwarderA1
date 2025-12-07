@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -94,15 +95,13 @@ fun AnimatedAppLogo(modifier: Modifier = Modifier) {
             painter = painterResource(id = R.drawable.logofwd2),
             contentDescription = "App Logo",
             modifier = Modifier
-                .size(80.dp)
+                .size(56.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .clickable {
                     rotationTarget += 360f
                 }
                 .graphicsLayer {
                     rotationZ = rotation
-                    scaleX = 1.3f
-                    scaleY = 1.3f
                 }
         )
     }
@@ -128,12 +127,17 @@ fun HomeScreen(
         viewModel.initialize()
     }
 
-    // Background with subtle gradient
+    // Background with wallpaper image
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGradientLight)
+        modifier = Modifier.fillMaxSize()
     ) {
+        // Wallpaper background
+        Image(
+            painter = painterResource(id = R.drawable.wallpaper),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
         BoxWithConstraints {
             val isLandscape = this.maxWidth > this.maxHeight
 
@@ -175,119 +179,88 @@ fun LandscapeLayout(
     callState: Int,
     onNavigateToHelp: () -> Unit = {}
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Left side: Contact selection with background title
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Top area
+        CallStatusCard(callState = callState)
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Bottom area: Contact selection + Controls in row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.Bottom
         ) {
-            // Watermark title - visible when no forwarding
-            if (selectedContact == null || !forwardingActive) {
-                Text(
-                    text = "FORWARDER",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+            // Contact selection (left)
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                ContactSelectionSection(
+                    selectedContact = selectedContact,
+                    forwardingActive = forwardingActive,
+                    isCallActive = isCallActive,
+                    onSelectContact = { viewModel.launchContactPicker() },
+                    onDeactivate = { viewModel.deactivateCurrentForwarding() },
+                    onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
                 )
             }
 
-            // Contact selection (button or card)
-            ContactSelectionSection(
-                selectedContact = selectedContact,
-                forwardingActive = forwardingActive,
-                isCallActive = isCallActive,
-                onSelectContact = { viewModel.launchContactPicker() },
-                onDeactivate = { viewModel.deactivateCurrentForwarding() },
-                onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
-            )
-        }
-
-        // Right side: Status and controls
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            CallStatusCard(callState = callState)
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Bottom row: Logo (left) + Buttons (right)
+            // Button row (right)
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Animated Logo (left)
-                AnimatedAppLogo()
-
-                // Buttons (right)
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                // Help Button
+                FloatingActionButton(
+                    onClick = onNavigateToHelp,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
                 ) {
-                    // Help Button
-                    FloatingActionButton(
-                        onClick = onNavigateToHelp,
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Help,
-                            contentDescription = "Hilfe anzeigen",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Help,
+                        contentDescription = "Hilfe anzeigen",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                // Status Info Button
+                FloatingActionButton(
+                    onClick = { viewModel.queryForwardingStatus() },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhoneForwarded,
+                        contentDescription = "Status abfragen",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
 
-                    // Status Info Button
-                    FloatingActionButton(
-                        onClick = { viewModel.queryForwardingStatus() },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PhoneForwarded,
-                            contentDescription = "Status abfragen",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    // Reset Button
-                    FloatingActionButton(
-                        onClick = {
-                            emailViewModel.updateForwardSmsToEmail(false)
-                            viewModel.resetAllForwarding()
-                        },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Alle Weiterleitungen zurücksetzen",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                // Reset Button
+                FloatingActionButton(
+                    onClick = {
+                        emailViewModel.updateForwardSmsToEmail(false)
+                        viewModel.resetAllForwarding()
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Alle Weiterleitungen zurücksetzen",
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
         }
@@ -312,103 +285,83 @@ fun PortraitLayout(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Watermark title - visible when no forwarding
-        if (selectedContact == null || !forwardingActive) {
-            Text(
-                text = "FORWARDER",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Black,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            )
-        }
-
-        // Contact selection (button or card)
-        ContactSelectionSection(
-            selectedContact = selectedContact,
-            forwardingActive = forwardingActive,
-            isCallActive = isCallActive,
-            onSelectContact = { viewModel.launchContactPicker() },
-            onDeactivate = { viewModel.deactivateCurrentForwarding() },
-            onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
-        )
+        // Top area with CallStatusCard
+        CallStatusCard(callState = callState)
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Status section
+        // Bottom area: Contact selection + Buttons
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CallStatusCard(callState = callState)
+            // Contact selection (button or card)
+            ContactSelectionSection(
+                selectedContact = selectedContact,
+                forwardingActive = forwardingActive,
+                isCallActive = isCallActive,
+                onSelectContact = { viewModel.launchContactPicker() },
+                onDeactivate = { viewModel.deactivateCurrentForwarding() },
+                onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
+            )
 
-            // Bottom row: Logo (left) + Buttons (right)
+            // Bottom row: Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Animated Logo (left)
-                AnimatedAppLogo()
-
-                // Buttons (right)
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                // Help Button
+                FloatingActionButton(
+                    onClick = onNavigateToHelp,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
                 ) {
-                    // Help Button
-                    FloatingActionButton(
-                        onClick = onNavigateToHelp,
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Help,
-                            contentDescription = "Hilfe anzeigen",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Help,
+                        contentDescription = "Hilfe anzeigen",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-                    // Status Info Button
-                    FloatingActionButton(
-                        onClick = { viewModel.queryForwardingStatus() },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PhoneForwarded,
-                            contentDescription = "Status abfragen",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                // Status Info Button
+                FloatingActionButton(
+                    onClick = { viewModel.queryForwardingStatus() },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhoneForwarded,
+                        contentDescription = "Status abfragen",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-                    // Reset Button
-                    FloatingActionButton(
-                        onClick = {
-                            emailViewModel.updateForwardSmsToEmail(false)
-                            viewModel.resetAllForwarding()
-                        },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Alle Weiterleitungen zurücksetzen",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                // Reset Button
+                FloatingActionButton(
+                    onClick = {
+                        emailViewModel.updateForwardSmsToEmail(false)
+                        viewModel.resetAllForwarding()
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Alle Weiterleitungen zurücksetzen",
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
         }
@@ -440,7 +393,8 @@ fun ContactSelectionSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .scale(if (!isCallActive) pulseScale else 1f),
+                .scale(if (!isCallActive) pulseScale else 1f)
+                .graphicsLayer { alpha = 0.7f },
             gradient = PrimaryGradient
         ) {
             Column(
@@ -468,7 +422,9 @@ fun ContactSelectionSection(
         // Contact selected: Show animated card with gradient border
         AnimatedCard(
             visible = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer { alpha = 0.7f },
             elevation = 8.dp
         ) {
             GradientBorderCard(
@@ -482,12 +438,19 @@ fun ContactSelectionSection(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Header
-                    Text(
-                        text = "Aktive Weiterleitung",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
+                    // Header row with title and logo
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Aktive Weiterleitung",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                        AnimatedAppLogo()
+                    }
 
                     // Contact info
                     Column(

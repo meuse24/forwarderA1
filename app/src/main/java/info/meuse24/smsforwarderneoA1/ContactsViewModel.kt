@@ -260,9 +260,7 @@ class ContactsViewModel(
                     activateForwarding(contact) { result ->
                         when (result) {
                             is ForwardingResult.Success -> {
-                                SnackbarManager.showSuccess(
-                                    "Weiterleitung zu ${contact.name} (${contact.phoneNumber}) aktiviert"
-                                )
+                                // Erfolgsmeldung entfernt - Status ist im Log sichtbar
                             }
                             is ForwardingResult.Error -> {
                                 SnackbarManager.showError(
@@ -372,7 +370,7 @@ class ContactsViewModel(
         deactivateForwarding { result ->
             when (result) {
                 is ForwardingResult.Success -> {
-                    SnackbarManager.showSuccess("Weiterleitung deaktiviert")
+                    // Erfolgsmeldung entfernt - Status ist im Log sichtbar
                 }
                 is ForwardingResult.Error -> {
                     SnackbarManager.showError("Fehler beim Deaktivieren: ${result.message}")
@@ -785,8 +783,6 @@ class ContactsViewModel(
                 "status_code" to statusCode
             )
         )
-
-        SnackbarManager.showInfo("Statusabfrage wird gesendet")
     }
 
     /**

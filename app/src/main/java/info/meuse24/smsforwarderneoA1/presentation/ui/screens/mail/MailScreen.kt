@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,11 +49,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.SnackbarManager
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.AnimatedOutlinedButton
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.GradientBorderCard
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
@@ -78,10 +83,15 @@ fun MailScreen(emailViewModel: EmailViewModel) {
     )
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundGradientLight)
+        modifier = Modifier.fillMaxSize()
     ) {
+        // Wallpaper background
+        Image(
+            painter = painterResource(id = R.drawable.wallpaper),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -91,7 +101,9 @@ fun MailScreen(emailViewModel: EmailViewModel) {
         ) {
             // Checkbox Card mit Gradient Border
             GradientBorderCard(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.8f },
                 borderWidth = 2.dp,
                 gradient = if (forwardSmsToEmail) SuccessGradient else PrimaryGradient,
                 backgroundColor = MaterialTheme.colorScheme.surfaceVariant
@@ -127,7 +139,9 @@ fun MailScreen(emailViewModel: EmailViewModel) {
 
             // Eingabefeld und Add-Button Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.8f },
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
@@ -189,7 +203,9 @@ fun MailScreen(emailViewModel: EmailViewModel) {
                 ) + fadeOut(animationSpec = tween(durationMillis = AnimationDuration.FAST))
             ) {
                 GradientBorderCard(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer { alpha = 0.8f },
                     borderWidth = 2.dp,
                     gradient = PrimaryGradient,
                     backgroundColor = MaterialTheme.colorScheme.surface
@@ -219,7 +235,9 @@ fun MailScreen(emailViewModel: EmailViewModel) {
             // Empty state
             if (emailAddresses.isEmpty()) {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer { alpha = 0.8f },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                     ),

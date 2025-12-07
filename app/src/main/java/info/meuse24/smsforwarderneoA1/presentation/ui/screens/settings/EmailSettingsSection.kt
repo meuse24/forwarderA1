@@ -48,12 +48,6 @@ fun EmailSettingsSection(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text(
-            text = "E-Mail-Einstellungen",
-            style = sectionTitleStyle,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         OutlinedTextField(
             value = smtpHost,
             onValueChange = { emailViewModel.updateSmtpSettings(it, smtpPort, smtpUsername, smtpPassword) },

@@ -51,12 +51,6 @@ fun LogSettingsSection(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Log-Einstellungen",
-            style = sectionTitleStyle,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         OutlinedTextField(
             value = maxLogSizeMB.toString(),
             onValueChange = { newValue ->
