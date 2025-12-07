@@ -91,20 +91,42 @@ fun InfoScreen() {
                         .padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
+                    // Logos Column (App Logo + Barracuda Logo)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logofwd2),
-                            contentDescription = "App Icon",
+                        // App Logo
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)
-                        )
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.logofwd2),
+                                contentDescription = "App Icon",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)
+                            )
+                        }
+
+                        // Barracuda Logo
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.barracuda),
+                                contentDescription = "Version Barracuda",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(20.dp))
