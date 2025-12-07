@@ -177,9 +177,11 @@ class MainActivity : ComponentActivity() {
                 val isLoading by _isLoading.collectAsState()
                 val error by _loadingError.collectAsState()
                 val isFullyInitialized by AppContainer.isInitialized.collectAsState()
+                val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
 
                 when {
-                    !isFullyInitialized || isLoading -> {
+                    // Zeige LoadingScreen nur wenn nicht der CriticalPermissionsDialog aktiv ist
+                    (!isFullyInitialized || isLoading) && !showCriticalPermissionsDialog -> {
                         LoadingScreen(
                             error = error,
                             onRetry = { retryInitialization() },
@@ -195,11 +197,14 @@ class MainActivity : ComponentActivity() {
                         if (prefsAvailable && loggerAvailable && permissionAvailable) {
                             UI(viewModel, emailViewModel)
                         } else {
-                            LoadingScreen(
-                                error = "Initialisierung unvollständig - Komponenten nicht verfügbar",
-                                onRetry = { retryInitialization() },
-                                onExit = { finish() }
-                            )
+                            // Zeige Fehler-LoadingScreen nur wenn nicht CriticalPermissionsDialog aktiv
+                            if (!showCriticalPermissionsDialog) {
+                                LoadingScreen(
+                                    error = "Initialisierung unvollständig - Komponenten nicht verfügbar",
+                                    onRetry = { retryInitialization() },
+                                    onExit = { finish() }
+                                )
+                            }
                         }
                     }
                 }
