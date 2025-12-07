@@ -82,17 +82,33 @@ class SmsReceiver : BroadcastReceiver() {
             flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
         }
 
-        LoggingManager.logInfo(
-            component = "SmsReceiver",
-            action = "FORWARD_TO_SERVICE",
-            message = "SMS-Daten an Service übergeben",
-            details = mapOf(
-                "has_extras" to (intent.extras != null),
-                "extras_count" to (intent.extras?.size() ?: 0),
-                "subscription_id" to subscriptionId
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+            
+            LoggingManager.logInfo(
+                component = "SmsReceiver",
+                action = "FORWARD_TO_SERVICE",
+                message = "SMS-Daten an Service übergeben",
+                details = mapOf(
+                    "has_extras" to (intent.extras != null),
+                    "extras_count" to (intent.extras?.size() ?: 0),
+                    "subscription_id" to subscriptionId
+                )
             )
-        )
-        context.startForegroundService(serviceIntent)
+        } catch (e: Exception) {
+            // Abfangen von ForegroundServiceStartNotAllowedException (Android 14+)
+            // und IllegalStateException (Android 8+ Background Limits)
+            LoggingManager.logError(
+                component = "SmsReceiver",
+                action = "START_SERVICE_ERROR",
+                message = "Konnte Service nicht starten - Hintergrundbeschränkungen?",
+                error = e
+            )
+        }
     }
 
     /**

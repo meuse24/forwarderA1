@@ -1,25 +1,19 @@
 [versions]
-agp = "8.13.1"
+agp = "8.7.3"
 kotlin = "2.1.0"
-coreKtx = "1.13.1"
+coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-libphonenumber = "8.13.19"
+libphonenumber = "8.13.52"
 lifecycleRuntimeKtx = "2.8.7"
-composeBom = "2024.10.01"
+activityCompose = "1.9.3"
+composeBom = "2024.11.00"
 securityCrypto = "1.1.0-alpha06"
-workRuntimeKtx = "2.9.1"
-navigationCompose = "2.8.3"
-navigationRuntimeKtx = "2.8.3"
-appcompat = "1.7.0"
-roomCommon = "2.6.1"
+navigationCompose = "2.8.5"
+navigationRuntimeKtx = "2.8.5"
 javamail = "1.6.7"
-kotlinTest = "2.1.0-Beta2"
-kotlinxCoroutinesTest = "1.9.0"
-material = "1.12.0"
-compose-icons = "1.5.4"
-datastoreCoreAndroid = "1.1.1"
+compose-icons = "1.7.5"
 
 [libraries]
 
@@ -33,7 +27,7 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.9.3" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
@@ -42,15 +36,9 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
-
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-androidx-datastore-core-android = { group = "androidx.datastore", name = "datastore-core-android", version.ref = "datastoreCoreAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

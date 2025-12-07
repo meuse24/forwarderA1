@@ -114,6 +114,7 @@ class TestUtilsViewModel(
                 prefsManager.getTestSmsText()
             )
         ) {
+            val sanitizedText = sanitizeSmsTextForLogging(prefsManager.getTestSmsText())
             LoggingManager.log(
                 LogLevel.INFO,
                 LogMetadata(
@@ -121,12 +122,13 @@ class TestUtilsViewModel(
                     action = "TEST_SMS_SENT",
                     details = mapOf(
                         "receiver" to receiver,
-                        "text" to prefsManager.getTestSmsText()
+                        "text" to sanitizedText
                     )
                 ),
                 "Test-SMS wurde versendet"
             )
         } else {
+            val sanitizedText = sanitizeSmsTextForLogging(prefsManager.getTestSmsText())
             LoggingManager.log(
                 LogLevel.ERROR,
                 LogMetadata(
@@ -134,11 +136,23 @@ class TestUtilsViewModel(
                     action = "TEST_SMS_FAILED",
                     details = mapOf(
                         "receiver" to receiver,
-                        "text" to prefsManager.getTestSmsText()
+                        "text" to sanitizedText
                     )
                 ),
                 "Fehler beim Versenden der Test-SMS"
             )
+        }
+    }
+
+    /**
+     * Anonymisiert SMS-Text für Logging-Zwecke.
+     * Bei Texten über 20 Zeichen werden nur die ersten und letzten 10 Zeichen geloggt.
+     */
+    private fun sanitizeSmsTextForLogging(text: String): String {
+        return if (text.length > 20) {
+            "${text.take(10)}...${text.takeLast(10)}"
+        } else {
+            text
         }
     }
 

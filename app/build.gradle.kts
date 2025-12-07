@@ -52,7 +52,7 @@ android {
     }
 
     namespace = "info.meuse24.smsforwarderneoA1"
-    compileSdk = 36
+    compileSdk = 35
 
     signingConfigs {
         create("release") {

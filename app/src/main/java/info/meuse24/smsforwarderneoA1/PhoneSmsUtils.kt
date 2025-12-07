@@ -35,6 +35,18 @@ class PhoneSmsUtils private constructor() {
 
     companion object {
 
+        /**
+         * Anonymisiert SMS-Text für Logging-Zwecke.
+         * Bei Texten über 20 Zeichen werden nur die ersten und letzten 10 Zeichen geloggt.
+         */
+        private fun sanitizeSmsTextForLogging(text: String): String {
+            return if (text.length > 20) {
+                "${text.take(10)}...${text.takeLast(10)}"
+            } else {
+                text
+            }
+        }
+
         fun initialize() {
             LoggingManager.logInfo(
                 component = "PhoneSmsUtils",
@@ -230,7 +242,7 @@ class PhoneSmsUtils private constructor() {
                             "recipient" to normalizedPhoneNumber,
                             "original_recipient" to phoneNumber,
                             "parts" to parts.size,
-                            "text" to encodedText
+                            "text" to sanitizeSmsTextForLogging(encodedText)
                         )
                     )
                 } else {
@@ -269,7 +281,7 @@ class PhoneSmsUtils private constructor() {
                         details = mapOf(
                             "recipient" to normalizedPhoneNumber,
                             "original_recipient" to phoneNumber,
-                            "text" to encodedText)
+                            "text" to sanitizeSmsTextForLogging(encodedText))
                     )
                 }
                 // Meldung entfernt - Status ist im Log sichtbar

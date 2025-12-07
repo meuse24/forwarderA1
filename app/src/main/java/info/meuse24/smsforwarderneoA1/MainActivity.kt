@@ -184,8 +184,8 @@ class MainActivity : ComponentActivity() {
                     (!isFullyInitialized || isLoading) && !showCriticalPermissionsDialog -> {
                         LoadingScreen(
                             error = error,
-                            onRetry = { retryInitialization() },
-                            onExit = { finish() }
+                            onRetry = if (error != null) { { retryInitialization() } } else null,
+                            onExit = if (error != null) { { finish() } } else null
                         )
                     }
                     else -> {

@@ -22,10 +22,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.PhoneForwarded
-import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PhoneForwarded
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -224,7 +223,7 @@ fun LandscapeLayout(
                     modifier = Modifier.graphicsLayer { alpha = 0.7f }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Help,
+                        imageVector = Icons.AutoMirrored.Filled.Help,
                         contentDescription = "Hilfe anzeigen",
                         modifier = Modifier.size(28.dp)
                     )
@@ -239,7 +238,7 @@ fun LandscapeLayout(
                     modifier = Modifier.graphicsLayer { alpha = 0.7f }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PhoneForwarded,
+                        imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
                         contentDescription = "Status abfragen",
                         modifier = Modifier.size(28.dp)
                     )
@@ -321,7 +320,7 @@ fun PortraitLayout(
                     modifier = Modifier.graphicsLayer { alpha = 0.7f }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Help,
+                        imageVector = Icons.AutoMirrored.Filled.Help,
                         contentDescription = "Hilfe anzeigen",
                         modifier = Modifier.size(28.dp)
                     )
@@ -338,7 +337,7 @@ fun PortraitLayout(
                     modifier = Modifier.graphicsLayer { alpha = 0.7f }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PhoneForwarded,
+                        imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
                         contentDescription = "Status abfragen",
                         modifier = Modifier.size(28.dp)
                     )
