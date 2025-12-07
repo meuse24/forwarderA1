@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -35,8 +37,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -44,10 +48,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import info.meuse24.smsforwarderneoA1.AppContainer.prefsManager
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
@@ -898,7 +898,6 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun UI(viewModel: ContactsViewModel, emailViewModel: EmailViewModel) {
-        val navController = rememberNavController()
         //val topBarTitle by navigationViewModel.topBarTitle.collectAsState()
         val navigationTarget by navigationViewModel.navigationTarget.collectAsState()
         val showExitDialog by navigationViewModel.showExitDialog.collectAsState()
@@ -908,7 +907,6 @@ class MainActivity : ComponentActivity() {
         val showSimNumbersDialog by simManagementViewModel.showSimNumbersDialog.collectAsState()
         val missingSims by simManagementViewModel.missingSims.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
-        val coroutineScope = rememberCoroutineScope()
 
         // Critical Permissions Dialog State
         val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
@@ -925,19 +923,30 @@ class MainActivity : ComponentActivity() {
         }
 
         // Initialisieren Sie den SnackbarManager mit dem State und Scope
-        LaunchedEffect(snackbarHostState, coroutineScope) {
-            SnackbarManager.setSnackbarState(snackbarHostState, coroutineScope)
+        LaunchedEffect(snackbarHostState) {
+            SnackbarManager.setSnackbarState(snackbarHostState, this)
         }
 
-        // Navigation Effect
-        LaunchedEffect(navigationTarget) {
+        // State für Swipe-Navigation
+        val mailScreenVisible by viewModel.mailScreenVisible.collectAsState()
+        val screens = remember(mailScreenVisible) {
+            if (mailScreenVisible) {
+                listOf("start", "mail", "setup", "log", "info")
+            } else {
+                listOf("start", "setup", "log", "info")
+            }
+        }
+
+        val pagerState = rememberPagerState(pageCount = { screens.size })
+        val coroutineScope = rememberCoroutineScope()
+        var showHelpScreen by remember { mutableStateOf(false) }
+
+        // Navigation Effect - navigate to page when navigationTarget changes
+        LaunchedEffect(navigationTarget, screens) {
             navigationTarget?.let { target ->
-                navController.navigate(target) {
-                    launchSingleTop = true
-                    restoreState = true
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
+                val targetIndex = screens.indexOf(target)
+                if (targetIndex >= 0) {
+                    pagerState.animateScrollToPage(targetIndex)
                 }
                 navigationViewModel.onNavigated()
             }
@@ -946,45 +955,48 @@ class MainActivity : ComponentActivity() {
         Box(modifier = Modifier.fillMaxSize()) {  // Äußere Box für absolutes Positioning
             Scaffold(
                 topBar = { CustomTopAppBar(title = "") },
-                bottomBar = { BottomNavigationBar(navController, viewModel) }
+                bottomBar = {
+                    BottomNavigationBar(
+                        screens = screens,
+                        currentPage = pagerState.currentPage,
+                        onPageSelected = { page ->
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(page)
+                            }
+                        }
+                    )
+                }
             ) { innerPadding ->
-                NavHost(
-                    navController,
-                    startDestination = "start",
-                    Modifier
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
                         .padding(innerPadding)
                         .fillMaxSize()
-                ) {
-                    composable("start") {
-                        val currentCallState = callState.collectAsState()
-                        HomeScreen(
-                            viewModel = viewModel,
-                            emailViewModel = emailViewModel,
-                            testUtilsViewModel = testUtilsViewModel,
-                            callState = currentCallState,
-                            onNavigateToHelp = { navController.navigate("help") }
-                        )
-                    }
-                    composable("mail") {
-                        MailScreen(emailViewModel)
-                    }
-                    composable("setup") {
-                        SettingsScreen(viewModel, emailViewModel, testUtilsViewModel, navigationViewModel)
-                    }
-                    composable("log") {
-                        LogScreen(logViewModel)
-                    }
-                    composable("info") {
-                        InfoScreen()
-                    }
-                    composable("help") {
-                        HelpScreen(
-                            onNavigateBack = {
-                                navController.popBackStack()
-                            }
-                        )
+                ) { page ->
+                    when (screens[page]) {
+                        "start" -> {
+                            val currentCallState = callState.collectAsState()
+                            HomeScreen(
+                                viewModel = viewModel,
+                                emailViewModel = emailViewModel,
+                                testUtilsViewModel = testUtilsViewModel,
+                                callState = currentCallState,
+                                onNavigateToHelp = { showHelpScreen = true }
+                            )
+                        }
+                        "mail" -> MailScreen(emailViewModel)
+                        "setup" -> SettingsScreen(viewModel, emailViewModel, testUtilsViewModel, navigationViewModel)
+                        "log" -> LogScreen(logViewModel)
+                        "info" -> InfoScreen()
                     }
                 }
+            }
+
+            // Help Screen als Overlay
+            if (showHelpScreen) {
+                HelpScreen(
+                    onNavigateBack = { showHelpScreen = false }
+                )
             }
 
             // Snackbar außerhalb des Scaffolds aber innerhalb der Box
