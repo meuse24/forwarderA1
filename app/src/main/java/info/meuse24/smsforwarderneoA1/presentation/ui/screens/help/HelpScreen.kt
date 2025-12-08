@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.util.Base64
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,10 +40,16 @@ import info.meuse24.smsforwarderneoA1.R
 import java.io.ByteArrayOutputStream
 
 @Composable
-fun HelpScreen(onNavigateBack: () -> Unit = {}) {
+fun HelpScreen(
+    modifier: Modifier = Modifier,
+    onNavigateBack: () -> Unit = {}
+) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5
+
+    // Handle system back button to return to the home screen instead of closing the app
+    BackHandler(onBack = onNavigateBack)
 
     // Cache Base64-konvertierte Bilder (nur 1x konvertieren pro Session)
     val cachedImages = remember {
@@ -54,7 +61,7 @@ fun HelpScreen(onNavigateBack: () -> Unit = {}) {
     }
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         // Wallpaper background
         Image(

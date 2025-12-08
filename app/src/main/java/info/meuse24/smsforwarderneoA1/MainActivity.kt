@@ -1071,36 +1071,41 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             ) { innerPadding ->
-                HorizontalPager(
-                    state = pagerState,
+                Box(
                     modifier = Modifier
                         .padding(innerPadding)
                         .fillMaxSize()
-                ) { page ->
-                    when (screens[page]) {
-                        "start" -> {
-                            val currentCallState = callState.collectAsState()
-                            HomeScreen(
-                                viewModel = viewModel,
-                                emailViewModel = emailViewModel,
-                                testUtilsViewModel = testUtilsViewModel,
-                                callState = currentCallState,
-                                onNavigateToHelp = { showHelpScreen = true }
-                            )
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        when (screens[page]) {
+                            "start" -> {
+                                val currentCallState = callState.collectAsState()
+                                HomeScreen(
+                                    viewModel = viewModel,
+                                    emailViewModel = emailViewModel,
+                                    testUtilsViewModel = testUtilsViewModel,
+                                    callState = currentCallState,
+                                    onNavigateToHelp = { showHelpScreen = true }
+                                )
+                            }
+                            "mail" -> MailScreen(emailViewModel)
+                            "setup" -> SettingsScreen(viewModel, emailViewModel, testUtilsViewModel, navigationViewModel)
+                            "log" -> LogScreen(logViewModel)
+                            "info" -> InfoScreen()
                         }
-                        "mail" -> MailScreen(emailViewModel)
-                        "setup" -> SettingsScreen(viewModel, emailViewModel, testUtilsViewModel, navigationViewModel)
-                        "log" -> LogScreen(logViewModel)
-                        "info" -> InfoScreen()
+                    }
+
+                    // Help Screen als Overlay innerhalb des nutzbaren Inhaltsbereichs (Top/Bottom Bar bleiben sichtbar)
+                    if (showHelpScreen) {
+                        HelpScreen(
+                            modifier = Modifier.fillMaxSize(),
+                            onNavigateBack = { showHelpScreen = false }
+                        )
                     }
                 }
-            }
-
-            // Help Screen als Overlay
-            if (showHelpScreen) {
-                HelpScreen(
-                    onNavigateBack = { showHelpScreen = false }
-                )
             }
 
             // Snackbar außerhalb des Scaffolds aber innerhalb der Box
