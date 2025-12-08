@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -62,7 +64,7 @@ fun SimNumbersDialog(
         ),
         title = {
             Text(
-                text = "SIM-Telefonnummern erforderlich",
+                text = stringResource(R.string.dialog_title_sim_numbers_required),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -73,7 +75,7 @@ fun SimNumbersDialog(
             ) {
                 item {
                     Text(
-                        text = "Für die folgenden SIM-Karten konnten die Telefonnummern nicht automatisch ermittelt werden. Bitte geben Sie diese manuell ein:",
+                        text = stringResource(R.string.msg_sim_numbers_explanation),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -89,14 +91,14 @@ fun SimNumbersDialog(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = "SIM ${sim.slotIndex + 1}",
+                                text = stringResource(R.string.label_sim_slot, sim.slotIndex + 1),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
 
                             if (!sim.carrierName.isNullOrEmpty()) {
                                 Text(
-                                    text = "Anbieter: ${sim.carrierName}",
+                                    text = stringResource(R.string.label_carrier, sim.carrierName),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -104,7 +106,7 @@ fun SimNumbersDialog(
 
                             if (!sim.displayName.isNullOrEmpty() && sim.displayName != sim.carrierName) {
                                 Text(
-                                    text = "Name: ${sim.displayName}",
+                                    text = stringResource(R.string.label_display_name, sim.displayName),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -115,8 +117,8 @@ fun SimNumbersDialog(
                                 onValueChange = { value ->
                                     numberInputs[sim.subscriptionId] = value
                                 },
-                                label = { Text("Telefonnummer") },
-                                placeholder = { Text("zB 0043664123456789") },
+                                label = { Text(stringResource(R.string.label_phone_number)) },
+                                placeholder = { Text(stringResource(R.string.placeholder_phone_number_example)) },
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Phone,
                                     imeAction = ImeAction.Next
@@ -144,7 +146,7 @@ fun SimNumbersDialog(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Überspringen")
+                    Text(stringResource(R.string.btn_skip))
                 }
 
                 Button(
@@ -160,7 +162,7 @@ fun SimNumbersDialog(
                     },
                     enabled = allFilled
                 ) {
-                    Text("Speichern")
+                    Text(stringResource(R.string.btn_save))
                 }
             }
         }

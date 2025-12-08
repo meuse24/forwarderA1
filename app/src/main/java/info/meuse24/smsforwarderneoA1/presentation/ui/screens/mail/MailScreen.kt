@@ -53,9 +53,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.AnimatedOutlinedButton
@@ -68,6 +70,7 @@ import info.meuse24.smsforwarderneoA1.ui.theme.SuccessGradient
 
 @Composable
 fun MailScreen(emailViewModel: EmailViewModel) {
+    val context = LocalContext.current
     val emailAddresses by emailViewModel.emailAddresses.collectAsState()
     val newEmailAddress by emailViewModel.newEmailAddress.collectAsState()
     val forwardSmsToEmail by emailViewModel.forwardSmsToEmail.collectAsState()
@@ -120,14 +123,14 @@ fun MailScreen(emailViewModel: EmailViewModel) {
                             if (emailAddresses.isNotEmpty()) {
                                 emailViewModel.updateForwardSmsToEmail(checked)
                             } else if (checked) {
-                                SnackbarManager.showWarning("Bitte fügen Sie zuerst E-Mail-Adressen hinzu")
+                                SnackbarManager.showWarning(context.getString(R.string.msg_warning_add_emails_first))
                             }
                         },
                         enabled = emailAddresses.isNotEmpty()
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "SMS an alle E-Mails weiterleiten",
+                        text = stringResource(R.string.label_forward_sms_to_email),
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (emailAddresses.isNotEmpty())
                             MaterialTheme.colorScheme.onSurface
@@ -157,7 +160,7 @@ fun MailScreen(emailViewModel: EmailViewModel) {
                     OutlinedTextField(
                         value = newEmailAddress,
                         onValueChange = { emailViewModel.updateNewEmailAddress(it) },
-                        label = { Text("Neue E-Mail-Adresse") },
+                        label = { Text(stringResource(R.string.label_new_email_address)) },
                         modifier = Modifier
                             .weight(1f)
                             .onFocusChanged { isEmailAddressFocused = it.isFocused },
@@ -183,7 +186,7 @@ fun MailScreen(emailViewModel: EmailViewModel) {
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = "Hinzufügen",
+                            contentDescription = stringResource(R.string.btn_add_email),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -250,7 +253,7 @@ fun MailScreen(emailViewModel: EmailViewModel) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Keine E-Mail-Adressen vorhanden",
+                            text = stringResource(R.string.msg_no_email_addresses),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -289,7 +292,7 @@ private fun EmailListItem(
             ) {
                 Icon(
                     imageVector = Icons.Default.Email,
-                    contentDescription = "Test-Mail senden",
+                    contentDescription = stringResource(R.string.btn_send_test_email),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -299,7 +302,7 @@ private fun EmailListItem(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Löschen",
+                    contentDescription = stringResource(R.string.btn_delete_email),
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(20.dp)
                 )

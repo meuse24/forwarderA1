@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -59,8 +61,8 @@ fun MmiCodeSettingsSection(
         OutlinedTextField(
             value = mmiActivatePrefix,
             onValueChange = { viewModel.updateMmiActivatePrefix(it) },
-            label = { Text("Aktivierungscode Prefix (z.B. *21*)") },
-            placeholder = { Text("*21*") },
+            label = { Text(stringResource(R.string.label_mmi_activate_prefix)) },
+            placeholder = { Text(stringResource(R.string.placeholder_mmi_prefix)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isActivateFocused = it.isFocused }
@@ -71,8 +73,8 @@ fun MmiCodeSettingsSection(
         OutlinedTextField(
             value = mmiActivateSuffix,
             onValueChange = { viewModel.updateMmiActivateSuffix(it) },
-            label = { Text("Aktivierungscode Suffix (z.B. **)") },
-            placeholder = { Text("**") },
+            label = { Text(stringResource(R.string.label_mmi_activate_suffix)) },
+            placeholder = { Text(stringResource(R.string.placeholder_mmi_suffix)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isActivateSuffixFocused = it.isFocused }
@@ -83,8 +85,8 @@ fun MmiCodeSettingsSection(
         OutlinedTextField(
             value = mmiDeactivateCode,
             onValueChange = { viewModel.updateMmiDeactivateCode(it) },
-            label = { Text("Deaktivierungscode (z.B. **21**)") },
-            placeholder = { Text("**21**") },
+            label = { Text(stringResource(R.string.label_mmi_deactivate_code)) },
+            placeholder = { Text(stringResource(R.string.placeholder_mmi_deactivate)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isDeactivateFocused = it.isFocused }
@@ -95,8 +97,8 @@ fun MmiCodeSettingsSection(
         OutlinedTextField(
             value = mmiStatusCode,
             onValueChange = { viewModel.updateMmiStatusCode(it) },
-            label = { Text("Statusabfrage (z.B. *021**)") },
-            placeholder = { Text("*021**") },
+            label = { Text(stringResource(R.string.label_mmi_status_code)) },
+            placeholder = { Text(stringResource(R.string.placeholder_mmi_status)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isStatusFocused = it.isFocused }
@@ -111,7 +113,7 @@ fun MmiCodeSettingsSection(
             Button(
                 onClick = { viewModel.resetMmiCodesToDefault() }
             ) {
-                Text("A1(BMI)")
+                Text(stringResource(R.string.btn_preset_a1_austria))
             }
 
             Button(
@@ -119,11 +121,11 @@ fun MmiCodeSettingsSection(
             ) {
                 Icon(
                     Icons.Filled.Refresh,
-                    contentDescription = "Reset",
+                    contentDescription = stringResource(R.string.btn_preset_standard),
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Standard")
+                Text(stringResource(R.string.btn_preset_standard))
             }
         }
 

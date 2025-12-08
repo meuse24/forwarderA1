@@ -12,6 +12,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import info.meuse24.smsforwarderneoA1.R
 
 @Composable
 fun BottomNavigationBar(
@@ -28,38 +30,38 @@ fun BottomNavigationBar(
                     when (screen) {
                         "setup" -> Icon(
                             Icons.Filled.Settings,
-                            contentDescription = "Setup"
+                            contentDescription = stringResource(R.string.tab_setup)
                         )
 
                         "mail" -> Icon(
                             Icons.Filled.Email,
-                            contentDescription = "Mail"
+                            contentDescription = stringResource(R.string.tab_mail)
                         )
 
                         "log" -> Icon(
                             Icons.AutoMirrored.Filled.List,
-                            contentDescription = "Log"
+                            contentDescription = stringResource(R.string.tab_log)
                         )
 
                         "info" -> Icon(
                             Icons.Filled.Info,
-                            contentDescription = "Info"
+                            contentDescription = stringResource(R.string.tab_info)
                         )
 
                         else -> Icon(
                             Icons.Filled.Home,
-                            contentDescription = "Start"
+                            contentDescription = stringResource(R.string.tab_home)
                         )
                     }
                 },
                 label = {
                     Text(
                         when (screen) {
-                            "start" -> "Start"
-                            "mail" -> "Mail"
-                            "setup" -> "Setup"
-                            "log" -> "Log"
-                            else -> "Info"
+                            "start" -> stringResource(R.string.tab_home)
+                            "mail" -> stringResource(R.string.tab_mail)
+                            "setup" -> stringResource(R.string.tab_setup)
+                            "log" -> stringResource(R.string.tab_log)
+                            else -> stringResource(R.string.tab_info)
                         }
                     )
                 },

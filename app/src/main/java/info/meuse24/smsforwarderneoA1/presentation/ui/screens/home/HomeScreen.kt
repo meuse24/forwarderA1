@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -224,7 +225,7 @@ fun LandscapeLayout(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Help,
-                        contentDescription = "Hilfe anzeigen",
+                        contentDescription = stringResource(R.string.btn_show_help),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -239,7 +240,7 @@ fun LandscapeLayout(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
-                        contentDescription = "Status abfragen",
+                        contentDescription = stringResource(R.string.btn_query_status),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -321,7 +322,7 @@ fun PortraitLayout(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Help,
-                        contentDescription = "Hilfe anzeigen",
+                        contentDescription = stringResource(R.string.btn_show_help),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -338,7 +339,7 @@ fun PortraitLayout(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
-                        contentDescription = "Status abfragen",
+                        contentDescription = stringResource(R.string.btn_query_status),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -402,14 +403,14 @@ fun ContactSelectionSection(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.officer),
-                    contentDescription = "Kontakt auswählen",
+                    contentDescription = stringResource(R.string.btn_select_contact),
                     modifier = Modifier
                         .padding(bottom = 8.dp)
                         .size(64.dp)
                         .clip(RoundedCornerShape(20.dp))
                 )
                 Text(
-                    text = "Kontakt auswählen",
+                    text = stringResource(R.string.btn_select_contact),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center,
@@ -444,7 +445,7 @@ fun ContactSelectionSection(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Aktive Weiterleitung",
+                            text = stringResource(R.string.heading_active_forwarding),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         )
@@ -486,7 +487,7 @@ fun ContactSelectionSection(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Kontakt ändern",
+                                text = stringResource(R.string.btn_change_contact),
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -496,7 +497,7 @@ fun ContactSelectionSection(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Test-SMS",
+                                text = stringResource(R.string.btn_test_sms),
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -510,7 +511,7 @@ fun ContactSelectionSection(
                         gradient = ErrorGradient
                     ) {
                         Text(
-                            text = "Deaktivieren",
+                            text = stringResource(R.string.btn_deactivate),
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold
                         )

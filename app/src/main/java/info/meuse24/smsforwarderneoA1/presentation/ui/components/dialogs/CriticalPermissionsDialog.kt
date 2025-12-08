@@ -23,8 +23,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import info.meuse24.smsforwarderneoA1.R
 
 /**
  * Dialog der angezeigt wird wenn kritische Berechtigungen fehlen.
@@ -43,6 +46,8 @@ fun CriticalPermissionsDialog(
     onRequestPermissions: () -> Unit,
     onExitApp: () -> Unit
 ) {
+    val context = LocalContext.current
+
     AlertDialog(
         onDismissRequest = { /* Verhindere Schließen durch Tippen außerhalb */ },
         icon = {
@@ -55,7 +60,7 @@ fun CriticalPermissionsDialog(
         },
         title = {
             Text(
-                text = "Erforderliche Berechtigungen fehlen",
+                text = stringResource(R.string.dialog_title_permissions_required),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -65,7 +70,7 @@ fun CriticalPermissionsDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Diese App benötigt zwingend folgende Berechtigungen um zu funktionieren:",
+                    text = stringResource(R.string.msg_permissions_required),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -88,7 +93,7 @@ fun CriticalPermissionsDialog(
                                 modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
-                                text = permission.toReadableName(),
+                                text = permission.toReadableName(context),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -99,7 +104,7 @@ fun CriticalPermissionsDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Ohne diese Berechtigungen kann die App SMS nicht empfangen oder weiterleiten.",
+                    text = stringResource(R.string.msg_permissions_required_explanation),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -112,7 +117,7 @@ fun CriticalPermissionsDialog(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("Berechtigungen erteilen")
+                Text(stringResource(R.string.btn_grant_permissions))
             }
         },
         dismissButton = {
@@ -132,7 +137,7 @@ fun CriticalPermissionsDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("App beenden")
+                    Text(stringResource(R.string.btn_exit_app))
                 }
             }
         }
@@ -140,24 +145,24 @@ fun CriticalPermissionsDialog(
 }
 
 /**
- * Konvertiert Android Permission-Namen in lesbare deutsche Beschreibungen.
+ * Konvertiert Android Permission-Namen in lesbare Beschreibungen.
  */
-private fun String.toReadableName(): String {
+private fun String.toReadableName(context: android.content.Context): String {
     return when (this) {
         Manifest.permission.READ_CONTACTS ->
-            "Kontakte lesen - Für die Auswahl des Weiterleitungsziels"
+            context.getString(R.string.perm_contacts_desc)
         Manifest.permission.SEND_SMS ->
-            "SMS senden - Zum Weiterleiten von Nachrichten"
+            context.getString(R.string.perm_send_sms_desc)
         Manifest.permission.RECEIVE_SMS ->
-            "SMS empfangen - Zum Empfangen eingehender Nachrichten"
+            context.getString(R.string.perm_receive_sms_desc)
         Manifest.permission.CALL_PHONE ->
-            "Telefon - Für die Anrufweiterleitung (MMI-Codes)"
+            context.getString(R.string.perm_call_forwarding_desc)
         Manifest.permission.READ_PHONE_STATE ->
-            "Telefonzustand - Zum Lesen von SIM-Informationen"
+            context.getString(R.string.perm_phone_state_desc)
         Manifest.permission.READ_PHONE_NUMBERS ->
-            "Telefonnummern - Zum Erkennen der eigenen Nummer"
+            context.getString(R.string.perm_phone_number_desc)
         Manifest.permission.POST_NOTIFICATIONS ->
-            "Benachrichtigungen - Für den Hintergrunddienst"
+            context.getString(R.string.perm_notifications_desc)
         else -> this.substringAfterLast('.').replace('_', ' ')
     }
 }

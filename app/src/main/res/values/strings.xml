@@ -1,3 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App Name -->
     <string name="app_name">SMSForwarderNeo A1</string>
+
+    <!-- ==================== NAVIGATION ==================== -->
+    <string name="tab_home">Home</string>
+    <string name="tab_mail">Mail</string>
+    <string name="tab_setup">Setup</string>
+    <string name="tab_log">Log</string>
+    <string name="tab_info">Info</string>
+
+    <!-- ==================== LOADING SCREEN ==================== -->
+    <string name="app_title_line_1">THE LAST LINE</string>
+    <string name="app_title_line_2">FORWARDER</string>
+    <string name="msg_initializing_app">Initializing app…</string>
+    <string name="heading_required_permissions">Required permissions:</string>
+
+    <!-- Permission Descriptions -->
+    <string name="perm_contacts_desc">Contacts - For selecting forwarding destination</string>
+    <string name="perm_send_sms_desc">Send SMS - For forwarding messages</string>
+    <string name="perm_receive_sms_desc">Receive SMS - For receiving incoming messages</string>
+    <string name="perm_call_forwarding_desc">Phone - For call forwarding (MMI codes)</string>
+    <string name="perm_phone_state_desc">Phone state - For reading SIM information</string>
+    <string name="perm_phone_number_desc">Phone numbers - For detecting own number</string>
+    <string name="perm_notifications_desc">Notifications - For background service</string>
+    <string name="perm_battery_opt_desc">Battery optimization - For reliable background execution</string>
+
+    <!-- Loading Screen Buttons -->
+    <string name="btn_retry">Retry</string>
+    <string name="btn_exit_app">Exit App</string>
+
+    <!-- ==================== HOME SCREEN ==================== -->
+    <string name="btn_show_help">Show help</string>
+    <string name="btn_query_status">Query Status</string>
+    <string name="btn_reset_all_forwarding">Reset All Forwarding</string>
+    <string name="btn_select_contact">Select Contact</string>
+    <string name="heading_active_forwarding">Active Forwarding</string>
+    <string name="btn_change_contact">Change Contact</string>
+    <string name="btn_test_sms">Test SMS</string>
+    <string name="btn_deactivate">Deactivate</string>
+
+    <!-- Home Screen Messages -->
+    <string name="msg_active_forwarding_to">Active forwarding to: %1$s</string>
+    <string name="msg_forwarding_maintained_on_exit">Keep forwarding on exit</string>
+
+    <!-- ==================== MAIL SCREEN ==================== -->
+    <string name="label_forward_sms_to_email">Forward SMS to all emails</string>
+    <string name="label_new_email_address">New email address</string>
+    <string name="btn_add_email">Add</string>
+    <string name="btn_send_test_email">Send Test Email</string>
+    <string name="btn_delete_email">Delete</string>
+    <string name="msg_warning_add_emails_first">Please add email addresses first</string>
+    <string name="msg_no_email_addresses">No email addresses available</string>
+
+    <!-- ==================== LOG SCREEN ==================== -->
+    <string name="header_time">Time</string>
+    <string name="header_entry">Entry</string>
+    <string name="msg_no_log_entries">No log entries available or error loading logs.</string>
+    <string name="btn_refresh_logs">Refresh logs</string>
+    <string name="desc_refresh_logs">Refresh logs</string>
+    <string name="btn_filter_important">Important logs only</string>
+    <string name="btn_show_all_logs">Show all logs</string>
+    <string name="desc_filter_important">Important logs only</string>
+    <string name="desc_filter_all">Show all logs</string>
+    <string name="msg_warning_no_logs_to_share">No log entries to share</string>
+    <string name="btn_share_log_entries">Share log entries</string>
+    <string name="desc_share_log_entries">Share log entries</string>
+    <string name="title_share_log_file">Share Log File</string>
+    <string name="error_sharing_logs">Error sharing logs</string>
+    <string name="log_message_logs_shared">CSV log file created for sharing</string>
+    <string name="log_error_sharing_logs">Error creating CSV file</string>
+
+    <!-- ==================== SETTINGS SECTIONS ==================== -->
+    <string name="section_phone_settings">Phone Settings</string>
+    <string name="section_sim_management">SIM Card Management</string>
+    <string name="section_sms_sim_selection">SMS Forwarding - SIM Selection</string>
+    <string name="section_app_settings">App Settings</string>
+    <string name="section_mmi_code_settings">MMI Code Settings</string>
+    <string name="section_email_settings">Email Settings</string>
+    <string name="section_logs_security">Logs &amp; Security</string>
+
+    <!-- Expand/Collapse -->
+    <string name="btn_collapse">Collapse</string>
+    <string name="btn_expand">Expand</string>
+
+    <!-- ==================== PHONE SETTINGS SECTION ==================== -->
+    <string name="label_detected_country_code">Detected Country Code</string>
+    <string name="label_source">Source: </string>
+
+    <!-- ==================== APP SETTINGS SECTION ==================== -->
+    <string name="label_test_sms_text">Test SMS Text</string>
+    <string name="label_test_email_text">Test Email Text</string>
+    <string name="label_int_dial_prefix">International Dial Prefix</string>
+    <string name="helper_dial_prefix_explanation">Replaces \'+\' in phone numbers (e.g., \'00\' for Austria)</string>
+    <string name="toggle_show_mail_tab">Show Mail Tab</string>
+    <string name="desc_show_mail_tab">Displays the Mail tab in bottom navigation</string>
+    <string name="msg_smtp_settings_required">SMTP settings must be complete</string>
+    <string name="warning_incomplete_smtp_settings">Please configure SMTP settings first (Server, Username, Password) in \'Email Settings\' section</string>
+
+    <!-- Language Settings -->
+    <string name="label_app_language">App Language</string>
+    <string name="language_system_default">System</string>
+    <string name="desc_app_language">App will restart to apply language change</string>
+
+    <!-- Battery Optimization -->
+    <string name="status_battery_opt_disabled">Battery optimization disabled</string>
+    <string name="status_battery_opt_active">Battery optimization active</string>
+    <string name="desc_battery_opt_disabled">App can work reliably in background</string>
+    <string name="desc_battery_opt_active">SMS forwarding might be restricted in background</string>
+    <string name="btn_disable_battery_opt">Disable Now</string>
+    <string name="error_open_settings_failed">Could not open settings</string>
+
+    <!-- ==================== MMI CODE SETTINGS SECTION ==================== -->
+    <string name="label_mmi_activate_prefix">Activation Code Prefix (e.g., *21*)</string>
+    <string name="placeholder_mmi_prefix">*21*</string>
+    <string name="label_mmi_activate_suffix">Activation Code Suffix (e.g., **)</string>
+    <string name="placeholder_mmi_suffix">**</string>
+    <string name="label_mmi_deactivate_code">Deactivation Code (e.g., **21**)</string>
+    <string name="placeholder_mmi_deactivate">**21**</string>
+    <string name="label_mmi_status_code">Status Query (e.g., *021**)</string>
+    <string name="placeholder_mmi_status">*021**</string>
+    <string name="btn_preset_a1_austria">A1 (BMI)</string>
+    <string name="btn_preset_standard">Standard</string>
+    <string name="toggle_mmi_warning">4-second warning before dialing</string>
+    <string name="desc_mmi_warning">Shows warning before MMI code execution</string>
+
+    <!-- ==================== EMAIL SETTINGS SECTION ==================== -->
+    <string name="label_smtp_host">SMTP Server</string>
+    <string name="label_smtp_port">TLS Port</string>
+    <string name="label_smtp_username">Username/Email Address</string>
+    <string name="label_smtp_password">Password</string>
+    <string name="desc_hide_password">Hide password</string>
+    <string name="desc_show_password">Show password</string>
+    <string name="btn_preset_gmail">Gmail</string>
+    <string name="btn_preset_gmx">GMX</string>
+    <string name="msg_gmail_setup_info">Enter username and app-specific password.</string>
+    <string name="msg_gmx_setup_info">Enter email address and password.</string>
+    <string name="note_email_setup_info">Note: Gmail requires an app-specific password, and GMX requires IMAP or POP3 to be enabled in settings.</string>
+
+    <!-- ==================== LOG SETTINGS SECTION ==================== -->
+    <string name="label_max_log_size">Maximum Log Size (MB)</string>
+    <string name="helper_max_log_size">Sets how large the log file can grow (1-20 MB)</string>
+    <string name="action_delete_logs">Delete Log File</string>
+    <string name="desc_delete_logs">Deletes all log entries</string>
+    <string name="desc_delete_logs_button">Delete logs</string>
+    <string name="action_change_pin">Change PIN</string>
+    <string name="desc_change_pin">Change PIN for delete function</string>
+    <string name="msg_logs_deleted">Log entries deleted</string>
+    <string name="snackbar_logs_deleted">Logs deleted</string>
+    <string name="msg_pin_changed">PIN changed</string>
+    <string name="log_message_pin_changed">LOG-PIN changed</string>
+
+    <!-- ==================== SIM MANAGEMENT SECTION ==================== -->
+    <string name="heading_sim_overview">SIM Cards Overview</string>
+    <string name="error_no_sims_found">No SIM cards found</string>
+    <string name="msg_check_permissions">Ensure permissions have been granted</string>
+    <string name="label_sim_number">SIM %1$d</string>
+
+    <!-- SIM Status Badges -->
+    <string name="badge_default">Default</string>
+    <string name="badge_default_sms">Default SMS</string>
+    <string name="badge_default_voice">Default Voice</string>
+    <string name="badge_auto_detected">Auto</string>
+    <string name="badge_configured">Configured</string>
+    <string name="badge_missing">Missing</string>
+
+    <!-- SIM Phone Number States -->
+    <string name="msg_not_configured">Not configured</string>
+    <string name="label_auto_detected">Auto-detected</string>
+    <string name="label_manually_entered">Manually entered</string>
+
+    <!-- SIM Summary -->
+    <string name="heading_summary">Summary:</string>
+    <string name="msg_sim_count_detected">• %1$d SIM card(s) detected</string>
+    <string name="msg_sim_auto_detected">• %1$d auto-detected</string>
+    <string name="msg_sim_numbers_configured">• %1$d number(s) configured</string>
+    <string name="info_missing_numbers_on_start">ℹ️ Missing numbers will be queried at app start</string>
+
+    <!-- ==================== SIM SELECTION SECTION ==================== -->
+    <string name="suffix_default_sms">(Default SMS)</string>
+    <string name="suffix_not_available">(not available)</string>
+
+    <!-- ==================== CALL STATUS CARD ==================== -->
+    <string name="status_mmi_code_executing">Executing MMI code…</string>
+    <string name="status_incoming_call">Incoming call…</string>
+
+    <!-- ==================== DIALOGS ==================== -->
+
+    <!-- MMI Warning Dialog -->
+    <string name="warning_await_dialing">Automatic dialing in progress!</string>
+    <string name="btn_execute_now">Dial Now</string>
+
+    <!-- PIN Entry Dialog -->
+    <string name="dialog_title_enter_pin">Enter PIN</string>
+    <string name="label_pin_input">PIN</string>
+    <string name="error_wrong_pin">Incorrect PIN</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancel</string>
+
+    <!-- Change PIN Dialog -->
+    <string name="dialog_title_change_pin">Change PIN</string>
+    <string name="label_current_pin">Current PIN</string>
+    <string name="label_new_pin">New PIN</string>
+    <string name="label_confirm_new_pin">Confirm New PIN</string>
+    <string name="error_current_pin_wrong">Current PIN is incorrect</string>
+    <string name="error_pin_length_invalid">New PIN must be 4 digits</string>
+    <string name="error_pin_mismatch">PINs do not match</string>
+    <string name="btn_save">Save</string>
+
+    <!-- Critical Permissions Dialog -->
+    <string name="dialog_title_permissions_required">Grant Permissions</string>
+    <string name="msg_permissions_required">This app requires the following permissions to function:</string>
+    <string name="msg_permissions_required_explanation">Without these permissions, the app cannot receive or forward SMS.</string>
+    <string name="btn_grant_permissions">Grant Permissions</string>
+
+    <!-- Cleanup Dialogs -->
+    <string name="msg_cleanup_in_progress">Cleanup in progress…</string>
+    <string name="msg_exit_app">Exiting app</string>
+    <string name="msg_please_wait">Please wait…</string>
+    <string name="error_deactivation_failed">Deactivation Failed</string>
+    <string name="error_timeout">Timeout</string>
+    <string name="error_timeout_message">Deactivation of forwarding is taking too long.</string>
+    <string name="error_general">Error</string>
+    <string name="error_general_message">An unexpected error occurred: %1$s</string>
+    <string name="btn_ignore">Ignore</string>
+
+    <!-- Exit Dialog -->
+    <string name="dialog_title_exit_app">Exit App</string>
+    <string name="btn_exit">Exit</string>
+    <string name="toggle_keep_forwarding_on_exit">Keep forwarding when exiting</string>
+    <string name="btn_settings">Settings</string>
+
+    <!-- SIM Numbers Dialog -->
+    <string name="dialog_title_sim_numbers_required">SIM Phone Numbers Required</string>
+    <string name="msg_sim_numbers_explanation">Phone numbers could not be automatically detected for the following SIM cards. Please enter them manually:</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_carrier">Carrier: %1$s</string>
+    <string name="label_display_name">Name: %1$s</string>
+    <string name="label_phone_number">Phone Number</string>
+    <string name="placeholder_phone_number_example">e.g. 0043664123456789</string>
+    <string name="btn_skip">Skip</string>
+
+    <!-- ==================== INFO SCREEN ==================== -->
+    <string name="btn_privacy_policy">Privacy Policy</string>
+    <string name="heading_links">Links</string>
+    <string name="link_author_website">Author Website</string>
+    <string name="link_author_website_url">www.meuse24.info</string>
+    <string name="link_github_repo">GitHub Repository</string>
+    <string name="link_github_subtitle">Source Code &amp; Issues</string>
+    <string name="link_project_website">Project Website</string>
+    <string name="link_project_subtitle">Documentation &amp; Downloads</string>
+    <string name="desc_open_link">Open link</string>
+
+    <!-- Info Screen - HTML Content -->
+    <string name="html_heading_main_features">Main Features</string>
+    <string name="html_feature_contact_picker">Contact Selection via Android Contact Picker</string>
+    <string name="html_feature_contact_picker_desc">Simple selection of forwarding destination directly from phone contacts</string>
+    <string name="html_feature_sms_forwarding">SMS Forwarding</string>
+    <string name="html_feature_sms_forwarding_desc">Automatic forwarding of received SMS messages to configured contact</string>
+    <string name="html_feature_email_config">Email Configuration</string>
+    <string name="html_feature_email_config_desc">Optional forwarding to multiple email addresses with SMTP configuration (Gmail, GMX support)</string>
+    <string name="html_feature_sim_selection">SIM Card Selection (Dual-SIM Support)</string>
+    <string name="html_feature_sim_selection_desc">Selection of SIM card for sending SMS on devices with multiple SIM cards</string>
+    <string name="html_feature_call_forwarding">Call Forwarding</string>
+    <string name="html_feature_call_forwarding_desc">Automatic setup and deactivation of network-based call forwarding via MMI codes</string>
+    <string name="html_feature_mmi_codes">MMI Code Settings</string>
+    <string name="html_feature_mmi_codes_desc">Configurable MMI codes for activation/deactivation and status query with provider presets (A1 Austria)</string>
+    <string name="html_feature_testing">Test and Monitoring</string>
+    <string name="html_feature_testing_desc">Test functions for SMS and email, comprehensive logging with PIN protection, configurable log size and rotation</string>
+    <string name="html_feature_ui">User Interface</string>
+    <string name="html_feature_ui_desc">Modern Material Design 3 with Dark Mode support, intuitive navigation, expandable settings sections</string>
+    <string name="html_feature_security">Security and Privacy</string>
+    <string name="html_feature_security_desc">Encrypted storage of sensitive data (SMTP password, PIN), no data collection, open source</string>
+
+    <!-- System Information -->
+    <string name="html_heading_system_info">System Information</string>
+    <string name="html_label_language">Programming Language</string>
+    <string name="html_value_kotlin">Kotlin</string>
+    <string name="html_label_ui_framework">UI Framework</string>
+    <string name="html_value_jetpack_compose">Jetpack Compose</string>
+    <string name="html_label_build_system">Build System</string>
+    <string name="html_value_gradle">Gradle</string>
+    <string name="html_label_build_tools">Build Tools</string>
+    <string name="html_label_build_time">Build Time</string>
+    <string name="html_label_build_type">Build Type</string>
+    <string name="html_label_architecture">Architecture</string>
+    <string name="html_value_architecture">MVVM (Model-View-ViewModel) with Repository Pattern</string>
+    <string name="html_label_concurrency">Concurrency</string>
+    <string name="html_value_concurrency">Coroutines and Flow</string>
+    <string name="html_label_data_storage">Data Storage</string>
+    <string name="html_value_encrypted_prefs">Encrypted SharedPreferences</string>
+    <string name="html_label_background_service">Background Service</string>
+    <string name="html_value_foreground_service">Foreground Service</string>
+    <string name="html_label_android_version">Android Version</string>
+    <string name="html_label_min_sdk">Min SDK</string>
+    <string name="html_label_target_sdk">Target SDK</string>
+    <string name="html_label_jdk">JDK</string>
+    <string name="html_footnote_development">This app was developed following modern Android development practices and privacy guidelines…</string>
+
+    <!-- Privacy Policy Screen -->
+    <string name="btn_privacy_ok">OK</string>
+
+    <!-- ==================== SNACKBAR MESSAGES ==================== -->
+    <string name="snackbar_error_loading_contact">Error loading contact: %1$s</string>
+    <string name="snackbar_contact_loaded">Contact loaded</string>
+    <string name="snackbar_forwarding_activated">Forwarding activated</string>
+    <string name="snackbar_forwarding_deactivated">Forwarding deactivated</string>
+    <string name="snackbar_mmi_code_sent">MMI code sent</string>
+    <string name="snackbar_test_sms_sent">Test SMS sent</string>
+    <string name="snackbar_test_email_sent">Test email sent</string>
+    <string name="snackbar_error_sending">Error sending: %1$s</string>
+    <string name="snackbar_email_added">Email address added</string>
+    <string name="snackbar_email_removed">Email address removed</string>
+    <string name="snackbar_invalid_email">Invalid email address</string>
+    <string name="snackbar_settings_saved">Settings saved</string>
+
+    <!-- ==================== LOGGING MESSAGES ==================== -->
+    <string name="log_app_started">App started</string>
+    <string name="log_app_stopped">App stopped</string>
+    <string name="log_sms_received">SMS received from %1$s</string>
+    <string name="log_sms_forwarded">SMS forwarded to %1$s</string>
+    <string name="log_email_sent">Email sent to %1$s</string>
+    <string name="log_error_occurred">Error: %1$s</string>
+
+    <!-- ==================== COMMON ==================== -->
+    <string name="btn_back">Back</string>
+    <string name="btn_close">Close</string>
+    <string name="btn_confirm">Confirm</string>
+    <string name="label_version">Version</string>
+    <string name="label_build">Build:</string>
+    <string name="copyright_notice">(C) 2025</string>
 </resources>

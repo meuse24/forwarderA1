@@ -133,6 +133,14 @@ class MainActivity : ComponentActivity() {
     @Suppress("DEPRECATION")
     private var phoneStateListener: PhoneStateListener? = null
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        // Read language from plain SharedPreferences (stored separately for early access)
+        val prefs = newBase.getSharedPreferences("app_language_prefs", android.content.Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("app_language", null)
+        val context = info.meuse24.smsforwarderneoA1.util.LocaleHelper.wrapContext(newBase, languageCode)
+        super.attachBaseContext(context)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

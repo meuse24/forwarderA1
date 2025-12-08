@@ -19,9 +19,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 
 /**
@@ -38,7 +41,7 @@ fun CleanupProgressDialog() {
             dismissOnBackPress = false,
             dismissOnClickOutside = false
         ),
-        title = { Text("Beende App") },
+        title = { Text(stringResource(R.string.msg_exit_app)) },
         text = {
             Row(
                 modifier = Modifier
@@ -51,7 +54,7 @@ fun CleanupProgressDialog() {
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Bitte warten...",
+                    text = stringResource(R.string.msg_please_wait),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -78,20 +81,22 @@ fun CleanupErrorDialog(
     onIgnore: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+
     val (title, message) = when (error) {
         is NavigationViewModel.ErrorDialogState.DeactivationError ->
-            Pair("Deaktivierung fehlgeschlagen", error.message)
+            Pair(context.getString(R.string.error_deactivation_failed), error.message)
 
         is NavigationViewModel.ErrorDialogState.TimeoutError ->
             Pair(
-                "Zeitüberschreitung",
-                "Die Deaktivierung der Weiterleitung dauert zu lange."
+                context.getString(R.string.error_timeout),
+                context.getString(R.string.error_timeout_message)
             )
 
         is NavigationViewModel.ErrorDialogState.GeneralError ->
             Pair(
-                "Fehler",
-                "Ein unerwarteter Fehler ist aufgetreten: ${error.error.message}"
+                context.getString(R.string.error_general),
+                context.getString(R.string.error_general_message, error.error.message ?: "Unknown error")
             )
     }
 
@@ -108,17 +113,17 @@ fun CleanupErrorDialog(
         text = { Text(message) },
         confirmButton = {
             Button(onClick = onRetry) {
-                Text("Wiederholen")
+                Text(stringResource(R.string.btn_retry))
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onIgnore) {
-                    Text("Ignorieren")
+                    Text(stringResource(R.string.btn_ignore))
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(onClick = onDismiss) {
-                    Text("Abbrechen")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         }

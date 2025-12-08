@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">SMSForwarderNeo A1</string>
+
+    <!-- ==================== NAVIGATION ==================== -->
+    <string name="tab_home">Start</string>
+    <string name="tab_mail">Mail</string>
+    <string name="tab_setup">Setup</string>
+    <string name="tab_log">Log</string>
+    <string name="tab_info">Info</string>
+
+    <!-- ==================== LOADING SCREEN ==================== -->
+    <string name="app_title_line_1">THE LAST LINE</string>
+    <string name="app_title_line_2">FORWARDER</string>
+    <string name="msg_initializing_app">App wird initialisiert…</string>
+    <string name="heading_required_permissions">Erforderliche Berechtigungen:</string>
+
+    <!-- Permission Descriptions -->
+    <string name="perm_contacts_desc">Kontakte - Für die Auswahl des Weiterleitungsziels</string>
+    <string name="perm_send_sms_desc">SMS senden - Zum Weiterleiten von Nachrichten</string>
+    <string name="perm_receive_sms_desc">SMS empfangen - Zum Empfangen eingehender Nachrichten</string>
+    <string name="perm_call_forwarding_desc">Telefon - Für die Anrufweiterleitung (MMI Codes)</string>
+    <string name="perm_phone_state_desc">Telefonzustand - Zum Lesen von SIM-Informationen</string>
+    <string name="perm_phone_number_desc">Telefonnummern - Zum Erkennen der eigenen Nummer</string>
+    <string name="perm_notifications_desc">Benachrichtigungen - Für den Hintergrunddienst</string>
+    <string name="perm_battery_opt_desc">Batterieoptimierung - Für zuverlässige Hintergrundausführung</string>
+
+    <!-- Loading Screen Buttons -->
+    <string name="btn_retry">Wiederholen</string>
+    <string name="btn_exit_app">App beenden</string>
+
+    <!-- ==================== HOME SCREEN ==================== -->
+    <string name="btn_show_help">Hilfe anzeigen</string>
+    <string name="btn_query_status">Status abfragen</string>
+    <string name="btn_reset_all_forwarding">Alle Weiterleitungen zurücksetzen</string>
+    <string name="btn_select_contact">Kontakt auswählen</string>
+    <string name="heading_active_forwarding">Aktive Weiterleitung</string>
+    <string name="btn_change_contact">Kontakt ändern</string>
+    <string name="btn_test_sms">Test-SMS</string>
+    <string name="btn_deactivate">Deaktivieren</string>
+
+    <!-- Home Screen Messages -->
+    <string name="msg_active_forwarding_to">Aktive Weiterleitung zu: %1$s</string>
+    <string name="msg_forwarding_maintained_on_exit">Weiterleitung beim Beenden beibehalten</string>
+
+    <!-- ==================== MAIL SCREEN ==================== -->
+    <string name="label_forward_sms_to_email">SMS an alle E-Mails weiterleiten</string>
+    <string name="label_new_email_address">Neue E-Mail-Adresse</string>
+    <string name="btn_add_email">Hinzufügen</string>
+    <string name="btn_send_test_email">Test-Mail senden</string>
+    <string name="btn_delete_email">Löschen</string>
+    <string name="msg_warning_add_emails_first">Bitte fügen Sie zuerst E-Mail-Adressen hinzu</string>
+    <string name="msg_no_email_addresses">Keine E-Mail-Adressen vorhanden</string>
+
+    <!-- ==================== LOG SCREEN ==================== -->
+    <string name="header_time">Zeit</string>
+    <string name="header_entry">Eintrag</string>
+    <string name="msg_no_log_entries">Keine Log-Einträge vorhanden oder Fehler beim Laden der Logs.</string>
+    <string name="btn_refresh_logs">Logs aktualisieren</string>
+    <string name="desc_refresh_logs">Logs aktualisieren</string>
+    <string name="btn_filter_important">Nur wichtige Logs</string>
+    <string name="btn_show_all_logs">Alle Logs anzeigen</string>
+    <string name="desc_filter_important">Nur wichtige Logs</string>
+    <string name="desc_filter_all">Alle Logs anzeigen</string>
+    <string name="msg_warning_no_logs_to_share">Keine Log-Einträge zum Teilen vorhanden</string>
+    <string name="btn_share_log_entries">Log-Einträge teilen</string>
+    <string name="desc_share_log_entries">Log-Einträge teilen</string>
+    <string name="title_share_log_file">Log-Datei teilen</string>
+    <string name="error_sharing_logs">Fehler beim Teilen der Logs</string>
+    <string name="log_message_logs_shared">CSV-Log-Datei wurde zum Teilen erstellt</string>
+    <string name="log_error_sharing_logs">Fehler beim Erstellen der CSV-Datei</string>
+
+    <!-- ==================== SETTINGS SECTIONS ==================== -->
+    <string name="section_phone_settings">Telefon-Einstellungen</string>
+    <string name="section_sim_management">SIM-Karten Verwaltung</string>
+    <string name="section_sms_sim_selection">SMS-Weiterleitung - SIM-Auswahl</string>
+    <string name="section_app_settings">App-Einstellungen</string>
+    <string name="section_mmi_code_settings">MMI Code Einstellungen</string>
+    <string name="section_email_settings">Email-Einstellungen</string>
+    <string name="section_logs_security">Logs &amp; Sicherheit</string>
+
+    <!-- Expand/Collapse -->
+    <string name="btn_collapse">Einklappen</string>
+    <string name="btn_expand">Ausklappen</string>
+
+    <!-- ==================== PHONE SETTINGS SECTION ==================== -->
+    <string name="label_detected_country_code">Erkannte Ländervorwahl</string>
+    <string name="label_source">Quelle: </string>
+
+    <!-- ==================== APP SETTINGS SECTION ==================== -->
+    <string name="label_test_sms_text">Text der Test-SMS</string>
+    <string name="label_test_email_text">Text der Test-Email</string>
+    <string name="label_int_dial_prefix">Internationale Anschaltziffernfolge</string>
+    <string name="helper_dial_prefix_explanation">Ersetzt \'+\' in Telefonnummern (z.B. \'00\' für Österreich)</string>
+    <string name="toggle_show_mail_tab">Mail-Tab anzeigen</string>
+    <string name="desc_show_mail_tab">Zeigt den Mail-Tab in der unteren Navigation an</string>
+    <string name="msg_smtp_settings_required">SMTP-Einstellungen müssen vollständig sein</string>
+    <string name="warning_incomplete_smtp_settings">Bitte konfigurieren Sie zuerst die SMTP-Einstellungen (Server, Benutzername, Passwort) im Abschnitt \'E-Mail-Einstellungen\'</string>
+
+    <!-- Language Settings -->
+    <string name="label_app_language">App-Sprache</string>
+    <string name="language_system_default">System</string>
+    <string name="desc_app_language">App wird neu gestartet, um Sprachwechsel anzuwenden</string>
+
+    <!-- Battery Optimization -->
+    <string name="status_battery_opt_disabled">Akku-Optimierung deaktiviert</string>
+    <string name="status_battery_opt_active">Akku-Optimierung aktiv</string>
+    <string name="desc_battery_opt_disabled">Die App kann zuverlässig im Hintergrund arbeiten</string>
+    <string name="desc_battery_opt_active">SMS-Weiterleitung könnte im Hintergrund eingeschränkt werden</string>
+    <string name="btn_disable_battery_opt">Jetzt deaktivieren</string>
+    <string name="error_open_settings_failed">Einstellungen konnten nicht geöffnet werden</string>
+
+    <!-- ==================== MMI CODE SETTINGS SECTION ==================== -->
+    <string name="label_mmi_activate_prefix">Aktivierungscode Prefix (z.B. *21*)</string>
+    <string name="placeholder_mmi_prefix">*21*</string>
+    <string name="label_mmi_activate_suffix">Aktivierungscode Suffix (z.B. **)</string>
+    <string name="placeholder_mmi_suffix">**</string>
+    <string name="label_mmi_deactivate_code">Deaktivierungscode (z.B. **21**)</string>
+    <string name="placeholder_mmi_deactivate">**21**</string>
+    <string name="label_mmi_status_code">Statusabfrage (z.B. *021**)</string>
+    <string name="placeholder_mmi_status">*021**</string>
+    <string name="btn_preset_a1_austria">A1 (BMI)</string>
+    <string name="btn_preset_standard">Standard</string>
+    <string name="toggle_mmi_warning">4-Sekunden-Warnung vor Wählvorgang</string>
+    <string name="desc_mmi_warning">Zeigt Hinweis vor MMI-Code-Ausführung</string>
+
+    <!-- ==================== EMAIL SETTINGS SECTION ==================== -->
+    <string name="label_smtp_host">SMTP Server</string>
+    <string name="label_smtp_port">TLS Port</string>
+    <string name="label_smtp_username">Benutzername/Email-Adresse</string>
+    <string name="label_smtp_password">Passwort</string>
+    <string name="desc_hide_password">Passwort verbergen</string>
+    <string name="desc_show_password">Passwort anzeigen</string>
+    <string name="btn_preset_gmail">Gmail</string>
+    <string name="btn_preset_gmx">GMX</string>
+    <string name="msg_gmail_setup_info">Benutzername und App-spezifisches Passwort eingeben.</string>
+    <string name="msg_gmx_setup_info">Email-Adresse und Passwort eingeben.</string>
+    <string name="note_email_setup_info">Hinweis: Für Gmail wird ein App-spezifisches Passwort benötigt und für GMX muss IMAP oder POP3 in den Einstellungen aktiviert werden.</string>
+
+    <!-- ==================== LOG SETTINGS SECTION ==================== -->
+    <string name="label_max_log_size">Maximale Log-Größe (MB)</string>
+    <string name="helper_max_log_size">Legt fest, wie groß die Log-Datei werden darf (1-20 MB)</string>
+    <string name="action_delete_logs">Log-Datei löschen</string>
+    <string name="desc_delete_logs">Löscht alle Protokolleinträge</string>
+    <string name="desc_delete_logs_button">Logs löschen</string>
+    <string name="action_change_pin">PIN ändern</string>
+    <string name="desc_change_pin">PIN für Löschfunktion ändern</string>
+    <string name="msg_logs_deleted">Log-Einträge wurden gelöscht</string>
+    <string name="snackbar_logs_deleted">Logs wurden gelöscht</string>
+    <string name="msg_pin_changed">PIN wurde geändert</string>
+    <string name="log_message_pin_changed">LOG-PIN wurde geändert</string>
+
+    <!-- ==================== SIM MANAGEMENT SECTION ==================== -->
+    <string name="heading_sim_overview">SIM-Karten Übersicht</string>
+    <string name="error_no_sims_found">Keine SIM-Karten gefunden</string>
+    <string name="msg_check_permissions">Stellen Sie sicher, dass Berechtigungen erteilt wurden</string>
+    <string name="label_sim_number">SIM %1$d</string>
+
+    <!-- SIM Status Badges -->
+    <string name="badge_default">Standard</string>
+    <string name="badge_default_sms">Standard SMS</string>
+    <string name="badge_default_voice">Standard Voice</string>
+    <string name="badge_auto_detected">Auto</string>
+    <string name="badge_configured">Konfiguriert</string>
+    <string name="badge_missing">Fehlend</string>
+
+    <!-- SIM Phone Number States -->
+    <string name="msg_not_configured">Nicht konfiguriert</string>
+    <string name="label_auto_detected">Automatisch erkannt</string>
+    <string name="label_manually_entered">Manuell eingegeben</string>
+
+    <!-- SIM Summary -->
+    <string name="heading_summary">Zusammenfassung:</string>
+    <string name="msg_sim_count_detected">• %1$d SIM-Karte(n) erkannt</string>
+    <string name="msg_sim_auto_detected">• %1$d automatisch erkannt</string>
+    <string name="msg_sim_numbers_configured">• %1$d Nummer(n) konfiguriert</string>
+    <string name="info_missing_numbers_on_start">ℹ️ Fehlende Nummern werden beim App-Start abgefragt</string>
+
+    <!-- ==================== SIM SELECTION SECTION ==================== -->
+    <string name="suffix_default_sms">(Standard-SMS)</string>
+    <string name="suffix_not_available">(nicht verfügbar)</string>
+
+    <!-- ==================== CALL STATUS CARD ==================== -->
+    <string name="status_mmi_code_executing">MMI-Code wird ausgeführt…</string>
+    <string name="status_incoming_call">Eingehender Anruf…</string>
+
+    <!-- ==================== DIALOGS ==================== -->
+
+    <!-- MMI Warning Dialog -->
+    <string name="warning_await_dialing">Automatischer Wählvorgang abwarten!</string>
+    <string name="btn_execute_now">Jetzt wählen</string>
+
+    <!-- PIN Entry Dialog -->
+    <string name="dialog_title_enter_pin">PIN eingeben</string>
+    <string name="label_pin_input">PIN</string>
+    <string name="error_wrong_pin">Falsche PIN</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Abbrechen</string>
+
+    <!-- Change PIN Dialog -->
+    <string name="dialog_title_change_pin">PIN ändern</string>
+    <string name="label_current_pin">Aktuelle PIN</string>
+    <string name="label_new_pin">Neue PIN</string>
+    <string name="label_confirm_new_pin">Neue PIN bestätigen</string>
+    <string name="error_current_pin_wrong">Aktuelle PIN ist falsch</string>
+    <string name="error_pin_length_invalid">Neue PIN muss 4 Stellen haben</string>
+    <string name="error_pin_mismatch">PINs stimmen nicht überein</string>
+    <string name="btn_save">Speichern</string>
+
+    <!-- Critical Permissions Dialog -->
+    <string name="dialog_title_permissions_required">Berechtigungen erteilen</string>
+    <string name="msg_permissions_required">Diese App benötigt folgende Berechtigungen um zu funktionieren:</string>
+    <string name="msg_permissions_required_explanation">Ohne diese Berechtigungen kann die App SMS nicht empfangen oder weiterleiten.</string>
+    <string name="btn_grant_permissions">Berechtigungen erteilen</string>
+
+    <!-- Cleanup Dialogs -->
+    <string name="msg_cleanup_in_progress">Aufräumen läuft…</string>
+    <string name="msg_exit_app">Beende App</string>
+    <string name="msg_please_wait">Bitte warten…</string>
+    <string name="error_deactivation_failed">Deaktivierung fehlgeschlagen</string>
+    <string name="error_timeout">Zeitüberschreitung</string>
+    <string name="error_timeout_message">Die Deaktivierung der Weiterleitung dauert zu lange.</string>
+    <string name="error_general">Fehler</string>
+    <string name="error_general_message">Ein unerwarteter Fehler ist aufgetreten: %1$s</string>
+    <string name="btn_ignore">Ignorieren</string>
+
+    <!-- Exit Dialog -->
+    <string name="dialog_title_exit_app">App beenden</string>
+    <string name="btn_exit">Beenden</string>
+    <string name="toggle_keep_forwarding_on_exit">Weiterleitung beim Beenden beibehalten</string>
+    <string name="btn_settings">Einstellungen</string>
+
+    <!-- SIM Numbers Dialog -->
+    <string name="dialog_title_sim_numbers_required">SIM-Telefonnummern erforderlich</string>
+    <string name="msg_sim_numbers_explanation">Für die folgenden SIM-Karten konnten die Telefonnummern nicht automatisch ermittelt werden. Bitte geben Sie diese manuell ein:</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_carrier">Anbieter: %1$s</string>
+    <string name="label_display_name">Name: %1$s</string>
+    <string name="label_phone_number">Telefonnummer</string>
+    <string name="placeholder_phone_number_example">z.B. 0043664123456789</string>
+    <string name="btn_skip">Überspringen</string>
+
+    <!-- ==================== INFO SCREEN ==================== -->
+    <string name="btn_privacy_policy">Datenschutzerklärung</string>
+    <string name="heading_links">Links</string>
+    <string name="link_author_website">Author Website</string>
+    <string name="link_author_website_url">www.meuse24.info</string>
+    <string name="link_github_repo">GitHub Repository</string>
+    <string name="link_github_subtitle">Source Code &amp; Issues</string>
+    <string name="link_project_website">Project Website</string>
+    <string name="link_project_subtitle">Documentation &amp; Downloads</string>
+    <string name="desc_open_link">Öffnen</string>
+
+    <!-- Info Screen - HTML Content -->
+    <string name="html_heading_main_features">Hauptfunktionen</string>
+    <string name="html_feature_contact_picker">Kontaktauswahl per Android Contact Picker</string>
+    <string name="html_feature_contact_picker_desc">Einfache Auswahl des Weiterleitungsziels direkt aus den Telefonkontakten</string>
+    <string name="html_feature_sms_forwarding">Weiterleitung von SMS</string>
+    <string name="html_feature_sms_forwarding_desc">Automatische Weiterleitung empfangener SMS-Nachrichten an konfigurierten Kontakt</string>
+    <string name="html_feature_email_config">Email-Konfiguration</string>
+    <string name="html_feature_email_config_desc">Optionale Weiterleitung an mehrere Email-Adressen mit SMTP-Konfiguration (Gmail, GMX Unterstützung)</string>
+    <string name="html_feature_sim_selection">SIM-Karten Auswahl (Dual-SIM Unterstützung)</string>
+    <string name="html_feature_sim_selection_desc">Auswahl der SIM-Karte für SMS-Versand auf Geräten mit mehreren SIM-Karten</string>
+    <string name="html_feature_call_forwarding">Anrufweiterleitung</string>
+    <string name="html_feature_call_forwarding_desc">Automatische Einrichtung und Deaktivierung der netzbasierten Anrufweiterleitung über MMI Codes</string>
+    <string name="html_feature_mmi_codes">MMI Code Einstellungen</string>
+    <string name="html_feature_mmi_codes_desc">Konfigurierbare MMI Codes für Aktivierung/Deaktivierung und Statusabfrage mit Provider-Presets (A1 Österreich)</string>
+    <string name="html_feature_testing">Test und Überwachung</string>
+    <string name="html_feature_testing_desc">Testfunktionen für SMS und Email, umfassendes Logging mit PIN-Schutz, konfigurierbare Log-Größe und Rotation</string>
+    <string name="html_feature_ui">Benutzeroberfläche</string>
+    <string name="html_feature_ui_desc">Modernes Material Design 3 mit Dark Mode Unterstützung, intuitive Navigation, ausklappbare Einstellungsbereiche</string>
+    <string name="html_feature_security">Sicherheit und Datenschutz</string>
+    <string name="html_feature_security_desc">Verschlüsselte Speicherung sensibler Daten (SMTP-Passwort, PIN), keine Datenerfassung, Open Source</string>
+
+    <!-- System Information -->
+    <string name="html_heading_system_info">System-Information</string>
+    <string name="html_label_language">Programmiersprache</string>
+    <string name="html_value_kotlin">Kotlin</string>
+    <string name="html_label_ui_framework">UI-Framework</string>
+    <string name="html_value_jetpack_compose">Jetpack Compose</string>
+    <string name="html_label_build_system">Build-System</string>
+    <string name="html_value_gradle">Gradle</string>
+    <string name="html_label_build_tools">Build Tools</string>
+    <string name="html_label_build_time">Build Zeitpunkt</string>
+    <string name="html_label_build_type">Build Typ</string>
+    <string name="html_label_architecture">Architektur</string>
+    <string name="html_value_architecture">MVVM (Model-View-ViewModel) mit Repository-Pattern</string>
+    <string name="html_label_concurrency">Nebenläufigkeit</string>
+    <string name="html_value_concurrency">Coroutines und Flow</string>
+    <string name="html_label_data_storage">Datenspeicherung</string>
+    <string name="html_value_encrypted_prefs">Verschlüsselte SharedPreferences</string>
+    <string name="html_label_background_service">Hintergrunddienst</string>
+    <string name="html_value_foreground_service">Foreground Service</string>
+    <string name="html_label_android_version">Android Version</string>
+    <string name="html_label_min_sdk">Min SDK</string>
+    <string name="html_label_target_sdk">Target SDK</string>
+    <string name="html_label_jdk">JDK</string>
+    <string name="html_footnote_development">Die App wurde unter Berücksichtigung moderner Android-Entwicklungspraktiken und Datenschutzrichtlinien entwickelt…</string>
+
+    <!-- Privacy Policy Screen -->
+    <string name="btn_privacy_ok">OK</string>
+
+    <!-- ==================== SNACKBAR MESSAGES ==================== -->
+    <string name="snackbar_error_loading_contact">Fehler beim Laden des Kontakts: %1$s</string>
+    <string name="snackbar_contact_loaded">Kontakt geladen</string>
+    <string name="snackbar_forwarding_activated">Weiterleitung aktiviert</string>
+    <string name="snackbar_forwarding_deactivated">Weiterleitung deaktiviert</string>
+    <string name="snackbar_mmi_code_sent">MMI Code gesendet</string>
+    <string name="snackbar_test_sms_sent">Test-SMS gesendet</string>
+    <string name="snackbar_test_email_sent">Test-Email gesendet</string>
+    <string name="snackbar_error_sending">Fehler beim Senden: %1$s</string>
+    <string name="snackbar_email_added">Email-Adresse hinzugefügt</string>
+    <string name="snackbar_email_removed">Email-Adresse entfernt</string>
+    <string name="snackbar_invalid_email">Ungültige Email-Adresse</string>
+    <string name="snackbar_settings_saved">Einstellungen gespeichert</string>
+
+    <!-- ==================== LOGGING MESSAGES ==================== -->
+    <string name="log_app_started">App gestartet</string>
+    <string name="log_app_stopped">App beendet</string>
+    <string name="log_sms_received">SMS empfangen von %1$s</string>
+    <string name="log_sms_forwarded">SMS weitergeleitet an %1$s</string>
+    <string name="log_email_sent">Email gesendet an %1$s</string>
+    <string name="log_error_occurred">Fehler: %1$s</string>
+
+    <!-- ==================== COMMON ==================== -->
+    <string name="btn_back">Zurück</string>
+    <string name="btn_close">Schließen</string>
+    <string name="btn_confirm">Bestätigen</string>
+    <string name="label_version">Version</string>
+    <string name="label_build">Build:</string>
+    <string name="copyright_notice">(C) 2025</string>
+</resources>

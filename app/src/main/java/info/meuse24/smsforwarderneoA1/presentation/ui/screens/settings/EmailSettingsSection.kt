@@ -24,6 +24,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,6 +40,7 @@ fun EmailSettingsSection(
     emailViewModel: EmailViewModel,
     sectionTitleStyle: TextStyle
 ) {
+    val context = LocalContext.current
     val smtpHost by emailViewModel.smtpHost.collectAsState()
     val smtpPort by emailViewModel.smtpPort.collectAsState()
     val smtpUsername by emailViewModel.smtpUsername.collectAsState()
@@ -51,7 +55,7 @@ fun EmailSettingsSection(
         OutlinedTextField(
             value = smtpHost,
             onValueChange = { emailViewModel.updateSmtpSettings(it, smtpPort, smtpUsername, smtpPassword) },
-            label = { Text("SMTP Server") },
+            label = { Text(stringResource(R.string.label_smtp_host)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -63,7 +67,7 @@ fun EmailSettingsSection(
                 val newPort = it.toIntOrNull() ?: smtpPort
                 emailViewModel.updateSmtpSettings(smtpHost, newPort, smtpUsername, smtpPassword)
             },
-            label = { Text("TLS Port") },
+            label = { Text(stringResource(R.string.label_smtp_port)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
@@ -73,7 +77,7 @@ fun EmailSettingsSection(
         OutlinedTextField(
             value = smtpUsername,
             onValueChange = { emailViewModel.updateSmtpSettings(smtpHost, smtpPort, it, smtpPassword) },
-            label = { Text("Benutzername/Email-Adresse") },
+            label = { Text(stringResource(R.string.label_smtp_username)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -82,7 +86,7 @@ fun EmailSettingsSection(
         OutlinedTextField(
             value = smtpPassword,
             onValueChange = { emailViewModel.updateSmtpSettings(smtpHost, smtpPort, smtpUsername, it) },
-            label = { Text("Passwort") },
+            label = { Text(stringResource(R.string.label_smtp_password)) },
             visualTransformation = if (isPasswordVisible)
                 VisualTransformation.None
             else
@@ -96,9 +100,9 @@ fun EmailSettingsSection(
                         else
                             Icons.Default.VisibilityOff,
                         contentDescription = if (isPasswordVisible)
-                            "Passwort verbergen"
+                            stringResource(R.string.desc_hide_password)
                         else
-                            "Passwort anzeigen"
+                            stringResource(R.string.desc_show_password)
                     )
                 }
             },
@@ -119,10 +123,10 @@ fun EmailSettingsSection(
                         "",
                         ""
                     )
-                    SnackbarManager.showSuccess("Benutzername und App-spezifisches Passwort eingeben.")
+                    SnackbarManager.showSuccess(context.getString(R.string.msg_gmail_setup_info))
                 }
             ) {
-                Text("Gmail")
+                Text(stringResource(R.string.btn_preset_gmail))
             }
             Button(
                 onClick = {
@@ -132,15 +136,15 @@ fun EmailSettingsSection(
                         "",
                         ""
                     )
-                    SnackbarManager.showSuccess("Email-Adresse und Passwort eingeben.")
+                    SnackbarManager.showSuccess(context.getString(R.string.msg_gmx_setup_info))
                 }
             ) {
-                Text("GMX")
+                Text(stringResource(R.string.btn_preset_gmx))
             }
         }
 
         Text(
-            text = "Hinweis: Für Gmail wird ein App-spezifisches Passwort benötigt und für GMX muss IMAP oder POP3 in den Einstellungen aktiviert werden.",
+            text = stringResource(R.string.note_email_setup_info),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp)

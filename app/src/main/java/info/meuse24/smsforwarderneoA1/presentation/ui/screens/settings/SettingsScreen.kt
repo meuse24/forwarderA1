@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
@@ -61,6 +62,7 @@ fun SettingsScreen(
     testUtilsViewModel: TestUtilsViewModel,
     navigationViewModel: NavigationViewModel
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
     LocalFocusManager.current
@@ -117,7 +119,7 @@ fun SettingsScreen(
         ) {
             // Section 1: Phone Settings
             ExpandableSection(
-                title = "Telefon-Einstellungen",
+                title = stringResource(R.string.section_phone_settings),
                 expanded = phoneSettingsExpanded,
                 onExpandChange = {
                     if (it) {
@@ -141,7 +143,7 @@ fun SettingsScreen(
 
             // Section 2: SIM Management
             ExpandableSection(
-                title = "SIM-Karten Verwaltung",
+                title = stringResource(R.string.section_sim_management),
                 expanded = simManagementExpanded,
                 onExpandChange = {
                     if (it) {
@@ -188,7 +190,7 @@ fun SettingsScreen(
 
             // Section 4: App Settings
             ExpandableSection(
-                title = "App-Einstellungen",
+                title = stringResource(R.string.section_app_settings),
                 expanded = appSettingsExpanded,
                 onExpandChange = {
                     if (it) {
@@ -239,7 +241,7 @@ fun SettingsScreen(
 
             // Section 6: Email Settings
             ExpandableSection(
-                title = "Email-Einstellungen",
+                title = stringResource(R.string.section_email_settings),
                 expanded = emailSettingsExpanded,
                 onExpandChange = {
                     if (it) {
@@ -262,7 +264,7 @@ fun SettingsScreen(
 
             // Section 7: Log Settings
             ExpandableSection(
-                title = "Logs & Sicherheit",
+                title = stringResource(R.string.section_logs_security),
                 expanded = logSettingsExpanded,
                 onExpandChange = {
                     if (it) {
@@ -298,7 +300,7 @@ fun SettingsScreen(
                         action = "CLEAR_LOGS",
                         message = "Log-Einträge wurden gelöscht"
                     )
-                    SnackbarManager.showSuccess("Logs wurden gelöscht")
+                    SnackbarManager.showSuccess(context.getString(R.string.snackbar_logs_deleted))
                     showPinDialog = false
                 },
                 onDismiss = { showPinDialog = false }

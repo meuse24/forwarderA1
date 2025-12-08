@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -82,13 +83,13 @@ fun LoadingScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "THE LAST LINE",
+                    text = stringResource(R.string.app_title_line_1),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "FORWARDER",
+                    text = stringResource(R.string.app_title_line_2),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -106,13 +107,13 @@ fun LoadingScreen(
                     modifier = Modifier.padding(horizontal = 32.dp)
                 ) {
                     Text(
-                        text = "App wird initialisiert...",
+                        text = stringResource(R.string.msg_initializing_app),
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
 
                     Text(
-                        text = "Erforderliche Berechtigungen:",
+                        text = stringResource(R.string.heading_required_permissions),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -122,16 +123,16 @@ fun LoadingScreen(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         buildList {
-                            add("Kontakte - Für die Auswahl des Weiterleitungsziels")
-                            add("SMS senden - Zum Weiterleiten von Nachrichten")
-                            add("SMS empfangen - Zum Empfangen eingehender Nachrichten")
-                            add("Telefon - Für die Anrufweiterleitung (MMI-Codes)")
-                            add("Telefonzustand - Zum Lesen von SIM-Informationen")
-                            add("Telefonnummern - Zum Erkennen der eigenen Nummer")
+                            add(stringResource(R.string.perm_contacts_desc))
+                            add(stringResource(R.string.perm_send_sms_desc))
+                            add(stringResource(R.string.perm_receive_sms_desc))
+                            add(stringResource(R.string.perm_call_forwarding_desc))
+                            add(stringResource(R.string.perm_phone_state_desc))
+                            add(stringResource(R.string.perm_phone_number_desc))
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                add("Benachrichtigungen - Für den Hintergrunddienst")
+                                add(stringResource(R.string.perm_notifications_desc))
                             }
-                            add("Batterieoptimierung - Für zuverlässige Hintergrundausführung")
+                            add(stringResource(R.string.perm_battery_opt_desc))
                         }.forEach { permission ->
                             androidx.compose.foundation.layout.Row(
                                 horizontalArrangement = Arrangement.Start,
@@ -188,7 +189,7 @@ fun LoadingScreen(
                                         contentDescription = null
                                     )
                                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Neu versuchen")
+                                    Text(stringResource(R.string.btn_retry))
                                 }
                             }
                         }
@@ -210,7 +211,7 @@ fun LoadingScreen(
                                         contentDescription = null
                                     )
                                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-                                    Text("App beenden")
+                                    Text(stringResource(R.string.btn_exit_app))
                                 }
                             }
                         }

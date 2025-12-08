@@ -23,7 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 
 /**
@@ -60,7 +62,7 @@ fun ExitDialog(
             )
         },
         title = {
-            Text("App beenden")
+            Text(stringResource(R.string.dialog_title_exit_app))
         },
         text = {
             Column(
@@ -71,7 +73,7 @@ fun ExitDialog(
             ) {
                 contact?.let {
                     Text(
-                        text = "Aktive Weiterleitung zu: ${it.name}",
+                        text = stringResource(R.string.msg_active_forwarding_to, it.name),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -91,7 +93,7 @@ fun ExitDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Weiterleitung beim Beenden beibehalten",
+                            text = stringResource(R.string.toggle_keep_forwarding_on_exit),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -102,17 +104,17 @@ fun ExitDialog(
             Button(
                 onClick = { onConfirm(keepForwarding) }
             ) {
-                Text("Beenden")
+                Text(stringResource(R.string.btn_exit))
             }
         },
         dismissButton = {
             Row {
                 TextButton(onClick = onSettings) {
-                    Text("Einstellungen")
+                    Text(stringResource(R.string.btn_settings))
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(onClick = onDismiss) {
-                    Text("Abbrechen")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         }

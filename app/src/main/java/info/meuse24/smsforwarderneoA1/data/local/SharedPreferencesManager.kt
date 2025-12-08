@@ -565,6 +565,39 @@ class SharedPreferencesManager(private val context: Context) {
     fun isPrivacyPolicyAccepted(): Boolean =
         getPreference(KEY_PRIVACY_POLICY_ACCEPTED, false)
 
+    /**
+     * Speichert die ausgewählte App-Sprache.
+     * WICHTIG: Wird in normalen (unverschlüsselten) Preferences gespeichert,
+     * da sie in attachBaseContext() gelesen werden muss (vor verschlüsselter Initialisierung).
+     * @param languageCode Der Sprachcode (z.B. "en", "de") oder null für Systemsprache
+     */
+    fun setAppLanguage(languageCode: String?) {
+        // Speichere in NORMALEN Preferences (nicht verschlüsselt) für frühen Zugriff
+        val plainPrefs = context.getSharedPreferences("app_language_prefs", android.content.Context.MODE_PRIVATE)
+        if (languageCode == null) {
+            plainPrefs.edit().remove(KEY_APP_LANGUAGE).apply()
+        } else {
+            plainPrefs.edit().putString(KEY_APP_LANGUAGE, languageCode).apply()
+        }
+
+        LoggingManager.logInfo(
+            component = "SharedPreferencesManager",
+            action = "SET_APP_LANGUAGE",
+            message = "App-Sprache geändert",
+            details = mapOf("language" to (languageCode ?: "system"))
+        )
+    }
+
+    /**
+     * Liest die ausgewählte App-Sprache.
+     * @return Der Sprachcode oder null für Systemsprache (Standard)
+     */
+    fun getAppLanguage(): String? {
+        // Lese aus normalen Preferences (nicht verschlüsselt)
+        val plainPrefs = context.getSharedPreferences("app_language_prefs", android.content.Context.MODE_PRIVATE)
+        return plainPrefs.getString(KEY_APP_LANGUAGE, null)
+    }
+
     companion object {
         private const val KEY_TEST_EMAIL_TEXT = "test_email_text"
         private const val KEY_FORWARD_SMS_TO_EMAIL = "forward_sms_to_email"
@@ -600,6 +633,7 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_MMI_WARNING_ENABLED = "mmi_warning_enabled"
         private const val KEY_MAX_LOG_SIZE_MB = "max_log_size_mb"
         private const val KEY_PRIVACY_POLICY_ACCEPTED = "privacy_policy_accepted"
+        private const val KEY_APP_LANGUAGE = "app_language"
 
         // BMI/A1 Codes (New Defaults)
         private const val DEFAULT_MMI_ACTIVATE_PREFIX = "*21*"

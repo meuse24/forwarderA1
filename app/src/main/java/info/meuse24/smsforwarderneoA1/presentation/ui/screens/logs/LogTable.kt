@@ -16,8 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 
@@ -170,7 +172,7 @@ fun LogTable(logViewModel: LogViewModel) {
     val logEntries by logViewModel.logEntries.collectAsState()
 
     if (logEntries.isEmpty()) {
-        Text("Keine Log-Einträge vorhanden oder Fehler beim Laden der Logs.")
+        Text(stringResource(R.string.msg_no_log_entries))
     } else {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -188,13 +190,13 @@ fun LogTable(logViewModel: LogViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Zeit",
+                        text = stringResource(R.string.header_time),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(0.3f)
                     )
                     Text(
-                        text = "Eintrag",
+                        text = stringResource(R.string.header_entry),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(0.7f)

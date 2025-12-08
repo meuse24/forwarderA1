@@ -14,7 +14,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import info.meuse24.smsforwarderneoA1.R
 import androidx.core.content.FileProvider
 import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.LoggingManager
@@ -40,7 +43,7 @@ fun RefreshLogButton(logViewModel: LogViewModel) {
     ) {
         Icon(
             imageVector = Icons.Default.Refresh,
-            contentDescription = "Logs aktualisieren",
+            contentDescription = stringResource(R.string.desc_refresh_logs),
             modifier = Modifier.size(28.dp)
         )
     }
@@ -68,7 +71,7 @@ fun FilterLogButton(logViewModel: LogViewModel, showAllLogs: Boolean) {
     ) {
         Icon(
             imageVector = if (showAllLogs) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-            contentDescription = if (showAllLogs) "Nur wichtige Logs" else "Alle Logs anzeigen",
+            contentDescription = if (showAllLogs) stringResource(R.string.desc_filter_important) else stringResource(R.string.desc_filter_all),
             modifier = Modifier.size(28.dp)
         )
     }
@@ -91,7 +94,7 @@ fun ShareLogIconButton(context: Context, logEntries: String) {
                 shareLogsAsFile(context)
             } else {
                 SnackbarManager.showWarning(
-                    "Keine Log-Einträge zum Teilen vorhanden",
+                    context.getString(R.string.msg_warning_no_logs_to_share),
                     duration = SnackbarManager.Duration.LONG
                 )
             }
@@ -102,7 +105,7 @@ fun ShareLogIconButton(context: Context, logEntries: String) {
     ) {
         Icon(
             imageVector = Icons.Filled.Share,
-            contentDescription = "Log-Einträge teilen",
+            contentDescription = stringResource(R.string.desc_share_log_entries),
             modifier = Modifier.size(28.dp)
         )
     }
@@ -141,12 +144,12 @@ private fun shareLogsAsFile(context: Context) {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        context.startActivity(Intent.createChooser(intent, "Log-Datei teilen"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.title_share_log_file)))
 
         LoggingManager.logInfo(
             component = "MainActivity",
             action = "SHARE_LOGS",
-            message = "CSV-Log-Datei wurde zum Teilen erstellt",
+            message = context.getString(R.string.log_message_logs_shared),
             details = mapOf(
                 "filename" to fileName,
                 "size" to file.length()
@@ -157,9 +160,9 @@ private fun shareLogsAsFile(context: Context) {
         LoggingManager.logError(
             component = "MainActivity",
             action = "SHARE_LOGS_ERROR",
-            message = "Fehler beim Erstellen der CSV-Datei",
+            message = context.getString(R.string.log_error_sharing_logs),
             error = e
         )
-        SnackbarManager.showError("Fehler beim Teilen der Logs")
+        SnackbarManager.showError(context.getString(R.string.error_sharing_logs))
     }
 }

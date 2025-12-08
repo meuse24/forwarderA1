@@ -15,6 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -40,7 +42,7 @@ fun PinDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("PIN eingeben") },
+        title = { Text(stringResource(R.string.dialog_title_enter_pin)) },
         text = {
             Column {
                 OutlinedTextField(
@@ -51,7 +53,7 @@ fun PinDialog(
                             error = false
                         }
                     },
-                    label = { Text("PIN") },
+                    label = { Text(stringResource(R.string.label_pin_input)) },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.NumberPassword,
                         imeAction = ImeAction.Done
@@ -59,7 +61,7 @@ fun PinDialog(
                     visualTransformation = PasswordVisualTransformation(),
                     isError = error,
                     supportingText = if (error) {
-                        { Text("Falsche PIN") }
+                        { Text(stringResource(R.string.error_wrong_pin)) }
                     } else null,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -73,12 +75,12 @@ fun PinDialog(
                     error = true
                 }
             }) {
-                Text("OK")
+                Text(stringResource(R.string.btn_ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Abbrechen")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )
@@ -100,6 +102,7 @@ fun ChangePinDialog(
     onPinChanged: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var currentPin by remember { mutableStateOf("") }
     var newPin by remember { mutableStateOf("") }
     var confirmPin by remember { mutableStateOf("") }
@@ -107,7 +110,7 @@ fun ChangePinDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("PIN ändern") },
+        title = { Text(stringResource(R.string.dialog_title_change_pin)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -120,7 +123,7 @@ fun ChangePinDialog(
                             error = null
                         }
                     },
-                    label = { Text("Aktuelle PIN") },
+                    label = { Text(stringResource(R.string.label_current_pin)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
@@ -134,7 +137,7 @@ fun ChangePinDialog(
                             error = null
                         }
                     },
-                    label = { Text("Neue PIN") },
+                    label = { Text(stringResource(R.string.label_new_pin)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
@@ -148,7 +151,7 @@ fun ChangePinDialog(
                             error = null
                         }
                     },
-                    label = { Text("Neue PIN bestätigen") },
+                    label = { Text(stringResource(R.string.label_confirm_new_pin)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
@@ -167,13 +170,13 @@ fun ChangePinDialog(
             TextButton(onClick = {
                 when {
                     currentPin != storedPin -> {
-                        error = "Aktuelle PIN ist falsch"
+                        error = context.getString(R.string.error_current_pin_wrong)
                     }
                     newPin.length != 4 -> {
-                        error = "Neue PIN muss 4 Stellen haben"
+                        error = context.getString(R.string.error_pin_length_invalid)
                     }
                     newPin != confirmPin -> {
-                        error = "PINs stimmen nicht überein"
+                        error = context.getString(R.string.error_pin_mismatch)
                     }
                     else -> {
                         onPinChanged(newPin)
@@ -181,12 +184,12 @@ fun ChangePinDialog(
                     }
                 }
             }) {
-                Text("Speichern")
+                Text(stringResource(R.string.btn_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Abbrechen")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

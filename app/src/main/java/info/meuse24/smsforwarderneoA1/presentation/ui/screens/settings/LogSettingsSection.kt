@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
@@ -63,9 +65,9 @@ fun LogSettingsSection(
                     // Aber speichere nichts bei ungültigen Werten
                 }
             },
-            label = { Text("Maximale Log-Größe (MB)") },
+            label = { Text(stringResource(R.string.label_max_log_size)) },
             supportingText = {
-                Text("Legt fest, wie groß die Log-Datei werden darf (1-20 MB)")
+                Text(stringResource(R.string.helper_max_log_size))
             },
             modifier = Modifier
                 .fillMaxWidth()

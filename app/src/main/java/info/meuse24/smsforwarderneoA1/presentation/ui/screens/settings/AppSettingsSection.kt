@@ -35,9 +35,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.FilterChip
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
@@ -53,6 +56,7 @@ fun AppSettingsSection(
     onFocusChanged: (Boolean) -> Unit,
     sectionTitleStyle: TextStyle
 ) {
+    val context = LocalContext.current
     val testSmsText by testUtilsViewModel.testSmsText.collectAsState()
     val testEmailText by emailViewModel.testEmailText.collectAsState()
     val mailScreenVisible by viewModel.mailScreenVisible.collectAsState()
@@ -62,6 +66,10 @@ fun AppSettingsSection(
     val smtpHost by emailViewModel.smtpHost.collectAsState()
     val smtpUsername by emailViewModel.smtpUsername.collectAsState()
     val smtpPassword by emailViewModel.smtpPassword.collectAsState()
+
+    // Current language from SharedPreferences
+    val prefsManager = remember { info.meuse24.smsforwarderneoA1.AppContainer.requirePrefsManager() }
+    var currentLanguage by remember { mutableStateOf(prefsManager.getAppLanguage()) }
 
     var isTestSmsTextFocused by remember { mutableStateOf(false) }
     var isTestEmailTextFocused by remember { mutableStateOf(false) }
@@ -90,7 +98,7 @@ fun AppSettingsSection(
         OutlinedTextField(
             value = testSmsText,
             onValueChange = { testUtilsViewModel.updateTestSmsText(it) },
-            label = { Text("Text der Test-SMS") },
+            label = { Text(stringResource(R.string.label_test_sms_text)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isTestSmsTextFocused = it.isFocused }
@@ -101,7 +109,7 @@ fun AppSettingsSection(
         OutlinedTextField(
             value = testEmailText,
             onValueChange = { emailViewModel.updateTestEmailText(it) },
-            label = { Text("Text der Test-Email") },
+            label = { Text(stringResource(R.string.label_test_email_text)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isTestEmailTextFocused = it.isFocused }
@@ -117,15 +125,81 @@ fun AppSettingsSection(
                     viewModel.updateInternationalDialPrefix(newValue)
                 }
             },
-            label = { Text("Internationale Anschaltziffernfolge") },
+            label = { Text(stringResource(R.string.label_int_dial_prefix)) },
             supportingText = {
-                Text("Ersetzt '+' in Telefonnummern (z.B. '00' für Österreich)")
+                Text(stringResource(R.string.helper_dial_prefix_explanation))
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isDialPrefixFocused = it.isFocused },
             singleLine = true
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Language Selection Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.label_app_language),
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // System Default Button
+                    FilterChip(
+                        selected = currentLanguage == null,
+                        onClick = {
+                            prefsManager.setAppLanguage(null)
+                            currentLanguage = null
+                            (context as? android.app.Activity)?.recreate()
+                        },
+                        label = { Text(stringResource(R.string.language_system_default)) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // English Button
+                    FilterChip(
+                        selected = currentLanguage == "en",
+                        onClick = {
+                            prefsManager.setAppLanguage("en")
+                            currentLanguage = "en"
+                            (context as? android.app.Activity)?.recreate()
+                        },
+                        label = { Text("English") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // German Button
+                    FilterChip(
+                        selected = currentLanguage == "de",
+                        onClick = {
+                            prefsManager.setAppLanguage("de")
+                            currentLanguage = "de"
+                            (context as? android.app.Activity)?.recreate()
+                        },
+                        label = { Text("Deutsch") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.desc_app_language),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -139,7 +213,7 @@ fun AppSettingsSection(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "Mail-Tab anzeigen",
+                    text = stringResource(R.string.toggle_show_mail_tab),
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (smtpSettingsComplete)
                         MaterialTheme.colorScheme.onSurface
@@ -148,9 +222,9 @@ fun AppSettingsSection(
                 )
                 Text(
                     text = if (smtpSettingsComplete)
-                        "Zeigt den Mail-Tab in der unteren Navigation an"
+                        stringResource(R.string.desc_show_mail_tab)
                     else
-                        "SMTP-Einstellungen müssen vollständig sein",
+                        stringResource(R.string.msg_smtp_settings_required),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (smtpSettingsComplete)
                         MaterialTheme.colorScheme.onSurfaceVariant
@@ -166,8 +240,7 @@ fun AppSettingsSection(
                         viewModel.updateMailScreenVisibility(checked)
                     } else {
                         SnackbarManager.showWarning(
-                            "Bitte konfigurieren Sie zuerst die SMTP-Einstellungen " +
-                            "(Server, Benutzername, Passwort) im Abschnitt 'E-Mail-Einstellungen'"
+                            context.getString(R.string.warning_incomplete_smtp_settings)
                         )
                     }
                 }
@@ -227,9 +300,9 @@ fun BatteryOptimizationStatusCard() {
                 ) {
                     Text(
                         text = if (isIgnoringBatteryOptimizations) {
-                            "Akku-Optimierung deaktiviert"
+                            stringResource(R.string.status_battery_opt_disabled)
                         } else {
-                            "Akku-Optimierung aktiv"
+                            stringResource(R.string.status_battery_opt_active)
                         },
                         style = MaterialTheme.typography.titleMedium,
                         color = if (isIgnoringBatteryOptimizations) {
@@ -240,9 +313,9 @@ fun BatteryOptimizationStatusCard() {
                     )
                     Text(
                         text = if (isIgnoringBatteryOptimizations) {
-                            "Die App kann zuverlässig im Hintergrund arbeiten"
+                            stringResource(R.string.desc_battery_opt_disabled)
                         } else {
-                            "SMS-Weiterleitung könnte im Hintergrund eingeschränkt werden"
+                            stringResource(R.string.desc_battery_opt_active)
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = if (isIgnoringBatteryOptimizations) {
@@ -276,7 +349,7 @@ fun BatteryOptimizationStatusCard() {
                                 message = "Fehler beim Öffnen der Einstellungen",
                                 error = e
                             )
-                            SnackbarManager.showError("Einstellungen konnten nicht geöffnet werden")
+                            SnackbarManager.showError(context.getString(R.string.error_open_settings_failed))
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -285,7 +358,7 @@ fun BatteryOptimizationStatusCard() {
                         contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
-                    Text("Jetzt deaktivieren")
+                    Text(stringResource(R.string.btn_disable_battery_opt))
                 }
             }
         }
