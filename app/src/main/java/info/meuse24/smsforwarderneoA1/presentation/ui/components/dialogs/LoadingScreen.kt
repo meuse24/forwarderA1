@@ -42,9 +42,9 @@ import info.meuse24.smsforwarderneoA1.R
  * Displays the app logo, loading indicator, and initialization status.
  * If an error occurs during initialization, shows an error message with retry option.
  *
- * @param error Optional error message to display. If null, shows loading state.
- * @param onRetry Callback when user clicks retry button (only shown on error)
- * @param onExit Callback when user clicks exit button (only shown on error)
+ * @param error Optional error message to display. If provided, shows error state with buttons.
+ * @param onRetry Callback when user clicks retry button (only shown when error is not null)
+ * @param onExit Callback when user clicks exit button (only shown when error is not null)
  */
 @Composable
 fun LoadingScreen(
@@ -52,6 +52,7 @@ fun LoadingScreen(
     onRetry: (() -> Unit)? = null,
     onExit: (() -> Unit)? = null
 ) {
+    val hasError = error != null && (onRetry != null || onExit != null)
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -96,122 +97,77 @@ fun LoadingScreen(
                 )
             }
 
-            if (error == null) {
+            if (!hasError) {
                 CircularProgressIndicator(
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                Text(
+                    text = error ?: stringResource(R.string.msg_initializing_app),
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 32.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.msg_initializing_app),
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        text = stringResource(R.string.heading_required_permissions),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Column(
-                        modifier = Modifier.padding(top = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        buildList {
-                            add(stringResource(R.string.perm_contacts_desc))
-                            add(stringResource(R.string.perm_send_sms_desc))
-                            add(stringResource(R.string.perm_receive_sms_desc))
-                            add(stringResource(R.string.perm_call_forwarding_desc))
-                            add(stringResource(R.string.perm_phone_state_desc))
-                            add(stringResource(R.string.perm_phone_number_desc))
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                add(stringResource(R.string.perm_notifications_desc))
-                            }
-                            add(stringResource(R.string.perm_battery_opt_desc))
-                        }.forEach { permission ->
-                            androidx.compose.foundation.layout.Row(
-                                horizontalArrangement = Arrangement.Start,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = permission,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
+                )
             } else {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = error,
+                        text = error ?: "",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(top = 16.dp)
                     )
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        onRetry?.let {
-                            Button(
-                                onClick = it,
-                                modifier = Modifier.fillMaxWidth(0.8f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                )
-                            ) {
-                                androidx.compose.foundation.layout.Row(
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Refresh,
-                                        contentDescription = null
+                    // Buttons werden NUR angezeigt, wenn Callbacks vorhanden sind
+                    if (onRetry != null || onExit != null) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            onRetry?.let {
+                                Button(
+                                    onClick = it,
+                                    modifier = Modifier.fillMaxWidth(0.8f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
                                     )
-                                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-                                    Text(stringResource(R.string.btn_retry))
+                                ) {
+                                    androidx.compose.foundation.layout.Row(
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = null
+                                        )
+                                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+                                        Text(stringResource(R.string.btn_retry))
+                                    }
                                 }
                             }
-                        }
 
-                        onExit?.let {
-                            Button(
-                                onClick = it,
-                                modifier = Modifier.fillMaxWidth(0.8f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                androidx.compose.foundation.layout.Row(
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = null
+                            onExit?.let {
+                                Button(
+                                    onClick = it,
+                                    modifier = Modifier.fillMaxWidth(0.8f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
                                     )
-                                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-                                    Text(stringResource(R.string.btn_exit_app))
+                                ) {
+                                    androidx.compose.foundation.layout.Row(
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = null
+                                        )
+                                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+                                        Text(stringResource(R.string.btn_exit_app))
+                                    }
                                 }
                             }
                         }

@@ -2,6 +2,7 @@ package info.meuse24.smsforwarderneoA1.presentation.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.PaddingValues
@@ -102,6 +103,11 @@ fun GradientButton(
         onClick = onClick,
         modifier = modifier
             .scale(scale)
+            .border(
+                width = 2.dp,
+                color = Color.Black.copy(alpha = 0.8f),
+                shape = RoundedCornerShape(12.dp)
+            )
             .background(
                 brush = if (enabled) gradient else Brush.linearGradient(
                     listOf(Color.Gray, Color.DarkGray)

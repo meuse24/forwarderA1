@@ -208,7 +208,6 @@ class MainActivity : ComponentActivity() {
 
                                 // Zeige LoadingScreen und starte normale Initialisierung
                                 _isLoading.value = true
-                                _loadingError.value = getString(R.string.msg_requesting_permissions)
 
                                 lifecycleScope.launch {
                                     // Kleine Verzögerung damit LoadingScreen sichtbar wird
@@ -911,8 +910,6 @@ class MainActivity : ComponentActivity() {
     private fun initializeApp() {
         lifecycleScope.launch {
             try {
-                _loadingError.value = getString(R.string.msg_requesting_permissions)
-
                 // Warte auf vollständige Basis-Initialisierung des AppContainers
                 AppContainer.isInitialized.first { it }
 
@@ -943,13 +940,27 @@ class MainActivity : ComponentActivity() {
      * Führt notwendige Schritte nach erteilten Berechtigungen aus.
      */
     private fun completeInitializationAfterPermissions() {
+        // Starte Services und weitere Initialisierungen
         SmsForegroundService.startService(this@MainActivity)
+
+        // Setup phone state listener for MMI code monitoring
         setupPhoneStateListener()
+
+        // Prüfe Battery Optimization Status
+        checkBatteryOptimization()
+
+        // Füge kleine Verzögerung hinzu um sicherzustellen, dass
+        // Berechtigungen vollständig gewährt wurden
         lifecycleScope.launch {
-            delay(500)
-            viewModel.initialize()
+            delay(500) // 500ms Verzögerung
+
+            // Prüfe und erfasse SIM-Telefonnummern
+            checkAndRequestSimPhoneNumbers()
+
+            viewModel.initialize() // Dies lädt nun die Kontakte
+
+            _isLoading.value = false
         }
-        _isLoading.value = false
     }
 
     /**
@@ -959,6 +970,190 @@ class MainActivity : ComponentActivity() {
         _loadingError.value = null
         _isLoading.value = true
         initializeApp()
+    }
+
+    /**
+     * Prüft den Battery Optimization Status und zeigt bei Bedarf einen Dialog.
+     */
+    private fun checkBatteryOptimization() {
+        try {
+            val powerManager = getSystemService(POWER_SERVICE) as? PowerManager
+            if (powerManager == null) {
+                LoggingManager.logWarning(
+                    component = "MainActivity",
+                    action = "CHECK_BATTERY_OPT",
+                    message = "PowerManager nicht verfügbar"
+                )
+                return
+            }
+
+            val isIgnoring = powerManager.isIgnoringBatteryOptimizations(packageName)
+
+            LoggingManager.logInfo(
+                component = "MainActivity",
+                action = "CHECK_BATTERY_OPT",
+                message = "Battery Optimization Status geprüft",
+                details = mapOf("isIgnoring" to isIgnoring)
+            )
+
+            if (!isIgnoring) {
+                showBatteryOptimizationDialog()
+            }
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "MainActivity",
+                action = "CHECK_BATTERY_OPT",
+                message = "Fehler beim Prüfen der Battery Optimization",
+                error = e
+            )
+        }
+    }
+
+    /**
+     * Zeigt einen Dialog zur Deaktivierung der Battery Optimization.
+     */
+    private fun showBatteryOptimizationDialog() {
+        lifecycleScope.launch(Dispatchers.Main) {
+            val builder = AlertDialog.Builder(this@MainActivity)
+            builder.setTitle(getString(R.string.dialog_battery_opt_title))
+            builder.setMessage(getString(R.string.dialog_battery_opt_message))
+            builder.setPositiveButton(getString(R.string.btn_open_settings)) { dialog, _ ->
+                requestBatteryOptimizationExemption()
+                dialog.dismiss()
+            }
+            builder.setNegativeButton(getString(R.string.btn_later)) { dialog, _ ->
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "BATTERY_OPT_DIALOG",
+                    message = "Nutzer hat Battery Optimization Dialog abgelehnt"
+                )
+                dialog.dismiss()
+            }
+            builder.setCancelable(true)
+            builder.show()
+        }
+    }
+
+    /**
+     * Öffnet die System-Einstellungen zur Deaktivierung der Battery Optimization.
+     */
+    private fun requestBatteryOptimizationExemption() {
+        try {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = "package:$packageName".toUri()
+            }
+            startActivity(intent)
+
+            LoggingManager.logInfo(
+                component = "MainActivity",
+                action = "REQUEST_BATTERY_OPT_EXEMPTION",
+                message = "Battery Optimization Einstellungen geöffnet"
+            )
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "MainActivity",
+                action = "REQUEST_BATTERY_OPT_EXEMPTION",
+                message = "Fehler beim Öffnen der Battery Optimization Einstellungen",
+                error = e
+            )
+            SnackbarManager.showError(getString(R.string.snackbar_error_open_settings))
+        }
+    }
+
+    /**
+     * Prüft alle SIM-Karten auf fehlende Telefonnummern und fordert diese bei Bedarf an.
+     */
+    private suspend fun checkAndRequestSimPhoneNumbers() {
+        try {
+            val simInfoList = PhoneSmsUtils.getAllSimInfo(this)
+
+            if (simInfoList.isEmpty()) {
+                LoggingManager.logWarning(
+                    component = "MainActivity",
+                    action = "CHECK_SIM_NUMBERS",
+                    message = "Keine SIM-Karten gefunden"
+                )
+                return
+            }
+
+            val prefsManager = AppContainer.getPrefsManagerSafe()
+            if (prefsManager == null) {
+                LoggingManager.logError(
+                    component = "MainActivity",
+                    action = "CHECK_SIM_NUMBERS",
+                    message = "PreferencesManager nicht verfügbar"
+                )
+                return
+            }
+
+            val storedNumbers = prefsManager.getSimPhoneNumbers()
+            val missingSims = mutableListOf<SimInfo>()
+
+            LoggingManager.logInfo(
+                component = "MainActivity",
+                action = "CHECK_SIM_NUMBERS_DEBUG",
+                message = "SIM-Nummern-Prüfung gestartet",
+                details = mapOf(
+                    "stored_numbers" to storedNumbers.toString(),
+                    "sim_count" to simInfoList.size
+                )
+            )
+
+            // Prüfe jede SIM auf fehlende Telefonnummern
+            simInfoList.forEach { simInfo ->
+                val stored = storedNumbers[simInfo.subscriptionId]
+
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "CHECK_SIM_DEBUG",
+                    message = "Prüfe SIM-Karte",
+                    details = mapOf(
+                        "subscription_id" to simInfo.subscriptionId,
+                        "slot" to simInfo.slotIndex,
+                        "auto_detected" to (simInfo.phoneNumber ?: "null"),
+                        "stored" to (stored ?: "null"),
+                        "carrier" to (simInfo.carrierName ?: "Unknown")
+                    )
+                )
+
+                if (stored.isNullOrEmpty() && simInfo.phoneNumber.isNullOrEmpty()) {
+                    missingSims.add(simInfo)
+                    LoggingManager.logInfo(
+                        component = "MainActivity",
+                        action = "SIM_MISSING",
+                        message = "SIM-Nummer fehlt - Dialog wird angezeigt",
+                        details = mapOf("subscription_id" to simInfo.subscriptionId)
+                    )
+                } else if (!simInfo.phoneNumber.isNullOrEmpty() && stored != simInfo.phoneNumber) {
+                    // Auto-erkannte Nummer in Preferences speichern
+                    prefsManager.setSimPhoneNumber(simInfo.subscriptionId, simInfo.phoneNumber)
+                    LoggingManager.logInfo(
+                        component = "MainActivity",
+                        action = "STORE_SIM_NUMBER",
+                        message = "Auto-erkannte SIM-Nummer gespeichert",
+                        details = mapOf(
+                            "subscription_id" to simInfo.subscriptionId,
+                            "slot" to simInfo.slotIndex,
+                            "carrier" to (simInfo.carrierName ?: "Unknown")
+                        )
+                    )
+                }
+            }
+
+            // Falls SIM-Nummern fehlen, zeige Dialog
+            if (missingSims.isNotEmpty()) {
+                withContext(Dispatchers.Main) {
+                    simManagementViewModel.requestMissingSimNumbers(missingSims)
+                }
+            }
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "MainActivity",
+                action = "CHECK_SIM_NUMBERS",
+                message = "Fehler beim Prüfen der SIM-Nummern",
+                error = e
+            )
+        }
     }
 
     // ============================================================================

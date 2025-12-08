@@ -29,7 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.ui.theme.AnimationDuration
 import info.meuse24.smsforwarderneoA1.ui.theme.AnimationHelpers
 import info.meuse24.smsforwarderneoA1.ui.theme.Blue200
@@ -40,8 +42,8 @@ fun CallStatusCard(callState: Int) {
     val isVisible = callState != TelephonyManager.CALL_STATE_IDLE
 
     val statusText = when (callState) {
-        TelephonyManager.CALL_STATE_OFFHOOK -> "MMI-Code wird ausgeführt..."
-        TelephonyManager.CALL_STATE_RINGING -> "Eingehender Anruf..."
+        TelephonyManager.CALL_STATE_OFFHOOK -> stringResource(R.string.status_mmi_code_executing)
+        TelephonyManager.CALL_STATE_RINGING -> stringResource(R.string.status_incoming_call)
         else -> ""
     }
 

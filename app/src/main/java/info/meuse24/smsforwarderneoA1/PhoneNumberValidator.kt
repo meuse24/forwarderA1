@@ -3,10 +3,13 @@ package info.meuse24.smsforwarderneoA1
 import android.content.Context
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 
 class PhoneNumberValidator(private val context: Context? = null) {
     private val phoneUtil = PhoneNumberUtil.getInstance()
+    private fun tr(resId: Int, fallback: String): String =
+        context?.getString(resId) ?: fallback
 
     /**
      * Validiert und formatiert eine Telefonnummer.
@@ -24,7 +27,7 @@ class PhoneNumberValidator(private val context: Context? = null) {
                 return ValidatedPhoneNumber(
                     isValid = false,
                     errorType = PhoneNumberError.INVALID_NUMBER,
-                    errorMessage = "Keine gültige Telefonnummer"
+                    errorMessage = tr(R.string.phone_error_invalid_number, "Keine gültige Telefonnummer")
                 )
             }
 
@@ -33,7 +36,7 @@ class PhoneNumberValidator(private val context: Context? = null) {
                 return ValidatedPhoneNumber(
                     isValid = false,
                     errorType = PhoneNumberError.NOT_MOBILE,
-                    errorMessage = "Keine Mobiltelefonnummer"
+                    errorMessage = tr(R.string.phone_error_not_mobile, "Keine Mobiltelefonnummer")
                 )
             }
 
@@ -52,11 +55,11 @@ class PhoneNumberValidator(private val context: Context? = null) {
             )
         } catch (e: NumberParseException) {
             val errorMsg = when (e.errorType) {
-                NumberParseException.ErrorType.INVALID_COUNTRY_CODE -> "Ungültiger Ländercode"
-                NumberParseException.ErrorType.NOT_A_NUMBER -> "Enthält ungültige Zeichen"
-                NumberParseException.ErrorType.TOO_SHORT_AFTER_IDD -> "Nummer zu kurz"
-                NumberParseException.ErrorType.TOO_SHORT_NSN -> "Nummer zu kurz"
-                else -> "Unbekannter Fehler bei der Validierung"
+                NumberParseException.ErrorType.INVALID_COUNTRY_CODE -> tr(R.string.phone_error_invalid_country_code, "Ungültiger Ländercode")
+                NumberParseException.ErrorType.NOT_A_NUMBER -> tr(R.string.phone_error_invalid_characters, "Enthält ungültige Zeichen")
+                NumberParseException.ErrorType.TOO_SHORT_AFTER_IDD -> tr(R.string.phone_error_too_short, "Nummer zu kurz")
+                NumberParseException.ErrorType.TOO_SHORT_NSN -> tr(R.string.phone_error_too_short, "Nummer zu kurz")
+                else -> tr(R.string.phone_error_unknown_validation, "Unbekannter Fehler bei der Validierung")
             }
             return ValidatedPhoneNumber(
                 isValid = false,
@@ -107,7 +110,7 @@ class PhoneNumberValidator(private val context: Context? = null) {
             LoggingManager.logError(
                 component = "PhoneNumberValidator",
                 action = "NORMALIZE_PHONE_NUMBER",
-                message = "Fehler bei der Normalisierung der Telefonnummer",
+                message = tr(R.string.phone_error_normalization, "Fehler bei der Normalisierung der Telefonnummer"),
                 error = e
             )
             return phoneNumber

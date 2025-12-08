@@ -8,8 +8,10 @@ import info.meuse24.smsforwarderneoA1.data.local.Logger
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.LogMetadata
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
+import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +39,7 @@ class EmailViewModel(
     private val prefsManager: SharedPreferencesManager,
     private val logger: Logger
 ) : ViewModel() {
+    private val appContext = AppContainer.getApplication()
 
     // Callback for notifying when email forwarding state changes (triggers service notification update)
     var onForwardingStateChanged: (() -> Unit)? = null
@@ -109,9 +112,9 @@ class EmailViewModel(
                         _emailAddresses.value = currentList
                         prefsManager.saveEmailAddresses(currentList)
                         _newEmailAddress.value = "" // Reset input field
-                        SnackbarManager.showSuccess("E-Mail-Adresse hinzugefügt")
+                        SnackbarManager.showSuccess(appContext.getString(R.string.snackbar_email_added))
                     } else {
-                        SnackbarManager.showWarning("E-Mail-Adresse existiert bereits")
+                        SnackbarManager.showWarning(appContext.getString(R.string.snackbar_email_exists))
                     }
                 } catch (e: Exception) {
                     LoggingManager.logError(
@@ -121,11 +124,11 @@ class EmailViewModel(
                         error = e,
                         details = mapOf("email" to email)
                     )
-                    SnackbarManager.showError("Fehler beim Hinzufügen der E-Mail-Adresse: ${e.message}")
+                    SnackbarManager.showError(appContext.getString(R.string.snackbar_email_add_error, e.message ?: ""))
                 }
             }
         } else {
-            SnackbarManager.showError("Ungültige E-Mail-Adresse")
+            SnackbarManager.showError(appContext.getString(R.string.snackbar_email_invalid))
         }
     }
 
@@ -158,7 +161,7 @@ class EmailViewModel(
                         ),
                         "SMS-E-Mail-Weiterleitung automatisch deaktiviert (keine E-Mail-Adressen vorhanden)"
                     )
-                    SnackbarManager.showInfo("SMS-E-Mail-Weiterleitung wurde deaktiviert, da keine E-Mail-Adressen mehr vorhanden sind")
+                    SnackbarManager.showInfo(appContext.getString(R.string.snackbar_email_forwarding_disabled_no_addresses))
                 }
 
                 LoggingManager.log(
@@ -173,7 +176,7 @@ class EmailViewModel(
                     ),
                     "E-Mail-Adresse entfernt"
                 )
-                SnackbarManager.showSuccess("E-Mail-Adresse entfernt")
+                SnackbarManager.showSuccess(appContext.getString(R.string.snackbar_email_removed))
             } catch (e: Exception) {
                 LoggingManager.logError(
                     component = "EmailViewModel",
@@ -185,7 +188,7 @@ class EmailViewModel(
                         "current_list_size" to _emailAddresses.value.size
                     )
                 )
-                SnackbarManager.showError("Fehler beim Entfernen der E-Mail-Adresse: ${e.message}")
+                SnackbarManager.showError(appContext.getString(R.string.snackbar_email_remove_error, e.message ?: ""))
             }
         }
     }
@@ -258,7 +261,7 @@ class EmailViewModel(
                         ),
                         "Unvollständige SMTP-Einstellungen"
                     )
-                    SnackbarManager.showError("SMTP-Einstellungen sind unvollständig")
+                    SnackbarManager.showError(appContext.getString(R.string.snackbar_smtp_incomplete))
                     return@launch
                 }
 
@@ -292,7 +295,7 @@ class EmailViewModel(
                             ),
                             "Test-E-Mail wurde versendet"
                         )
-                        SnackbarManager.showSuccess("Test-E-Mail wurde an $mailrecipient versendet")
+                        SnackbarManager.showSuccess(appContext.getString(R.string.snackbar_test_email_sent, mailrecipient))
                     }
 
                     is EmailResult.Error -> {
@@ -309,7 +312,7 @@ class EmailViewModel(
                             ),
                             "Fehler beim Versenden der Test-E-Mail"
                         )
-                        SnackbarManager.showError("E-Mail-Versand fehlgeschlagen: ${result.message}")
+                        SnackbarManager.showError(appContext.getString(R.string.snackbar_test_email_failed, result.message ?: ""))
                     }
                 }
             } catch (e: Exception) {
@@ -325,7 +328,7 @@ class EmailViewModel(
                     ),
                     "Unerwarteter Fehler beim E-Mail-Versand"
                 )
-                SnackbarManager.showError("E-Mail-Versand fehlgeschlagen: ${e.message}")
+                SnackbarManager.showError(appContext.getString(R.string.snackbar_test_email_failed, e.message ?: ""))
             }
         }
     }

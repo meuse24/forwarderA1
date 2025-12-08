@@ -118,7 +118,7 @@ fun InfoScreen() {
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.logofwd2),
-                                contentDescription = "App Icon",
+                                contentDescription = stringResource(R.string.desc_app_icon),
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)
@@ -134,7 +134,7 @@ fun InfoScreen() {
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.barracuda),
-                                contentDescription = "Version Barracuda",
+                                contentDescription = stringResource(R.string.desc_version_badge),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
@@ -147,13 +147,13 @@ fun InfoScreen() {
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "(C) 2025",
+                            text = stringResource(R.string.text_copyright),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Günther Meusburger",
+                            text = stringResource(R.string.text_author_name),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -652,7 +652,7 @@ private fun LinkItem(
 
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
-            contentDescription = "Öffnen",
+            contentDescription = stringResource(R.string.desc_open),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )

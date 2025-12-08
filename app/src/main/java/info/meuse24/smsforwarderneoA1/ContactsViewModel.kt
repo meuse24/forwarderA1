@@ -15,6 +15,7 @@ import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 import info.meuse24.smsforwarderneoA1.service.SmsForegroundService
+import info.meuse24.smsforwarderneoA1.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -906,27 +907,27 @@ class ContactsViewModel(
 
             when {
                 hasForwarding && hasEmail -> {
-                    append("SMS-Weiterleitung aktiv")
+                    append(application.getString(R.string.notification_status_sms_active))
                     _selectedContact.value?.let { contact ->
-                        append(" zu ${contact.name}")
+                        append(" " + application.getString(R.string.notification_status_to_number, contact.name))
                     }
                     append("\nEmail-Weiterleitung aktiv")
                     val emailCount = prefsManager.getEmailAddresses().size
-                    append(" an $emailCount Email(s)")
+                    append(" " + application.getString(R.string.notification_status_email_count, emailCount))
                 }
                 hasForwarding -> {
-                    append("SMS-Weiterleitung aktiv")
+                    append(application.getString(R.string.notification_status_sms_active))
                     _selectedContact.value?.let { contact ->
-                        append(" zu ${contact.name}")
+                        append(" " + application.getString(R.string.notification_status_to_number, contact.name))
                     }
                 }
                 hasEmail -> {
-                    append("Email-Weiterleitung aktiv")
+                    append(application.getString(R.string.notification_status_email_active))
                     val emailCount = prefsManager.getEmailAddresses().size
-                    append(" an $emailCount Email(s)")
+                    append(" " + application.getString(R.string.notification_status_email_count, emailCount))
                 }
                 else -> {
-                    append("TEL/SMS Forwarder läuft im Hintergrund.")
+                    append(application.getString(R.string.notification_running_long))
                 }
             }
         }

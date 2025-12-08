@@ -1,23 +1,43 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.screens.privacy
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import info.meuse24.smsforwarderneoA1.R
 
 /**
@@ -60,61 +80,61 @@ fun PrivacyPolicyScreen(
                     .fillMaxSize()
                     .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 32.dp)
             ) {
-            // Header
-            PrivacyPolicyHeader(
-                selectedLanguage = selectedLanguage,
-                onLanguageChange = { selectedLanguage = it }
-            )
+                // Header
+                PrivacyPolicyHeader(
+                    selectedLanguage = selectedLanguage,
+                    onLanguageChange = { selectedLanguage = it }
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Scrollable Content
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    if (selectedLanguage == "DE") {
-                        PrivacyPolicyContentDE()
-                    } else {
-                        PrivacyPolicyContentEN()
+                // Scrollable Content
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item {
+                        if (selectedLanguage == "DE") {
+                            PrivacyPolicyContentDE()
+                        } else {
+                            PrivacyPolicyContentEN()
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Action Buttons
-            if (viewMode) {
-                // View-Only Mode: Nur "OK" Button
-                Button(
-                    onClick = { onDismiss?.invoke() },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text(
-                        text = "OK",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                // Action Buttons
+                if (viewMode) {
+                    // View-Only Mode: Nur "OK" Button
+                    Button(
+                        onClick = { onDismiss?.invoke() },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_ok),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    // First Launch Mode: Akzeptieren/Ablehnen Buttons
+                    PrivacyPolicyActions(
+                        onAccept = onAccept ?: {},
+                        onDecline = onDecline ?: {},
+                        selectedLanguage = selectedLanguage
                     )
                 }
-            } else {
-                // First Launch Mode: Akzeptieren/Ablehnen Buttons
-                PrivacyPolicyActions(
-                    onAccept = onAccept ?: {},
-                    onDecline = onDecline ?: {},
-                    selectedLanguage = selectedLanguage
-                )
-            }
             }
         }
     }
@@ -131,7 +151,7 @@ private fun PrivacyPolicyHeader(
     ) {
         Icon(
             imageVector = Icons.Default.Security,
-            contentDescription = "Privacy",
+            contentDescription = stringResource(R.string.desc_dialing_privacy),
             modifier = Modifier.size(40.dp),
             tint = MaterialTheme.colorScheme.primary
         )
@@ -140,7 +160,7 @@ private fun PrivacyPolicyHeader(
 
         Text(
             text = if (selectedLanguage == "DE")
-                "Datenschutzerklärung" else "Privacy Policy",
+                stringResource(R.string.privacy_title_de) else stringResource(R.string.privacy_title_en),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
@@ -170,116 +190,58 @@ private fun PrivacyPolicyHeader(
 private fun PrivacyPolicyContentDE() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         PolicySection(
-            title = "Willkommen bei SMS Forwarder Neo",
-            content = """
-                Diese App leitet eingehende SMS-Nachrichten automatisch weiter. Bevor Sie fortfahren,
-                lesen Sie bitte diese Datenschutzerklärung sorgfältig durch, um zu verstehen,
-                welche Berechtigungen erforderlich sind und wie Ihre Daten behandelt werden.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_welcome_title_de),
+            content = stringResource(R.string.privacy_section_welcome_body_de)
         )
 
         PolicySection(
-            title = "1. Erforderliche Berechtigungen",
+            title = stringResource(R.string.privacy_section_permissions_title_de),
             content = null
         )
 
         PermissionItem(
-            title = "SMS senden und empfangen",
-            description = """
-                • SMS_RECEIVE: Zum Empfang eingehender SMS-Nachrichten
-                • SMS_SEND: Zum Weiterleiten von SMS an die konfigurierte Zielrufnummer
-
-                Dies ist die Kernfunktionalität der App. Ohne diese Berechtigung kann die
-                SMS-Weiterleitung nicht funktionieren.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_sms_de),
+            description = stringResource(R.string.privacy_perm_sms_body_de)
         )
 
         PermissionItem(
-            title = "Telefon / Anrufe",
-            description = """
-                • CALL_PHONE: Zum Ausführen von MMI-Codes (*21*, ##21#, *#21#)
-                • READ_PHONE_STATE: Zum Erkennen der SIM-Karte und Netzwerkstatus
-
-                MMI-Codes werden verwendet, um den Status der Anrufweiterleitung direkt beim
-                Mobilfunkanbieter abzufragen. Dies ist optional, verbessert aber die
-                Zuverlässigkeit der App.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_phone_de),
+            description = stringResource(R.string.privacy_perm_phone_body_de)
         )
 
         PermissionItem(
-            title = "Kontakte lesen",
-            description = """
-                • READ_CONTACTS: Zum Öffnen des Android-Kontaktauswahlmenüs
-
-                Die App speichert nur den ausgewählten Kontakt (Name + Nummer) lokal und
-                verschlüsselt. Es werden keine Kontaktdaten an Dritte weitergegeben.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_contacts_de),
+            description = stringResource(R.string.privacy_perm_contacts_body_de)
         )
 
         PermissionItem(
-            title = "Vordergrund-Dienst",
-            description = """
-                • FOREGROUND_SERVICE: Für zuverlässige Hintergrundverarbeitung
-                • FOREGROUND_SERVICE_PHONE_CALL: Speziell für SMS/Telefon-Funktionen
-
-                Der Vordergrund-Dienst stellt sicher, dass SMS auch bei gesperrtem Bildschirm
-                weitergeleitet werden. Sie sehen eine Benachrichtigung, wenn der Dienst aktiv ist.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_foreground_de),
+            description = stringResource(R.string.privacy_perm_foreground_body_de)
         )
 
         PermissionItem(
-            title = "Akku-Optimierung ignorieren",
-            description = """
-                • REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: Für kontinuierlichen Dienst
-
-                Android kann Apps im Hintergrund stoppen, um Akku zu sparen. Diese Berechtigung
-                verhindert, dass der SMS-Weiterleitungsdienst unerwartet beendet wird.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_battery_de),
+            description = stringResource(R.string.privacy_perm_battery_body_de)
         )
 
         PolicySection(
-            title = "2. Datenverarbeitung und Sicherheit",
-            content = """
-                • Alle Einstellungen werden verschlüsselt auf Ihrem Gerät gespeichert
-                • SMTP-Passwörter werden mit androidx.security.crypto verschlüsselt
-                • Telefonnummern werden nur lokal protokolliert (für Debugging)
-                • Es werden keine Daten an externe Server gesendet (außer bei E-Mail-Weiterleitung an Ihren SMTP-Server)
-                • Die App ist für den privaten Gebrauch konzipiert
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_security_title_de),
+            content = stringResource(R.string.privacy_section_security_body_de)
         )
 
         PolicySection(
-            title = "3. E-Mail-Weiterleitung (optional)",
-            content = """
-                Wenn Sie die E-Mail-Weiterleitung aktivieren, werden SMS-Inhalte an die von
-                Ihnen konfigurierten E-Mail-Adressen gesendet. Dies erfordert die Eingabe von
-                SMTP-Zugangsdaten (Gmail, Outlook, etc.), die verschlüsselt gespeichert werden.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_email_title_de),
+            content = stringResource(R.string.privacy_section_email_body_de)
         )
 
         PolicySection(
-            title = "4. Open Source und Transparenz",
-            content = """
-                Diese App ist Open Source. Der vollständige Quellcode ist verfügbar unter:
-                https://github.com/meuse24/forwarderA1
-
-                Sie können den Code einsehen und prüfen, dass keine versteckten Funktionen
-                oder Datensammlung vorhanden sind.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_opensource_title_de),
+            content = stringResource(R.string.privacy_section_opensource_body_de)
         )
 
         PolicySection(
-            title = "5. Ihre Zustimmung",
-            content = """
-                Durch Klicken auf "Akzeptieren" bestätigen Sie, dass Sie:
-
-                • Diese Datenschutzerklärung gelesen und verstanden haben
-                • Der Verwendung der oben genannten Berechtigungen zustimmen
-                • Verstehen, dass die App SMS-Inhalte weiterleitet
-                • Die App auf eigene Verantwortung nutzen
-
-                Sie können die App jederzeit deinstallieren, um alle lokalen Daten zu entfernen.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_consent_title_de),
+            content = stringResource(R.string.privacy_section_consent_body_de)
         )
     }
 }
@@ -288,115 +250,58 @@ private fun PrivacyPolicyContentDE() {
 private fun PrivacyPolicyContentEN() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         PolicySection(
-            title = "Welcome to SMS Forwarder Neo",
-            content = """
-                This app automatically forwards incoming SMS messages. Before proceeding,
-                please read this privacy policy carefully to understand what permissions
-                are required and how your data is handled.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_welcome_title_en),
+            content = stringResource(R.string.privacy_section_welcome_body_en)
         )
 
         PolicySection(
-            title = "1. Required Permissions",
+            title = stringResource(R.string.privacy_section_permissions_title_en),
             content = null
         )
 
         PermissionItem(
-            title = "Send and Receive SMS",
-            description = """
-                • SMS_RECEIVE: To receive incoming SMS messages
-                • SMS_SEND: To forward SMS to the configured target number
-
-                This is the core functionality of the app. Without this permission,
-                SMS forwarding cannot work.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_sms_en),
+            description = stringResource(R.string.privacy_perm_sms_body_en)
         )
 
         PermissionItem(
-            title = "Phone / Calls",
-            description = """
-                • CALL_PHONE: To execute MMI codes (*21*, ##21#, *#21#)
-                • READ_PHONE_STATE: To detect SIM card and network status
-
-                MMI codes are used to query call forwarding status directly from your
-                mobile carrier. This is optional but improves app reliability.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_phone_en),
+            description = stringResource(R.string.privacy_perm_phone_body_en)
         )
 
         PermissionItem(
-            title = "Read Contacts",
-            description = """
-                • READ_CONTACTS: To open the Android contact picker dialog
-
-                The app only stores the selected contact (name + number) locally and
-                encrypted. No contact data is shared with third parties.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_contacts_en),
+            description = stringResource(R.string.privacy_perm_contacts_body_en)
         )
 
         PermissionItem(
-            title = "Foreground Service",
-            description = """
-                • FOREGROUND_SERVICE: For reliable background processing
-                • FOREGROUND_SERVICE_PHONE_CALL: Specifically for SMS/phone functions
-
-                The foreground service ensures SMS are forwarded even when the screen is locked.
-                You will see a notification when the service is active.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_foreground_en),
+            description = stringResource(R.string.privacy_perm_foreground_body_en)
         )
 
         PermissionItem(
-            title = "Ignore Battery Optimization",
-            description = """
-                • REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: For continuous service
-
-                Android may stop background apps to save battery. This permission prevents
-                the SMS forwarding service from being unexpectedly terminated.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_perm_battery_en),
+            description = stringResource(R.string.privacy_perm_battery_body_en)
         )
 
         PolicySection(
-            title = "2. Data Processing and Security",
-            content = """
-                • All settings are encrypted and stored on your device
-                • SMTP passwords are encrypted using androidx.security.crypto
-                • Phone numbers are only logged locally (for debugging)
-                • No data is sent to external servers (except email forwarding to your SMTP server)
-                • The app is designed for private use
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_security_title_en),
+            content = stringResource(R.string.privacy_section_security_body_en)
         )
 
         PolicySection(
-            title = "3. Email Forwarding (Optional)",
-            content = """
-                If you enable email forwarding, SMS contents will be sent to the email
-                addresses you configure. This requires entering SMTP credentials
-                (Gmail, Outlook, etc.), which are stored encrypted.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_email_title_en),
+            content = stringResource(R.string.privacy_section_email_body_en)
         )
 
         PolicySection(
-            title = "4. Open Source and Transparency",
-            content = """
-                This app is open source. The complete source code is available at:
-                https://github.com/meuse24/forwarderA1
-
-                You can review the code and verify that there are no hidden features
-                or data collection.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_opensource_title_en),
+            content = stringResource(R.string.privacy_section_opensource_body_en)
         )
 
         PolicySection(
-            title = "5. Your Consent",
-            content = """
-                By clicking "Accept" you confirm that you:
-
-                • Have read and understood this privacy policy
-                • Agree to the use of the permissions listed above
-                • Understand that the app forwards SMS contents
-                • Use the app at your own responsibility
-
-                You can uninstall the app at any time to remove all local data.
-            """.trimIndent()
+            title = stringResource(R.string.privacy_section_consent_title_en),
+            content = stringResource(R.string.privacy_section_consent_body_en)
         )
     }
 }
@@ -473,7 +378,9 @@ private fun PrivacyPolicyActions(
             )
         ) {
             Text(
-                text = if (selectedLanguage == "DE") "Akzeptieren" else "Accept",
+                text = if (selectedLanguage == "DE") stringResource(R.string.privacy_btn_accept_de) else stringResource(
+                    R.string.privacy_btn_accept_en
+                ),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -487,7 +394,9 @@ private fun PrivacyPolicyActions(
             )
         ) {
             Text(
-                text = if (selectedLanguage == "DE") "Ablehnen" else "Decline",
+                text = if (selectedLanguage == "DE") stringResource(R.string.privacy_btn_decline_de) else stringResource(
+                    R.string.privacy_btn_decline_en
+                ),
                 fontSize = 16.sp
             )
         }

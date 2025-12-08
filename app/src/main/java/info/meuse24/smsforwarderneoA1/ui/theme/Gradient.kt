@@ -140,3 +140,13 @@ val AnimatedBackgroundGradient = Brush.radialGradient(
         Color(0xFF90CAF9).copy(alpha = 0.1f)
     )
 )
+
+// Warm gradient for contact selection button (yellowish beige like wallpaper text)
+val WarmContactGradient = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFFE8C547).copy(alpha = 0.7f), // Light golden yellow with 70% opacity
+        Color(0xFFD4A853).copy(alpha = 0.6f)  // Darker golden/tan with 60% opacity
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+)

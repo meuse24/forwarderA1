@@ -18,6 +18,7 @@ import android.net.ConnectivityManager
 import android.telephony.ServiceState
 import android.telephony.SubscriptionInfo
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
@@ -75,7 +76,7 @@ class PhoneSmsUtils private constructor() {
                         "sms_length" to testSmsText.length
                     )
                 )
-                SnackbarManager.showWarning("Bitte wählen Sie zuerst einen Kontakt aus")
+                SnackbarManager.showWarning(context.getString(R.string.snackbar_select_contact_first))
                 return false
             }
 
@@ -86,7 +87,7 @@ class PhoneSmsUtils private constructor() {
                     message = "Test-SMS konnte nicht gesendet werden",
                     details = mapOf("reason" to "empty_text")
                 )
-                SnackbarManager.showWarning("Der SMS-Text darf nicht leer sein")
+                SnackbarManager.showWarning(context.getString(R.string.snackbar_sms_text_empty))
                 return false
             }
             if (!PermissionHelper.hasPermission(context, Manifest.permission.SEND_SMS))
@@ -100,7 +101,7 @@ class PhoneSmsUtils private constructor() {
                         "status" to "denied"
                     )
                 )
-                SnackbarManager.showError("Berechtigung zum Senden von SMS nicht erteilt")
+                SnackbarManager.showError(context.getString(R.string.snackbar_sms_permission_missing))
                 return false
             }
 
@@ -315,7 +316,7 @@ class PhoneSmsUtils private constructor() {
                     details = mapOf("recipient" to phoneNumber)
 
                 )
-                SnackbarManager.showError("SMS an $phoneNumber fehlgeschlagen ($message).")
+                SnackbarManager.showError(context.getString(R.string.snackbar_sms_send_failed, phoneNumber, message))
                 throw e
             }
         }
@@ -518,7 +519,7 @@ class PhoneSmsUtils private constructor() {
                     message = "USSD-Code ist leer",
                     details = mapOf("code_length" to ussdCode.length)
                 )
-                SnackbarManager.showWarning("USSD-Code darf nicht leer sein")
+                SnackbarManager.showWarning(context.getString(R.string.snackbar_ussd_empty))
                 return false
             }
 
@@ -532,7 +533,7 @@ class PhoneSmsUtils private constructor() {
                         "status" to "denied"
                     )
                 )
-                SnackbarManager.showError("Berechtigung für USSD-Codes nicht erteilt")
+                SnackbarManager.showError(context.getString(R.string.snackbar_ussd_permission_missing))
                 return false
             }
 
@@ -545,7 +546,7 @@ class PhoneSmsUtils private constructor() {
                         message = "TelephonyManager nicht verfügbar",
                         details = mapOf("system_service" to "TELEPHONY_SERVICE")
                     )
-                    SnackbarManager.showError("Telefondienst nicht verfügbar")
+                    SnackbarManager.showError(context.getString(R.string.snackbar_phone_service_unavailable))
                     return false
                 }
 
@@ -567,7 +568,7 @@ class PhoneSmsUtils private constructor() {
                                     "response_length" to response.length
                                 )
                             )
-                            SnackbarManager.showSuccess("MMI-Antwort: $response")
+                            SnackbarManager.showSuccess(context.getString(R.string.snackbar_mmi_response, response))
                         }
 
                         override fun onReceiveUssdResponseFailed(
@@ -590,7 +591,7 @@ class PhoneSmsUtils private constructor() {
                                     "failure_reason" to failureReason
                                 )
                             )
-                            SnackbarManager.showError("USSD-Fehler: $failureReason")
+                            SnackbarManager.showError(context.getString(R.string.snackbar_ussd_failure, failureReason))
                         }
                     },
                     Handler(Looper.getMainLooper())
@@ -605,7 +606,7 @@ class PhoneSmsUtils private constructor() {
                         "code_type" to getUssdCodeType(context, ussdCode)
                     )
                 )
-                SnackbarManager.showInfo("Folgende MMI-Anfrage wurde gesendet: $ussdCode")
+                SnackbarManager.showInfo(context.getString(R.string.snackbar_ussd_request_sent, ussdCode))
                 true
 
             } catch (e: SecurityException) {
@@ -619,7 +620,7 @@ class PhoneSmsUtils private constructor() {
                         "error_type" to "security_exception"
                     )
                 )
-                SnackbarManager.showError("Sicherheitsfehler beim Senden des USSD-Codes")
+                SnackbarManager.showError(context.getString(R.string.snackbar_ussd_security_error))
                 false
 
             } catch (e: Exception) {
@@ -633,7 +634,7 @@ class PhoneSmsUtils private constructor() {
                         "error_type" to e.javaClass.simpleName
                     )
                 )
-                SnackbarManager.showError("Fehler beim Senden des USSD-Codes: ${e.message}")
+                SnackbarManager.showError(context.getString(R.string.snackbar_ussd_general_error, e.message ?: ""))
                 false
             }
         }
@@ -913,7 +914,7 @@ class PhoneSmsUtils private constructor() {
 
             if (!requiredPermissions.all { PermissionHelper.hasPermission(context, it) }) {
                 logError("Fehlende Berechtigungen für Telefonnummer", requiredPermissions)
-                SnackbarManager.showError("Berechtigungen für das Lesen der Telefonnummer fehlen")
+                SnackbarManager.showError(context.getString(R.string.snackbar_read_phone_permission_missing))
                 return ""
             }
 
@@ -953,11 +954,11 @@ class PhoneSmsUtils private constructor() {
 
             } catch (e: SecurityException) {
                 logError("Sicherheitsfehler beim Abrufen der Telefonnummer", e)
-                SnackbarManager.showError("Sicherheitsfehler beim Abrufen der Telefonnummer")
+                SnackbarManager.showError(context.getString(R.string.snackbar_read_phone_security_error))
                 ""
             } catch (e: Exception) {
                 logError("Fehler beim Abrufen der Telefonnummer", e)
-                SnackbarManager.showError("Fehler beim Abrufen der Telefonnummer: ${e.message}")
+                SnackbarManager.showError(context.getString(R.string.snackbar_read_phone_error, e.message ?: ""))
                 ""
             }
         }

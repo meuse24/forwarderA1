@@ -66,6 +66,7 @@ import info.meuse24.smsforwarderneoA1.ui.theme.AnimationHelpers
 import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 import info.meuse24.smsforwarderneoA1.ui.theme.ErrorGradient
 import info.meuse24.smsforwarderneoA1.ui.theme.PrimaryGradient
+import info.meuse24.smsforwarderneoA1.ui.theme.WarmContactGradient
 
 /**
  * Animated app logo with one-time 360° rotation on screen open and on touch
@@ -93,7 +94,7 @@ fun AnimatedAppLogo(modifier: Modifier = Modifier) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.logofwd2),
-            contentDescription = "App Logo",
+            contentDescription = stringResource(R.string.desc_app_logo),
             modifier = Modifier
                 .size(56.dp)
                 .clip(RoundedCornerShape(16.dp))
@@ -258,7 +259,7 @@ fun LandscapeLayout(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "Alle Weiterleitungen zurücksetzen",
+                        contentDescription = stringResource(R.string.desc_reset_forwarding),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -309,7 +310,7 @@ fun PortraitLayout(
             // Bottom row: Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Help Button
@@ -359,7 +360,7 @@ fun PortraitLayout(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "Alle Weiterleitungen zurücksetzen",
+                        contentDescription = stringResource(R.string.desc_reset_forwarding),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -394,8 +395,8 @@ fun ContactSelectionSection(
                 .fillMaxWidth()
                 .height(120.dp)
                 .scale(if (!isCallActive) pulseScale else 1f)
-                .graphicsLayer { alpha = 0.7f },
-            gradient = PrimaryGradient
+                .graphicsLayer { rotationZ = -2f },
+            gradient = WarmContactGradient
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

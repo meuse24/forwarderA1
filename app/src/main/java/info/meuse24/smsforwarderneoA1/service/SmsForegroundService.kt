@@ -61,7 +61,8 @@ class SmsForegroundService : Service() {
     private val prefsManager: SharedPreferencesManager by lazy {
         AppContainer.requirePrefsManager()
     }
-    private var currentNotificationText = "App läuft im Hintergrund."
+    private var currentNotificationText = ""
+    private lateinit var defaultNotificationText: String
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val notificationManager by lazy {
         getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
@@ -75,7 +76,6 @@ class SmsForegroundService : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "MY_CHANNEL_ID"
-        private const val DEFAULT_NOTIFICATION_TEXT = "TEL/SMS Forwarder läuft im Hintergrund."
         private const val MAX_RETRIES = 3
         private const val INITIAL_RETRY_DELAY = 5000L  // 5 Sekunden
 
@@ -116,6 +116,11 @@ class SmsForegroundService : Service() {
     }
 
     private fun setupService() {
+        defaultNotificationText = getString(R.string.notification_running_long)
+        if (currentNotificationText.isBlank()) {
+            currentNotificationText = getString(R.string.notification_running_short)
+        }
+
         // ANDROID 13+ FIX: Check POST_NOTIFICATIONS permission before starting foreground
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasNotificationPermission = ContextCompat.checkSelfPermission(
@@ -141,7 +146,7 @@ class SmsForegroundService : Service() {
             }
         }
 
-        val notification = createNotification(DEFAULT_NOTIFICATION_TEXT)
+        val notification = createNotification(defaultNotificationText)
         startForeground(NOTIFICATION_ID, notification)
         isRunning = true
 
@@ -376,7 +381,7 @@ class SmsForegroundService : Service() {
                     message = "Fehler bei SMS-Verarbeitung",
                     error = e
                 )
-                SnackbarManager.showError("Fehler bei der SMS-Verarbeitung: ${e.message}")
+                SnackbarManager.showError(getString(R.string.snackbar_sms_processing_error, e.message ?: ""))
             }
         }
     }
@@ -521,7 +526,7 @@ class SmsForegroundService : Service() {
                 )
             )
             retryCounter.remove(retryKey)
-            SnackbarManager.showError("SMS von $sender konnte nach $MAX_RETRIES Versuchen nicht verarbeitet werden")
+            SnackbarManager.showError(getString(R.string.snackbar_sms_retry_failed, sender, MAX_RETRIES))
             return
         }
 
@@ -626,7 +631,7 @@ class SmsForegroundService : Service() {
                         message = "SIM 1 nicht verfügbar, verwende Standard-SIM",
                         details = mapOf("available_sims" to availableSims.size)
                     )
-                    SnackbarManager.showWarning("SIM 1 nicht verfügbar, verwende Standard-SIM")
+                    SnackbarManager.showWarning(getString(R.string.snackbar_sim1_unavailable))
                     -1 // Fallback: Standard-SIM
                 } else {
                     LoggingManager.logInfo(
@@ -650,7 +655,7 @@ class SmsForegroundService : Service() {
                         message = "SIM 2 nicht verfügbar, verwende Fallback",
                         details = mapOf("available_sims" to availableSims.size)
                     )
-                    SnackbarManager.showWarning("SIM 2 nicht verfügbar, verwende Standard-SIM")
+                    SnackbarManager.showWarning(getString(R.string.snackbar_sim2_unavailable))
                     // Fallback: Verwende SIM 1 wenn vorhanden, sonst Standard-SIM
                     availableSims.getOrNull(0)?.subscriptionId ?: -1
                 } else {
@@ -694,7 +699,7 @@ class SmsForegroundService : Service() {
                         "subscription_id" to subscriptionId
                     )
                 )
-                SnackbarManager.showWarning("Nachricht zu lang für SMS-Weiterleitung (max. $maxSmsLength Zeichen)")
+                SnackbarManager.showWarning(getString(R.string.snackbar_message_too_long, maxSmsLength))
                 return
             }
 
@@ -816,7 +821,7 @@ class SmsForegroundService : Service() {
                                 "smtp_host" to host
                             )
                         )
-                        SnackbarManager.showSuccess("SMS per Email weitergeleitet")
+                        SnackbarManager.showSuccess(getString(R.string.snackbar_email_forward_success))
                         updateServiceStatus()
                     }
 
@@ -838,7 +843,7 @@ class SmsForegroundService : Service() {
                         "message_length" to messageBody.length
                     )
                 )
-                SnackbarManager.showError("Fehler bei der Email-Weiterleitung")
+                SnackbarManager.showError(getString(R.string.snackbar_email_forward_error))
                 // Re-throw um in processMessageGroup error handling zu triggern
                 throw e
             }
@@ -862,7 +867,7 @@ class SmsForegroundService : Service() {
                 "sender" to sender
             )
         )
-        SnackbarManager.showError("Email-Weiterleitung fehlgeschlagen: $errorMessage")
+        SnackbarManager.showError(getString(R.string.snackbar_email_forward_failed, errorMessage))
     }
 
     private fun buildEmailBody(sender: String, messageBody: String): String {
@@ -897,7 +902,7 @@ class SmsForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("TEL/SMS Forwarder")
+            .setContentTitle(getString(R.string.notification_title_service))
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
             .setSmallIcon(R.drawable.logofwd2)
@@ -941,6 +946,12 @@ class SmsForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun startForegroundService() {
+        if (!::defaultNotificationText.isInitialized) {
+            defaultNotificationText = getString(R.string.notification_running_long)
+        }
+        if (currentNotificationText.isBlank()) {
+            currentNotificationText = getString(R.string.notification_running_short)
+        }
         isRunning = true
         val prefs = SharedPreferencesManager(this)
         val initialStatus = buildServiceStatus(prefs)
@@ -953,21 +964,21 @@ class SmsForegroundService : Service() {
     private fun buildServiceStatus(prefs: SharedPreferencesManager): String {
         return buildString {
             if (!prefs.isForwardingActive() && !prefs.isForwardSmsToEmail()) {
-                append(DEFAULT_NOTIFICATION_TEXT)  // Statt "Keine Weiterleitung aktiv"
+                append(defaultNotificationText)  // Statt "Keine Weiterleitung aktiv"
             } else {
                 if (prefs.isForwardingActive()) {
-                    append("SMS-Weiterleitung aktiv")
+                    append(getString(R.string.notification_status_sms_active))
                     prefs.getSelectedPhoneNumber().let { number ->
                         if (number.isNotEmpty()) {
-                            append(" zu $number")
+                            append(" " + getString(R.string.notification_status_to_number, number))
                         }
                     }
                 }
                 if (prefs.isForwardSmsToEmail()) {
                     if (prefs.isForwardingActive()) append("\n")
-                    append("Email-Weiterleitung aktiv")
+                    append(getString(R.string.notification_status_email_active))
                     val emailCount = prefs.getEmailAddresses().size
-                    append(" an $emailCount Email(s)")
+                    append(" " + getString(R.string.notification_status_email_count, emailCount))
                 }
             }
         }

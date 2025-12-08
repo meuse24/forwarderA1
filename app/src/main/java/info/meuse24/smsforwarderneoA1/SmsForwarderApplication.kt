@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.data.local.Logger
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
@@ -142,10 +143,10 @@ class SmsForwarderApplication : Application() {
             try {
                 val channel = NotificationChannel(
                     "MY_CHANNEL_ID",
-                    "SMS Weiterleitung",
+                    getString(R.string.notification_channel_name),
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
-                    description = "Zeigt den Status der SMS/Anruf-Weiterleitung an"
+                    description = getString(R.string.notification_channel_description)
                     setShowBadge(true)
                     enableLights(false)
                     enableVibration(false)
