@@ -366,6 +366,30 @@
     <string name="dialog_title_privacy_required">Datenschutzerklärung erforderlich</string>
     <string name="dialog_msg_privacy_required">Ohne Akzeptierung der Datenschutzerklärung kann die App nicht verwendet werden, da die benötigten Berechtigungen nicht angefordert werden können.</string>
 
+    <!-- Help Screen -->
+    <string name="help_html_title">Kurzanleitung SMS &amp; Rufumleitung</string>
+    <string name="help_html_heading">Kurzanleitung: Ruf- &amp; SMS-Weiterleitung</string>
+    <string name="help_html_intro">Diese Anleitung hilft Ihnen, die Weiterleitung von Anrufen und SMS schnell und einfach einzurichten.</string>
+    <string name="help_html_steps_heading">Einrichtung in 3 Schritten</string>
+    <string name="help_step1_title">Ziel auswählen:</string>
+    <string name="help_step1_body">Tippen Sie auf der Hauptseite auf die Schaltfläche &lt;code&gt;%1$s&lt;/code&gt;. Wählen Sie einen Kontakt aus Ihren Kontakten aus. Dies ist die Nummer, an die Ihre Anrufe und SMS weitergeleitet werden.</string>
+    <string name="help_step2_title">Aktivieren:</string>
+    <string name="help_step2_body">Nachdem Sie eine Nummer ausgewählt haben, wird die Weiterleitung automatisch aktiviert. Die App wählt den Code, um die Rufumleitung beim Provider einzurichten. Gleichzeitig startet der interne Dienst für die SMS-Weiterleitung.</string>
+    <string name="help_step2_warning">Warten Sie den automatischen Wählvorgang vollständig ab. Während des Wählvorgangs erhalten Sie eine kurze akustische Rückmeldung über den Erfolg der Rufumleitung. Die App kehrt danach automatisch zum Hauptbildschirm zurück.</string>
+    <string name="help_step3_title">Deaktivieren:</string>
+    <string name="help_step3_body">Um alle Weiterleitungen zu beenden, tippen Sie auf die rote &lt;code&gt;%1$s&lt;/code&gt; Schaltfläche auf dem Hauptbildschirm.</string>
+    <string name="help_note_title">Wichtiger Hinweis zur Rufumleitung:</string>
+    <string name="help_note_body">Die App leitet Anrufe nicht selbst um. Sie sendet nur einen Standard-Steuercode (MMI-Code) an Ihren Mobilfunkanbieter. Die eigentliche Umleitung findet im Netz des Anbieters statt.</string>
+    <string name="help_buttons_heading">Weitere Schaltflächen</string>
+    <string name="help_btn_change_contact_title">Kontakt ändern</string>
+    <string name="help_btn_change_contact_desc">Neue Telefonnummer für die Weiterleitung wählen, ohne zuvor zu deaktivieren.</string>
+    <string name="help_btn_test_sms_title">Test-SMS</string>
+    <string name="help_btn_test_sms_desc">Sendet eine Test-Nachricht an die Zielnummer, um die SMS-Weiterleitung zu prüfen.</string>
+    <string name="help_btn_status_title">Status</string>
+    <string name="help_btn_status_desc">Fragt den aktuellen Status der Rufumleitung beim Netzbetreiber ab und gibt akustisches Feedback.</string>
+    <string name="help_btn_reset_title">Reset</string>
+    <string name="help_btn_reset_desc">Setzt alle Einstellungen auf Standard (deaktiviert) zurück, falls sich die App unerwartet verhält.</string>
+
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Fehler beim Laden des Kontakts: %1$s</string>
     <string name="snackbar_contact_loaded">Kontakt geladen</string>

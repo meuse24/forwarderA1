@@ -366,6 +366,30 @@
     <string name="dialog_title_privacy_required">Privacy Policy Required</string>
     <string name="dialog_msg_privacy_required">Without accepting the Privacy Policy, the app cannot be used, as the necessary permissions cannot be requested.</string>
 
+    <!-- Help Screen -->
+    <string name="help_html_title">Quick Guide SMS &amp; Call Forwarding</string>
+    <string name="help_html_heading">Quickstart: Call &amp; SMS Forwarding</string>
+    <string name="help_html_intro">This guide helps you set up call and SMS forwarding quickly and easily.</string>
+    <string name="help_html_steps_heading">Setup in 3 Steps</string>
+    <string name="help_step1_title">Select destination:</string>
+    <string name="help_step1_body">On the home screen tap the &lt;code&gt;%1$s&lt;/code&gt; button. Choose a contact from your address book. This is the number your calls and SMS will be forwarded to.</string>
+    <string name="help_step2_title">Activate:</string>
+    <string name="help_step2_body">After choosing a number, forwarding is activated automatically. The app dials the code to set up call forwarding with your carrier. At the same time the internal service for SMS forwarding starts.</string>
+    <string name="help_step2_warning">Wait until the automatic dialing finishes. During dialing you will hear brief audio feedback about the call forwarding result. The app returns to the main screen afterwards.</string>
+    <string name="help_step3_title">Deactivate:</string>
+    <string name="help_step3_body">To stop all forwarding, tap the red &lt;code&gt;%1$s&lt;/code&gt; button on the home screen.</string>
+    <string name="help_note_title">Important note about call forwarding:</string>
+    <string name="help_note_body">The app does not forward calls itself. It only sends a standard control code (MMI code) to your carrier. The actual forwarding happens in the carrier network.</string>
+    <string name="help_buttons_heading">Additional buttons</string>
+    <string name="help_btn_change_contact_title">Change contact</string>
+    <string name="help_btn_change_contact_desc">Select a new forwarding number without deactivating first.</string>
+    <string name="help_btn_test_sms_title">Test SMS</string>
+    <string name="help_btn_test_sms_desc">Sends a test message to the destination number to verify SMS forwarding.</string>
+    <string name="help_btn_status_title">Status</string>
+    <string name="help_btn_status_desc">Queries the current call forwarding status from the carrier and plays audio feedback.</string>
+    <string name="help_btn_reset_title">Reset</string>
+    <string name="help_btn_reset_desc">Resets all settings to default (disabled) if the app behaves unexpectedly.</string>
+
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Error loading contact: %1$s</string>
     <string name="snackbar_contact_loaded">Contact loaded</string>

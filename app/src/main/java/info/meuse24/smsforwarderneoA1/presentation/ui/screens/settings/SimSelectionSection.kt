@@ -17,9 +17,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 
 /**
@@ -42,7 +44,7 @@ fun SimSelectionSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "SMS-Weiterleitung - SIM-Auswahl",
+            text = stringResource(R.string.section_sms_sim_selection),
             style = sectionTitleStyle,
             color = MaterialTheme.colorScheme.primary
         )

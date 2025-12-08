@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -90,7 +91,7 @@ fun HelpScreen(onNavigateBack: () -> Unit = {}) {
                             setBackgroundColor(if (isDarkTheme) 0xFF121212.toInt() else 0xFFFFFFFF.toInt())
                             loadDataWithBaseURL(
                                 null,
-                                getHelpHtmlContent(isDarkTheme, cachedImages),
+                                getHelpHtmlContent(isDarkTheme, cachedImages, context),
                                 "text/html",
                                 "UTF-8",
                                 null
@@ -100,7 +101,7 @@ fun HelpScreen(onNavigateBack: () -> Unit = {}) {
                     update = { webView ->
                         webView.loadDataWithBaseURL(
                             null,
-                            getHelpHtmlContent(isDarkTheme, cachedImages),
+                            getHelpHtmlContent(isDarkTheme, cachedImages, context),
                             "text/html",
                             "UTF-8",
                             null
@@ -123,7 +124,7 @@ fun HelpScreen(onNavigateBack: () -> Unit = {}) {
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Zurück",
+                contentDescription = stringResource(R.string.btn_back),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -138,7 +139,11 @@ private fun drawableToBase64(context: Context, drawableId: Int): String {
     return Base64.encodeToString(byteArray, Base64.NO_WRAP)
 }
 
-private fun getHelpHtmlContent(isDarkTheme: Boolean, cachedImages: Map<String, String>): String {
+private fun getHelpHtmlContent(
+    isDarkTheme: Boolean,
+    cachedImages: Map<String, String>,
+    context: Context
+): String {
     val backgroundColor = if (isDarkTheme) "#121212" else "#FFFFFF"
     val textColor = if (isDarkTheme) "#E0E0E0" else "#333333"
     val primaryColor = if (isDarkTheme) "#90CAF9" else "#0056b3"
@@ -154,13 +159,15 @@ private fun getHelpHtmlContent(isDarkTheme: Boolean, cachedImages: Map<String, S
     val btnStatusBase64 = cachedImages["status"] ?: ""
     val btnResetBase64 = cachedImages["reset"] ?: ""
 
+    val locale = context.resources.configuration.locales[0].language
+
     return """
 <!DOCTYPE html>
-<html lang="de">
+<html lang="$locale">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Kurzanleitung SMS & Rufumleitung</title>
+    <title>${context.getString(R.string.help_html_title)}</title>
     <style>
         * {
             box-sizing: border-box;
@@ -314,37 +321,31 @@ private fun getHelpHtmlContent(isDarkTheme: Boolean, cachedImages: Map<String, S
     </style>
 </head>
 <body>
-    <h1>Kurzanleitung: Ruf- & SMS-Weiterleitung</h1>
+    <h1>${context.getString(R.string.help_html_heading)}</h1>
 
     <p style="margin-bottom: 16px; text-align: center; font-style: italic;">
-        Diese Anleitung hilft Ihnen, die Weiterleitung von Anrufen und SMS schnell und einfach einzurichten.
+        ${context.getString(R.string.help_html_intro)}
     </p>
 
-    <h2>Einrichtung in 3 Schritten</h2>
+    <h2>${context.getString(R.string.help_html_steps_heading)}</h2>
 
     <div class="step">
         <span class="step-number">1.</span>
         <div class="step-content">
-            <strong>Ziel auswählen:</strong>
-            Tippen Sie auf der Hauptseite auf die Schaltfläche <code>Kontakt auswählen</code>.
-            Wählen Sie einen Kontakt aus Ihren Kontakten aus. Dies ist die Nummer, an die Ihre
-            Anrufe und SMS weitergeleitet werden.
+            <strong>${context.getString(R.string.help_step1_title)}</strong>
+            ${context.getString(R.string.help_step1_body, context.getString(R.string.btn_select_contact))}
             <br><br>
-            <img src="data:image/png;base64,$btnSelectBase64" class="step-icon" alt="Kontakt auswählen Button">
+            <img src="data:image/png;base64,$btnSelectBase64" class="step-icon" alt="${context.getString(R.string.btn_select_contact)}">
         </div>
     </div>
 
     <div class="step">
         <span class="step-number">2.</span>
         <div class="step-content">
-            <strong>Aktivieren:</strong>
-            Nachdem Sie eine Nummer ausgewählt haben, wird die Weiterleitung automatisch aktiviert.
-            Die App wählt den Code, um die <strong>Rufumleitung</strong> beim Provider einzurichten.
-            Gleichzeitig startet der interne Dienst für die <strong>SMS-Weiterleitung</strong>.
+            <strong>${context.getString(R.string.help_step2_title)}</strong>
+            ${context.getString(R.string.help_step2_body)}
             <div class="highlight-red">
-                Warten Sie den automatischen Wählvorgang vollständig ab. Während des Wählvorgangs
-                erhalten Sie eine kurze akustische Rückmeldung über den Erfolg der Rufumleitung.
-                Die App kehrt danach automatisch zum Hauptbildschirm zurück.
+                ${context.getString(R.string.help_step2_warning)}
             </div>
         </div>
     </div>
@@ -352,54 +353,50 @@ private fun getHelpHtmlContent(isDarkTheme: Boolean, cachedImages: Map<String, S
     <div class="step">
         <span class="step-number">3.</span>
         <div class="step-content">
-            <strong>Deaktivieren:</strong>
-            Um alle Weiterleitungen zu beenden, tippen Sie einfach auf die rote
-            <code>Deaktivieren</code> Schaltfläche auf dem Hauptbildschirm.
+            <strong>${context.getString(R.string.help_step3_title)}</strong>
+            ${context.getString(R.string.help_step3_body, context.getString(R.string.btn_deactivate))}
         </div>
     </div>
 
     <div class="note">
-        <strong>Wichtiger Hinweis zur Rufumleitung:</strong>
-        Die App leitet Anrufe nicht selbst um. Sie sendet nur einen Standard-Steuercode (MMI-Code)
-        an Ihren Mobilfunkanbieter. Die eigentliche Umleitung findet im Netz des Anbieters statt.
+        <strong>${context.getString(R.string.help_note_title)}</strong>
+        ${context.getString(R.string.help_note_body)}
     </div>
 
-    <h2>Weitere Schaltflächen</h2>
+    <h2>${context.getString(R.string.help_buttons_heading)}</h2>
 
     <div class="features-table">
         <div class="feature-row">
-            <div class="feature-label">Kontakt ändern</div>
+            <div class="feature-label">${context.getString(R.string.help_btn_change_contact_title)}</div>
             <div class="feature-description">
-                Neue Telefonnummer für die Weiterleitung wählen, ohne zuvor zu deaktivieren.
+                ${context.getString(R.string.help_btn_change_contact_desc)}
             </div>
         </div>
 
         <div class="feature-row">
-            <div class="feature-label">Test-SMS</div>
+            <div class="feature-label">${context.getString(R.string.help_btn_test_sms_title)}</div>
             <div class="feature-description">
-                Sendet eine Test-Nachricht an die Zielnummer, um die SMS-Weiterleitung zu prüfen.
-            </div>
-        </div>
-
-        <div class="feature-row">
-            <div class="feature-label">
-                <img src="data:image/png;base64,$btnStatusBase64" class="button-icon" alt="Status">
-                Status
-            </div>
-            <div class="feature-description">
-                Fragt den aktuellen Status der Rufumleitung beim Netzbetreiber ab und gibt
-                akustisches Feedback.
+                ${context.getString(R.string.help_btn_test_sms_desc)}
             </div>
         </div>
 
         <div class="feature-row">
             <div class="feature-label">
-                <img src="data:image/png;base64,$btnResetBase64" class="button-icon" alt="Reset">
-                Reset
+                <img src="data:image/png;base64,$btnStatusBase64" class="button-icon" alt="${context.getString(R.string.help_btn_status_title)}">
+                ${context.getString(R.string.help_btn_status_title)}
             </div>
             <div class="feature-description">
-                Setzt alle Einstellungen auf Standard (deaktiviert) zurück, falls sich die App
-                unerwartet verhält.
+                ${context.getString(R.string.help_btn_status_desc)}
+            </div>
+        </div>
+
+        <div class="feature-row">
+            <div class="feature-label">
+                <img src="data:image/png;base64,$btnResetBase64" class="button-icon" alt="${context.getString(R.string.help_btn_reset_title)}">
+                ${context.getString(R.string.help_btn_reset_title)}
+            </div>
+            <div class="feature-description">
+                ${context.getString(R.string.help_btn_reset_desc)}
             </div>
         </div>
     </div>

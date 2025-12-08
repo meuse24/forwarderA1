@@ -167,7 +167,7 @@ fun SettingsScreen(
 
             // Section 3: SIM Selection
             ExpandableSection(
-                title = "SMS-Weiterleitung - SIM-Auswahl",
+                title = stringResource(R.string.section_sms_sim_selection),
                 expanded = simSelectionExpanded,
                 onExpandChange = {
                     if (it) {
@@ -317,7 +317,7 @@ fun SettingsScreen(
                         action = "CHANGE_PIN",
                         message = "Log-PIN wurde geändert"
                     )
-                    SnackbarManager.showSuccess("PIN wurde geändert")
+                    SnackbarManager.showSuccess(context.getString(R.string.msg_pin_changed))
                     showChangePinDialog = false
                 },
                 onDismiss = { showChangePinDialog = false }

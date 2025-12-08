@@ -101,11 +101,11 @@ fun LogSettingsSection(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Log-Datei löschen",
+                    text = stringResource(R.string.action_delete_logs),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = "Löscht alle Protokolleinträge",
+                    text = stringResource(R.string.desc_delete_logs),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -113,7 +113,7 @@ fun LogSettingsSection(
             IconButton(onClick = onDeleteLogs) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Logs löschen",
+                    contentDescription = stringResource(R.string.desc_delete_logs_button),
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -134,11 +134,11 @@ fun LogSettingsSection(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "PIN ändern",
+                    text = stringResource(R.string.action_change_pin),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = "PIN für Löschfunktion ändern",
+                    text = stringResource(R.string.desc_change_pin),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -146,7 +146,7 @@ fun LogSettingsSection(
             IconButton(onClick = onChangePin) {
                 Icon(
                     imageVector = Icons.Default.Lock,
-                    contentDescription = "PIN ändern",
+                    contentDescription = stringResource(R.string.action_change_pin),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
