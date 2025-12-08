@@ -161,7 +161,30 @@ fun SettingsScreen(
                 )
             }
 
-            // Section 4: Call Forwarding (MMI SIM + Codes)
+            // Section 4: Email Forwarding
+            ExpandableSection(
+                title = stringResource(R.string.section_email_settings),
+                expanded = emailSettingsExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("email")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(emailSettingsPosition.toInt())
+                        }
+                    }
+                    emailSettingsExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    emailSettingsPosition = coordinates.positionInParent().y
+                }
+            ) {
+                EmailSettingsSection(
+                    emailViewModel = emailViewModel,
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
+
+            // Section 5: Call Forwarding (MMI SIM + Codes)
             ExpandableSection(
                 title = stringResource(R.string.section_call_forwarding_settings),
                 expanded = callForwardingExpanded,
@@ -182,29 +205,6 @@ fun SettingsScreen(
                     viewModel = viewModel,
                     sectionTitleStyle = sectionTitleStyle,
                     onFocusChanged = { isAnyFieldFocused = it }
-                )
-            }
-
-            // Section 5: Email Settings
-            ExpandableSection(
-                title = stringResource(R.string.section_email_settings),
-                expanded = emailSettingsExpanded,
-                onExpandChange = {
-                    if (it) {
-                        collapseAllExcept("email")
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo(emailSettingsPosition.toInt())
-                        }
-                    }
-                    emailSettingsExpanded = it
-                },
-                modifier = Modifier.onGloballyPositioned { coordinates ->
-                    emailSettingsPosition = coordinates.positionInParent().y
-                }
-            ) {
-                EmailSettingsSection(
-                    emailViewModel = emailViewModel,
-                    sectionTitleStyle = sectionTitleStyle
                 )
             }
 

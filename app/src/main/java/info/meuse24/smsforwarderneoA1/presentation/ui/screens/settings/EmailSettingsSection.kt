@@ -34,6 +34,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 import info.meuse24.smsforwarderneoA1.SnackbarManager
+import info.meuse24.smsforwarderneoA1.AppContainer
 
 @Composable
 fun EmailSettingsSection(
@@ -46,12 +47,32 @@ fun EmailSettingsSection(
     val smtpUsername by emailViewModel.smtpUsername.collectAsState()
     val smtpPassword by emailViewModel.smtpPassword.collectAsState()
     var isPasswordVisible by remember { mutableStateOf(false) }
+    var mailScreenVisible by remember { mutableStateOf(AppContainer.requirePrefsManager().isMailScreenVisible()) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(R.string.label_mail_tab_visible),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Switch(
+                checked = mailScreenVisible,
+                onCheckedChange = { newValue ->
+                    AppContainer.requirePrefsManager().setMailScreenVisible(newValue)
+                    mailScreenVisible = newValue
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = smtpHost,
             onValueChange = { emailViewModel.updateSmtpSettings(it, smtpPort, smtpUsername, smtpPassword) },

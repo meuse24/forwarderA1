@@ -73,7 +73,7 @@
 
     <!-- ==================== SETTINGS SECTIONS ==================== -->
     <string name="section_phone_settings">Phone Settings</string>
-    <string name="section_sim_management">SIM Card Management</string>
+    <string name="section_sim_management">SIM Card Overview</string>
     <string name="section_sms_sim_selection">SMS Forwarding</string>
     <string name="sim_selection_same_as_incoming">Same SIM as incoming SMS</string>
     <string name="sim_selection_always_sim1">Always SIM 1</string>
@@ -83,7 +83,7 @@
     <string name="suffix_default_voice">(Default Voice SIM)</string>
     <string name="section_app_settings">App Settings</string>
     <string name="section_mmi_code_settings">MMI Code Settings</string>
-    <string name="section_email_settings">Email Settings</string>
+    <string name="section_email_settings">Email Forwarding</string>
     <string name="section_logs_security">Logs &amp; Security</string>
 
     <!-- Expand/Collapse -->
