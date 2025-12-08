@@ -2,10 +2,6 @@
 
 Guidance for Claude Code when working with this repository.
 
-## Task Master AI Instructions
-**Import Task Master's development workflow commands and guidelines.**
-@./.taskmaster/CLAUDE.md
-
 ## Git Configuration
 
 - **Repository:** https://github.com/meuse24/forwarderA1

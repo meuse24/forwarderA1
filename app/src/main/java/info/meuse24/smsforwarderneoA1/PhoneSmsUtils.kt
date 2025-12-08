@@ -23,7 +23,6 @@ import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import info.meuse24.smsforwarderneoA1.util.permission.PermissionHelper
 import info.meuse24.smsforwarderneoA1.util.phone.CarrierTrie
-import info.meuse24.smsforwarderneoA1.util.sms.Gsm7BitEncoder
 import java.io.IOException
 
 /**
@@ -106,23 +105,30 @@ class PhoneSmsUtils private constructor() {
             }
 
             return try {
-                val (encodedText, smsLength) = Gsm7BitEncoder.encode(testSmsText)
-                val maxLength = if (smsLength <= 160) 160 else 153
+                // Android's SmsMessage.calculateLength() für Pre-Check und Logging
+                val lengthInfo = android.telephony.SmsMessage.calculateLength(testSmsText, false)
+                val msgCount = lengthInfo[0]      // Anzahl SMS-Teile
+                val codeUnitCount = lengthInfo[1] // Zeichen in aktueller Nachricht
+                val encoding = when (lengthInfo[3]) {
+                    android.telephony.SmsMessage.ENCODING_7BIT -> "GSM-7"
+                    android.telephony.SmsMessage.ENCODING_16BIT -> "UCS-2"
+                    else -> "Unknown"
+                }
 
-                if (smsLength > maxLength) {
+                if (msgCount > 1) {
                     LoggingManager.logInfo(
                         component = "PhoneSmsUtils",
                         action = "SEND_TEST_SMS",
                         message = "SMS wird in mehrere Teile aufgeteilt",
                         details = mapOf(
-                            "total_length" to smsLength,
-                            "max_length" to maxLength,
-                            "parts" to ((smsLength - 1) / maxLength + 1)
+                            "parts" to msgCount,
+                            "encoding" to encoding,
+                            "total_length" to codeUnitCount
                         )
                     )
                 }
 
-                sendSms(context, phoneNumber, encodedText)
+                sendSms(context, phoneNumber, testSmsText)
 
                 LoggingManager.logInfo(
                     component = "PhoneSmsUtils",
@@ -130,8 +136,9 @@ class PhoneSmsUtils private constructor() {
                     message = "Test-SMS erfolgreich gesendet",
                     details = mapOf(
                         "recipient" to phoneNumber,
-                        "length" to smsLength,
-                        "encoding" to "GSM-7"
+                        "length" to codeUnitCount,
+                        "parts" to msgCount,
+                        "encoding" to encoding
                     )
                 )
                 // Meldung entfernt - Status ist im Log sichtbar
@@ -192,12 +199,20 @@ class PhoneSmsUtils private constructor() {
                 SmsManager.getDefault()
             }
 
-            val (encodedText, smsLength) = Gsm7BitEncoder.encode(text)
-            val maxLength = if (smsLength <= 160) 160 else 153
+            // Encoding-Detection EINMALIG für Logging (verhindert doppelte Berechnung)
+            val lengthInfo = android.telephony.SmsMessage.calculateLength(text, false)
+            val encoding = when (lengthInfo[3]) {
+                android.telephony.SmsMessage.ENCODING_7BIT -> "GSM-7"
+                android.telephony.SmsMessage.ENCODING_16BIT -> "UCS-2"
+                else -> "Unknown"
+            }
+
+            // Android macht automatisch GSM-7 oder UCS-2 Kodierung
+            val parts = smsManager.divideMessage(text)
             var message: String
             try {
-                if (encodedText.length > maxLength) {
-                    val parts = smsManager.divideMessage(encodedText)
+                if (parts.size > 1) {
+                    // Multi-part SMS
                     val sentIntents = ArrayList<PendingIntent>()
                     val deliveredIntents = ArrayList<PendingIntent>()
 
@@ -234,6 +249,7 @@ class PhoneSmsUtils private constructor() {
                         deliveredIntents
                     )
                     message = "Multipart SMS sent"
+
                     LoggingManager.logInfo(
                         component = "PhoneSmsUtils",
                         action = "SEND_SMS",
@@ -242,10 +258,12 @@ class PhoneSmsUtils private constructor() {
                             "recipient" to normalizedPhoneNumber,
                             "original_recipient" to phoneNumber,
                             "parts" to parts.size,
-                            "text" to sanitizeSmsTextForLogging(encodedText)
+                            "encoding" to encoding,
+                            "text" to sanitizeSmsTextForLogging(text)
                         )
                     )
                 } else {
+                    // Single SMS - direkt mit text, kein Umweg über parts[0]
                     val sentIntent = PendingIntent.getBroadcast(
                         context,
                         System.currentTimeMillis().toInt(),  // Eindeutiger requestCode
@@ -269,11 +287,12 @@ class PhoneSmsUtils private constructor() {
                     smsManager.sendTextMessage(
                         normalizedPhoneNumber,
                         null,
-                        encodedText,
+                        text,  // Direkter Text statt parts[0]
                         sentIntent,
                         deliveredIntent
                     )
                     message = "Single SMS sent"
+
                     LoggingManager.logInfo(
                         component = "PhoneSmsUtils",
                         action = "SEND_SMS",
@@ -281,7 +300,8 @@ class PhoneSmsUtils private constructor() {
                         details = mapOf(
                             "recipient" to normalizedPhoneNumber,
                             "original_recipient" to phoneNumber,
-                            "text" to sanitizeSmsTextForLogging(encodedText))
+                            "encoding" to encoding,
+                            "text" to sanitizeSmsTextForLogging(text))
                     )
                 }
                 // Meldung entfernt - Status ist im Log sichtbar
@@ -355,13 +375,20 @@ class PhoneSmsUtils private constructor() {
                 }
             }
 
-            val (encodedText, smsLength) = Gsm7BitEncoder.encode(text)
-            val maxLength = if (smsLength <= 160) 160 else 153
+            // Encoding-Detection EINMALIG für Logging (verhindert doppelte Berechnung)
+            val lengthInfo = android.telephony.SmsMessage.calculateLength(text, false)
+            val encoding = when (lengthInfo[3]) {
+                android.telephony.SmsMessage.ENCODING_7BIT -> "GSM-7"
+                android.telephony.SmsMessage.ENCODING_16BIT -> "UCS-2"
+                else -> "Unknown"
+            }
+
+            // Android macht automatisch GSM-7 oder UCS-2 Kodierung
+            val parts = smsManager.divideMessage(text)
 
             try {
-                if (encodedText.length > maxLength) {
+                if (parts.size > 1) {
                     // Multi-part SMS
-                    val parts = smsManager.divideMessage(encodedText)
                     val sentIntents = ArrayList<PendingIntent>()
                     val deliveredIntents = ArrayList<PendingIntent>()
 
@@ -410,11 +437,12 @@ class PhoneSmsUtils private constructor() {
                             "original_recipient" to phoneNumber,
                             "parts" to parts.size,
                             "subscription_id" to subscriptionId,
-                            "sms_length" to smsLength
+                            "encoding" to encoding,
+                            "sms_length" to lengthInfo[1]
                         )
                     )
                 } else {
-                    // Single SMS
+                    // Single SMS - direkt mit text, kein Umweg über parts[0]
                     val sentIntent = PendingIntent.getBroadcast(
                         context,
                         System.currentTimeMillis().toInt(),
@@ -442,7 +470,7 @@ class PhoneSmsUtils private constructor() {
                     smsManager.sendTextMessage(
                         normalizedPhoneNumber,
                         null,
-                        encodedText,
+                        text,  // Direkter Text statt parts[0]
                         sentIntent,
                         deliveredIntent
                     )
@@ -455,7 +483,8 @@ class PhoneSmsUtils private constructor() {
                             "recipient" to normalizedPhoneNumber,
                             "original_recipient" to phoneNumber,
                             "subscription_id" to subscriptionId,
-                            "sms_length" to smsLength
+                            "encoding" to encoding,
+                            "sms_length" to lengthInfo[1]
                         )
                     )
                 }
@@ -633,10 +662,11 @@ class PhoneSmsUtils private constructor() {
             )
 
             if (!requiredPermissions.all { PermissionHelper.hasPermission(context, it) }) {
-                LoggingManager.logError(
+                // DEBUG: Permissions noch nicht erteilt (normal bei App-Initialisierung)
+                LoggingManager.logDebug(
                     component = "PhoneSmsUtils",
                     action = "GET_ALL_SIM_INFO",
-                    message = "Fehlende Berechtigungen für SIM-Informationen",
+                    message = "Permissions not granted at initialization - returning empty list",
                     details = mapOf("missing_permissions" to requiredPermissions.joinToString())
                 )
                 return emptyList()
@@ -1338,7 +1368,12 @@ class PhoneSmsUtils private constructor() {
                 // Prüfe ob notwendige Berechtigungen vorhanden sind
                 if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE)
                     != PackageManager.PERMISSION_GRANTED) {
-                    logMsg("READ_PHONE_STATE permission not granted")
+                    // DEBUG: Permission noch nicht erteilt (normal bei App-Initialisierung)
+                    LoggingManager.logDebug(
+                        component = "PhoneSmsUtils",
+                        action = "GET_COUNTRY_CODE",
+                        message = "READ_PHONE_STATE permission not granted at initialization - using fallback"
+                    )
                     return ""  // Geändert von "+43" zu ""
                 }
 

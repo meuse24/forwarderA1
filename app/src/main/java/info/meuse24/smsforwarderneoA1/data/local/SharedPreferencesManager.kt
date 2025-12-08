@@ -582,7 +582,7 @@ class SharedPreferencesManager(private val context: Context) {
         private const val DEFAULT_SMTP_PORT = 587
         private const val PREFS_NAME = "sms_forwarder_secure_prefs"
         // REMOVED: PREFS_NAME_FALLBACK - no plaintext fallback for security
-        private const val DEFAULT_TEST_SMS_TEXT = "Das ist eine Test-SMS"
+        private const val DEFAULT_TEST_SMS_TEXT = "Test: GSM-7 Extended Chars -> {€}[^]|~\\ <- prüft korrekte Kodierung (2 Septets je Zeichen)"
         private const val DEFAULT_TEST_EMAIL_TEXT = "Das ist eine Test-Email"
         private const val DEFAULT_FILTER_TEXT = ""
         private const val DEFAULT_COUNTRY_CODE = "+43"

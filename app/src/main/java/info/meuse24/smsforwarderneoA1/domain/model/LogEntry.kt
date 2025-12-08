@@ -1,15 +1,18 @@
 package info.meuse24.smsforwarderneoA1.domain.model
 
+import info.meuse24.smsforwarderneoA1.data.local.Logger
+
 /**
  * Domain model representing a log entry.
  *
- * Contains timestamp, message text, phone number, and highlight flag.
+ * Contains timestamp, message text, phone number, highlight flag, and log level.
  */
 data class LogEntry(
     val timestamp: String,
     val text: String,
     val number: String,
-    val shouldHighlight: Boolean = false
+    val shouldHighlight: Boolean = false,
+    val logLevel: Logger.LogLevel = Logger.LogLevel.INFO
 ) {
     fun getFormattedDate(): String {
         return try {

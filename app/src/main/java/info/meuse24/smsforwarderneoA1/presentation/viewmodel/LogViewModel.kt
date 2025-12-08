@@ -28,23 +28,22 @@ class LogViewModel(
 ) : ViewModel() {
 
     // Relevant Actions: Only these log entries are shown when filtering is active
-    // Note: All actions ending with "ERROR" are also shown (automatic error inclusion)
+    // Note: All ERROR level logs are also shown (automatic error inclusion via LogLevel)
     companion object {
         private val RELEVANT_ACTIONS = setOf(
-            // SMS Empfangen
+            // SMS-Empfang & Weiterleitung
             "PROCESS_SMS",
             "FORWARD_TO_SERVICE",
-            "INVALID_SMS",
             "PROCESS_MESSAGE_GROUP",
-
-            // SMS Senden
             "FORWARD_SMS",
             "SEND_SMS",
+
+            // Test-SMS
             "SEND_TEST_SMS",
             "TEST_SMS_SENT",
             "TEST_SMS_FAILED",
 
-            // Email Weiterleitung
+            // Email-Weiterleitung (alle)
             "EMAIL_FORWARD",
             "ENABLE_EMAIL_FORWARDING",
             "DISABLE_EMAIL_FORWARDING",
@@ -52,12 +51,10 @@ class LogViewModel(
             // Rufumleitung aktivieren/deaktivieren
             "ACTIVATE_FORWARDING",
             "DEACTIVATE_FORWARDING",
-            "REQUEST_ACTIVATE_FORWARDING",
-            "REQUEST_DEACTIVATE_FORWARDING",
-            "STORE_ACTIVATE_FORWARDING",
-            "STORE_DEACTIVATE_FORWARDING",
+
+            // Status & Reset
             "TOGGLE_SUCCESS"
-            // Note: *_ERROR actions are automatically included via .endsWith("ERROR") check
+            // Note: ERROR level logs are automatically included via LogLevel check
         )
     }
 
@@ -93,11 +90,17 @@ class LogViewModel(
                     // Show all entries
                     allEntries
                 } else {
-                    // Show ONLY relevant actions + all errors
+                    // Show ONLY relevant actions + ERROR level logs
                     allEntries.filter { entry ->
                         val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
                         val action = actionMatch?.groupValues?.get(1)
-                        action != null && (action in RELEVANT_ACTIONS || action.endsWith("ERROR"))
+
+                        // Bedingung 1: ACTION in RELEVANT_ACTIONS
+                        // Bedingung 2: LogLevel == ERROR (nur schwere Fehler)
+                        action != null && (
+                            action in RELEVANT_ACTIONS ||
+                            entry.logLevel == Logger.LogLevel.ERROR
+                        )
                     }
                 }
 
@@ -105,15 +108,20 @@ class LogViewModel(
                 _logEntriesHtml.value = logger.getLogEntriesHtml(
                     filterNoise = !showAll,
                     noiseActions = if (!showAll) {
-                        // Invert: Remove everything NOT in RELEVANT_ACTIONS and not an error
+                        // Invert: Remove everything NOT in RELEVANT_ACTIONS and not ERROR level
                         allEntries
+                            .filter { entry ->
+                                val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
+                                val action = actionMatch?.groupValues?.get(1)
+                                // Invertiert: Alles was NICHT angezeigt werden soll
+                                !(action != null && (
+                                    action in RELEVANT_ACTIONS ||
+                                    entry.logLevel == Logger.LogLevel.ERROR
+                                ))
+                            }
                             .mapNotNull { entry ->
                                 val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
                                 actionMatch?.groupValues?.get(1)
-                            }
-                            .toSet()
-                            .filterNot { action ->
-                                action in RELEVANT_ACTIONS || action.endsWith("ERROR")
                             }
                             .toSet()
                     } else {

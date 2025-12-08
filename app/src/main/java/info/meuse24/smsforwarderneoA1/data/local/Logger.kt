@@ -129,8 +129,14 @@ class Logger(
     /**
      * Append-only mode: Directly appends XML entry without parsing entire file.
      * This is MUCH faster than parsing + transforming the whole document.
+     *
+     * IMPORTANT: This function must ONLY be called from within writeLogToFile(),
+     * which is protected by logMutex. DO NOT call directly without mutex protection.
      */
     private fun appendToLogFile(timestamp: String, entry: String, entryNumber: Int) {
+        // Create a temporary file for atomic write operation
+        val tempFile = File(baseLogDir, "app_log_temp.xml")
+
         try {
             val sanitizedEntry = sanitizeXmlText(entry)
 
@@ -144,6 +150,10 @@ class Logger(
             }
 
             // Read current content
+            if (!mainLogFile.exists()) {
+                createEmptyLogFile()
+            }
+
             val content = mainLogFile.readText()
 
             // Find closing tag and insert before it
@@ -154,16 +164,33 @@ class Logger(
                 // File is corrupted, recreate it
                 Log.w(TAG, "Log file corrupted, recreating...")
                 createEmptyLogFile()
-                appendToLogFile(timestamp, entry, entryNumber)
+                // Retry once with new file
+                val retryContent = mainLogFile.readText()
+                val retryPosition = retryContent.lastIndexOf(closingTag)
+                if (retryPosition == -1) {
+                    Log.e(TAG, "Failed to recreate log file properly")
+                    return
+                }
+                val newContent = retryContent.substring(0, retryPosition) + xmlEntry + closingTag + "\n"
+                tempFile.writeText(newContent)
+                tempFile.renameTo(mainLogFile)
                 return
             }
 
-            // Insert new entry before closing tag
+            // Insert new entry before closing tag and write atomically via temp file
             val newContent = content.substring(0, insertPosition) + xmlEntry + closingTag + "\n"
-            mainLogFile.writeText(newContent)
+            tempFile.writeText(newContent)
+
+            // Atomic rename to replace main log file
+            if (!tempFile.renameTo(mainLogFile)) {
+                // Fallback if rename fails (shouldn't happen on Android)
+                mainLogFile.writeText(newContent)
+                tempFile.delete()
+            }
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to append log entry", e)
+            tempFile.delete()
         }
     }
 
@@ -382,6 +409,15 @@ class Logger(
                     text.contains(pattern, ignoreCase = true)
                 }
 
+                // Extract LogLevel from emoji prefix
+                val logLevel = when {
+                    text.startsWith("ℹ️") -> LogLevel.INFO
+                    text.startsWith("⚠️") -> LogLevel.WARNING
+                    text.startsWith("❌") -> LogLevel.ERROR
+                    text.startsWith("🔍") -> LogLevel.DEBUG
+                    else -> LogLevel.INFO
+                }
+
                 // Format timestamp for display
                 val formattedTimestamp = try {
                     val dateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
@@ -396,7 +432,8 @@ class Logger(
                     timestamp = formattedTimestamp,
                     text = text,
                     number = number,
-                    shouldHighlight = shouldHighlight
+                    shouldHighlight = shouldHighlight,
+                    logLevel = logLevel
                 ))
             }
 

@@ -1,35 +1,38 @@
 Nr;Datum;Zeit;Eintrag
-29;2025-11-25;16:53:16; [SmsForegroundService; WAKE_LOCK_RELEASED | WakeLock freigegeben
-28;2025-11-25;16:53:16; [SmsForegroundService; PROCESS_SMS | messages_count=1, groups_count=1, subscription_id=2 | SMS-Verarbeitung abgeschlossen
-27;2025-11-25;16:53:16; [SmsForegroundService; UPDATE_NOTIFICATION | text=SMS-Weiterleitung aktiv zu +43 6644440286, success=true | Notification aktualisiert
-26;2025-11-25;16:53:16; [SmsForegroundService; FORWARD_SMS | target=+43 6644440286, length=73, is_multipart=false | SMS erfolgreich weitergeleitet
-25;2025-11-25;16:53:16; [PhoneSmsUtils; SEND_SMS | recipient=+43 6644440286, text=Von: +4368120261353 Zeit: 25.11.2025 16:53:16 SIM: Slot 2 Nachricht: Test | Single SMS sent
-24;2025-11-25;16:53:15; [SmsForegroundService; PROCESS_MESSAGE_GROUP | sender=+4368120261353, parts_count=1, total_length=4, is_multipart=false, subscription_id=2 | Verarbeite SMS-Gruppe
-23;2025-11-25;16:53:15; [SmsForegroundService; WAKE_LOCK_ACQUIRED | timeout_ms=120000 | WakeLock aktiviert
-22;2025-11-25;16:53:15; [SmsReceiver; FORWARD_TO_SERVICE | has_extras=true, extras_count=7 | SMS-Daten an Service uebergeben
-21;2025-11-25;16:44:26; [MainActivity; SHARE_LOGS | filename=sms_forwarder_log_20251125_164426.csv, size=2954 | CSV-Log-Datei wurde zum Teilen erstellt
-20;2025-11-25;16:44:12; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
-19;2025-11-25;16:44:12; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
-18;2025-11-25;16:44:12; [ContactsViewModel; RESTORE_CONTACT | contact=Dani, number=+43 6644440286, forwarding_active=true | Gespeicherter Kontakt wiederhergestellt
-17;2025-11-25;16:44:12; [MainActivity; CHECK_SIM_NUMBERS | total_sims=2, missing_numbers=0, auto_detected=1 | SIM-Nummern-Pruefung abgeschlossen
-16;2025-11-25;16:44:12; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=2, slot=1, carrier=A1 AT | Telefonnummer konnte nicht automatisch ermittelt werden
-15;2025-11-25;16:44:12; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=1, slot=0, method=subscription_info | Telefonnummer ueber Subscription Info ermittelt
-14;2025-11-25;16:44:12; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
-13;2025-11-25;16:44:12; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
-12;2025-11-25;16:44:12; [ContactsViewModel; RESTORE_CONTACT | contact=Dani, number=+43 6644440286, forwarding_active=true | Gespeicherter Kontakt wiederhergestellt
-11;2025-11-25;16:44:11; [MainActivity; CALL_STATE_CHANGED | state=IDLE | Telefonstatus geaendert
-10;2025-11-25;16:44:11; [SmsForegroundService; START | Service started successfully
-9;2025-11-25;16:44:11; [MainActivity; CHECK_BATTERY_OPT | isIgnoring=true | Battery Optimization Status geprueft
-8;2025-11-25;16:44:11; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
-7;2025-11-25;16:44:11; [ContactsViewModel; RESTORE_CONTACT | contact=Dani, number=+43 6644440286, forwarding_active=true | Gespeicherter Kontakt wiederhergestellt
-6;2025-11-25;16:44:11; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
-5;2025-11-25;16:44:11; [BootReceiver; BOOT_COMPLETED | Geraet wurde neu gestartet - starte SMS Foreground Service
-4;2025-11-25;16:44:11; [Application; INIT | Base components initialized successfully
-3;2025-11-25;16:44:11; [BootReceiver; SERVICE_STARTED | SMS Foreground Service erfolgreich nach Neustart gestartet
-2;2025-11-25;16:44:11; [LoggingManager; INIT | Logging system initialized
-1;2025-11-25;16:44:10; [Logger; INIT | Logger initialized. Device: samsung SM-A536B, Android: 16 (API 36)
-1;2025-11-25;16:44:10; [Logger; INIT | Logger initialized. Device: samsung SM-A536B, Android: 16 (API 36)
-38;2025-11-25;16:41:52; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
-37;2025-11-25;16:41:52; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
-36;2025-11-25;16:41:52; [ContactsViewModel; RESTORE_CONTACT | contact=Dani, number=+43 6644440286, forwarding_active=true | Gespeicherter Kontakt wiederhergestellt
-35;2025-11-25;16:41:48; [SettingsScreen; CLEAR_LOGS | Log-Eintraege wurden geloescht
+37;2025-12-08;07:47:38; [MainActivity; REQUEST_BATTERY_OPT_EXEMPTION | Battery Optimization Einstellungen geoeffnet
+36;2025-12-08;07:47:36; [SimManagementViewModel; SAVE_SIM_NUMBER | subscription_id=2, number_length=7 | SIM-Nummer vom User gespeichert
+35;2025-12-08;07:47:22; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
+34;2025-12-08;07:47:22; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
+33;2025-12-08;07:47:22; [ContactsViewModel; INIT_SIM_SELECTION | mode=SAME_AS_INCOMING, available_sims=2, default_sms_sub_id=2 | SIM-Auswahl initialisiert
+32;2025-12-08;07:47:22; [PhoneSmsUtils; GET_DEFAULT_SIMS | sms_sub_id=2, voice_sub_id=2 | Default SIM IDs ermittelt
+31;2025-12-08;07:47:22; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=2, slot=1, carrier=A1 AT | Telefonnummer konnte nicht automatisch ermittelt werden
+30;2025-12-08;07:47:22; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=1, slot=0, method=subscription_info | Telefonnummer ueber Subscription Info ermittelt
+29;2025-12-08;07:47:22; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
+28;2025-12-08;07:47:22; [MainActivity; CHECK_SIM_NUMBERS | total_sims=2, missing_numbers=1, auto_detected=1 | SIM-Nummern-Pruefung abgeschlossen
+27;2025-12-08;07:47:22; [MainActivity; SIM_MISSING | subscription_id=2 | SIM-Nummer fehlt - Dialog wird angezeigt
+26;2025-12-08;07:47:22; [MainActivity; CHECK_SIM_DEBUG | subscription_id=2, slot=1, auto_detected=null, stored=null, carrier=A1 AT | Pruefe SIM-Karte
+25;2025-12-08;07:47:22; [MainActivity; STORE_SIM_NUMBER | subscription_id=1, slot=0, carrier=spusu | Auto-erkannte SIM-Nummer gespeichert
+24;2025-12-08;07:47:22; [MainActivity; CHECK_SIM_DEBUG | subscription_id=1, slot=0, auto_detected=+436702026399, stored=null, carrier=spusu | Pruefe SIM-Karte
+23;2025-12-08;07:47:22; [MainActivity; CHECK_SIM_NUMBERS_DEBUG | stored_numbers={}, sim_count=2 | SIM-Nummern-Pruefung gestartet
+22;2025-12-08;07:47:22; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=2, slot=1, carrier=A1 AT | Telefonnummer konnte nicht automatisch ermittelt werden
+21;2025-12-08;07:47:22; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=1, slot=0, method=subscription_info | Telefonnummer ueber Subscription Info ermittelt
+20;2025-12-08;07:47:22; [ContactsViewModel; INIT_SIM_SELECTION | mode=SAME_AS_INCOMING, available_sims=2, default_sms_sub_id=2 | SIM-Auswahl initialisiert
+19;2025-12-08;07:47:22; [PhoneSmsUtils; GET_DEFAULT_SIMS | sms_sub_id=2, voice_sub_id=2 | Default SIM IDs ermittelt
+18;2025-12-08;07:47:22; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=2, slot=1, carrier=A1 AT | Telefonnummer konnte nicht automatisch ermittelt werden
+17;2025-12-08;07:47:22; [PhoneSmsUtils; GET_SIM_NUMBER | subscription_id=1, slot=0, method=subscription_info | Telefonnummer ueber Subscription Info ermittelt
+16;2025-12-08;07:47:22; [ContactsViewModel; COUNTRY_CODE_INIT | source=sim, code=+43 | Laendercode von SIM-Karte ermittelt
+15;2025-12-08;07:47:21; [MainActivity; CALL_STATE_CHANGED | state=IDLE | Telefonstatus geaendert
+14;2025-12-08;07:47:21; [SmsForegroundService; START | sdk_version=36, notification_permission=granted | Service started successfully
+13;2025-12-08;07:47:21; [MainActivity; CHECK_BATTERY_OPT | isIgnoring=false | Battery Optimization Status geprueft
+12;2025-12-08;07:47:17; [MainActivity; PRIVACY_POLICY_ACCEPTED | Datenschutzerklaerung akzeptiert
+11;2025-12-08;07:46:59; [ContactsViewModel; INIT | ViewModel erfolgreich initialisiert
+10;2025-12-08;07:46:59; [MainActivity; SHOW_PRIVACY_POLICY | Datenschutzerklaerung wird angezeigt (erster App-Start)
+9;2025-12-08;07:46:59; [ContactsViewModel; INIT_SIM_SELECTION | mode=SAME_AS_INCOMING, available_sims=0, default_sms_sub_id=2 | SIM-Auswahl initialisiert
+8;2025-12-08;07:46:59; [PhoneSmsUtils; GET_DEFAULT_SIMS | sms_sub_id=2, voice_sub_id=2 | Default SIM IDs ermittelt
+7;2025-12-08;07:46:59; [ContactsViewModel; COUNTRY_CODE_INIT | source=default, code=+43 | Verwende Default-Laendercode: Oesterreich
+6;2025-12-08;07:46:59; [PhoneSmsUtils; GET_ALL_SIM_INFO | missing_permissions=android.permission.READ_PHONE_STATE, android.permission.READ_PHONE_NUMBERS | Fehlende Berechtigungen fuer SIM-Informationen
+5;2025-12-08;07:46:59; [PhoneSmsUtils; SYSTEM | timestamp=1765176419546 | READ_PHONE_STATE permission not granted
+4;2025-12-08;07:46:59; [PhoneSmsUtils; INITIALIZE | PhoneSmsUtils initialized
+3;2025-12-08;07:46:59; [LoggingManager; INIT | max_log_size_mb=5 | Logging system initialized
+2;2025-12-08;07:46:59; [Application; INIT | Base components initialized successfully
+1;2025-12-08;07:46:59; [Logger; INIT | Logger initialized. Device: samsung SM-A536B, Android: 16 (API 36)
