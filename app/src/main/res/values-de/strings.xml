@@ -401,6 +401,9 @@
     <string name="snackbar_contact_loaded">Kontakt geladen</string>
     <string name="snackbar_forwarding_activated">Weiterleitung aktiviert</string>
     <string name="snackbar_forwarding_deactivated">Weiterleitung deaktiviert</string>
+    <string name="snackbar_forwarding_activation_failed">Rufumleitung wurde nicht übernommen: %1$s</string>
+    <string name="snackbar_forwarding_deactivation_failed">Rufumleitung konnte nicht deaktiviert werden: %1$s</string>
+    <string name="snackbar_forwarding_unknown_reason">Unbekannter Grund</string>
     <string name="snackbar_mmi_code_sent">MMI Code gesendet</string>
     <string name="snackbar_test_sms_sent">Test-SMS gesendet</string>
     <string name="snackbar_test_email_sent">Test-Email gesendet</string>
@@ -602,6 +605,13 @@
     <string name="snackbar_ussd_permission_missing">Telefonberechtigung für USSD erforderlich</string>
     <string name="snackbar_ussd_request_sent">USSD-Anfrage gesendet</string>
     <string name="snackbar_ussd_security_error">USSD-Sicherheitsfehler</string>
+    <string name="ussd_progress_title">Rufumleitung wird gesendet</string>
+    <string name="ussd_progress_body">Bitte warten, bis das Netz geantwortet hat…</string>
+    <string name="mmi_confirmation_title">Hat die Rufumleitung funktioniert?</string>
+    <string name="mmi_confirmation_body">Bitte kurz bestätigen. Ohne Eingabe wird nach 4 Sekunden ein Erfolg angenommen.</string>
+    <string name="mmi_confirmation_positive">Ja, hat funktioniert</string>
+    <string name="mmi_confirmation_negative">Nein, fehlgeschlagen</string>
+    <string name="mmi_confirmation_failure_reason">Vom Benutzer als fehlgeschlagen markiert</string>
     <string name="snackbar_wait_for_call_end">Bitte warten Sie, bis der aktuelle Anruf beendet ist</string>
 
     <!-- ==================== TEXT/OTHERS ==================== -->

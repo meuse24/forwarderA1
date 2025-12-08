@@ -105,6 +105,9 @@ class ContactsViewModel(
     private val _defaultVoiceSubscriptionId = MutableStateFlow(-1)
     val defaultVoiceSubscriptionId: StateFlow<Int> = _defaultVoiceSubscriptionId.asStateFlow()
 
+    private val _pendingForwardingRequest = MutableStateFlow<PendingForwardingRequest?>(null)
+    val pendingForwardingRequest: StateFlow<PendingForwardingRequest?> = _pendingForwardingRequest.asStateFlow()
+
     class Factory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ContactsViewModel::class.java)) {
@@ -127,6 +130,13 @@ class ContactsViewModel(
     enum class ForwardingAction {
         ACTIVATE, DEACTIVATE, TOGGLE
     }
+
+    data class PendingForwardingRequest(
+        val action: ForwardingAction,
+        val contact: Contact?,
+        val code: String,
+        val isUssd: Boolean
+    )
 
     init {
         initialize()
@@ -388,6 +398,133 @@ class ContactsViewModel(
         }
     }
 
+    fun resolvePendingForwardingResult(success: Boolean, source: String, message: String? = null) {
+        val pending = _pendingForwardingRequest.value ?: run {
+            LoggingManager.logWarning(
+                component = "ContactsViewModel",
+                action = "FORWARDING_RESULT",
+                message = "Kein ausstehender Forwarding-Request bei Ergebnisrückmeldung",
+                details = mapOf(
+                    "success" to success,
+                    "source" to source,
+                    "reason" to (message ?: "none")
+                )
+            )
+            return
+        }
+
+        _pendingForwardingRequest.value = null
+        val reason = message?.takeIf { it.isNotBlank() }
+            ?: application.getString(R.string.snackbar_forwarding_unknown_reason)
+
+        when (pending.action) {
+            ForwardingAction.ACTIVATE -> {
+                if (success) {
+                    val contact = pending.contact
+                    contact?.let {
+                        viewModelScope.launch {
+                            _selectedContact.value = it
+                            _forwardingActive.value = true
+                        }
+                        prefsManager.saveSelectedPhoneNumber(it.phoneNumber)
+                        prefsManager.saveContactName(it.name)
+                    } ?: run {
+                        viewModelScope.launch {
+                            _forwardingActive.value = true
+                        }
+                    }
+                    prefsManager.saveForwardingStatus(true)
+                    val notificationMessage = if (contact != null) {
+                        "Weiterleitung aktiviert zu ${contact.name} (${contact.phoneNumber})"
+                    } else {
+                        "Weiterleitung aktiviert"
+                    }
+                    updateNotification(notificationMessage)
+
+                    LoggingManager.logInfo(
+                        component = "ContactsViewModel",
+                        action = "FORWARDING_CONFIRMED",
+                        message = "Aktivierung der Weiterleitung bestätigt",
+                        details = mapOf(
+                            "source" to source,
+                            "code" to pending.code,
+                            "is_ussd" to pending.isUssd,
+                            "contact" to (pending.contact?.name ?: "unknown"),
+                            "number" to (pending.contact?.phoneNumber ?: "unknown")
+                        )
+                    )
+                } else {
+                    LoggingManager.logWarning(
+                        component = "ContactsViewModel",
+                        action = "FORWARDING_FAILED",
+                        message = "Aktivierung der Weiterleitung nicht bestätigt",
+                        details = mapOf(
+                            "source" to source,
+                            "code" to pending.code,
+                            "is_ussd" to pending.isUssd,
+                            "reason" to reason
+                        )
+                    )
+                    SnackbarManager.showError(
+                        application.getString(R.string.snackbar_forwarding_activation_failed, reason)
+                    )
+                }
+            }
+
+            ForwardingAction.DEACTIVATE -> {
+                if (success) {
+                    viewModelScope.launch {
+                        _selectedContact.value = null
+                        _forwardingActive.value = false
+                    }
+                    prefsManager.clearSelection()
+                    prefsManager.saveForwardingStatus(false)
+                    updateNotification("Weiterleitung deaktiviert")
+
+                    LoggingManager.logInfo(
+                        component = "ContactsViewModel",
+                        action = "FORWARDING_CONFIRMED",
+                        message = "Deaktivierung der Weiterleitung bestätigt",
+                        details = mapOf(
+                            "source" to source,
+                            "code" to pending.code,
+                            "is_ussd" to pending.isUssd,
+                            "previous_contact" to (pending.contact?.name ?: "unknown")
+                        )
+                    )
+                } else {
+                    LoggingManager.logWarning(
+                        component = "ContactsViewModel",
+                        action = "FORWARDING_FAILED",
+                        message = "Deaktivierung der Weiterleitung nicht bestätigt",
+                        details = mapOf(
+                            "source" to source,
+                            "code" to pending.code,
+                            "is_ussd" to pending.isUssd,
+                            "reason" to reason
+                        )
+                    )
+                    SnackbarManager.showError(
+                        application.getString(R.string.snackbar_forwarding_deactivation_failed, reason)
+                    )
+                }
+            }
+
+            ForwardingAction.TOGGLE -> {
+                LoggingManager.logWarning(
+                    component = "ContactsViewModel",
+                    action = "FORWARDING_RESULT",
+                    message = "Unverarbeiteter Toggle-Status - keine Aktion durchgeführt",
+                    details = mapOf(
+                        "source" to source,
+                        "success" to success,
+                        "reason" to reason
+                    )
+                )
+            }
+        }
+    }
+
     private fun manageForwardingStatus(
         action: ForwardingAction,
         contact: Contact? = null,
@@ -472,8 +609,16 @@ class ContactsViewModel(
         }
 
         val activateCode = "${prefsManager.getMmiActivatePrefix()}${contact.phoneNumber}${prefsManager.getMmiActivateSuffix()}"
+        val pendingRequest = PendingForwardingRequest(
+            action = ForwardingAction.ACTIVATE,
+            contact = contact,
+            code = activateCode,
+            isUssd = activateCode.endsWith("#")
+        )
+        _pendingForwardingRequest.value = pendingRequest
 
         onDialMmiCode?.invoke(activateCode) ?: run {
+            _pendingForwardingRequest.value = null
             LoggingManager.logError(
                 component = "ContactsViewModel",
                 action = "ACTIVATE_FORWARDING",
@@ -481,17 +626,6 @@ class ContactsViewModel(
             )
             return ForwardingResult.Error("MMI-Code konnte nicht gesendet werden")
         }
-
-        withContext(Dispatchers.Main) {
-            _selectedContact.value = contact
-            _forwardingActive.value = true
-        }
-
-        prefsManager.saveSelectedPhoneNumber(contact.phoneNumber)
-        prefsManager.saveContactName(contact.name) // Neue Methode
-        prefsManager.saveForwardingStatus(true)
-
-        updateNotification("Weiterleitung angefordert zu ${contact.name} (${contact.phoneNumber})")
 
         LoggingManager.logInfo(
             component = "ContactsViewModel",
@@ -510,7 +644,16 @@ class ContactsViewModel(
         val prevContact = _selectedContact.value
         val deactivateCode = prefsManager.getMmiDeactivateCode()
 
+        val pendingRequest = PendingForwardingRequest(
+            action = ForwardingAction.DEACTIVATE,
+            contact = prevContact,
+            code = deactivateCode,
+            isUssd = deactivateCode.endsWith("#")
+        )
+        _pendingForwardingRequest.value = pendingRequest
+
         onDialMmiCode?.invoke(deactivateCode) ?: run {
+            _pendingForwardingRequest.value = null
             LoggingManager.logError(
                 component = "ContactsViewModel",
                 action = "DEACTIVATE_FORWARDING",
@@ -518,15 +661,6 @@ class ContactsViewModel(
             )
             return ForwardingResult.Error("MMI-Code konnte nicht gesendet werden")
         }
-
-        withContext(Dispatchers.Main) {
-            _selectedContact.value = null
-            _forwardingActive.value = false
-        }
-
-        prefsManager.clearSelection()
-
-        updateNotification("Weiterleitung-Deaktivierung angefordert")
 
         LoggingManager.logInfo(
             component = "ContactsViewModel",

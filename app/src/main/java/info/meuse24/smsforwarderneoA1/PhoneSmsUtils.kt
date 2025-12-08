@@ -29,6 +29,19 @@ import info.meuse24.smsforwarderneoA1.util.permission.PermissionHelper
 import info.meuse24.smsforwarderneoA1.util.phone.CarrierTrie
 import java.io.IOException
 
+enum class UssdRequestType {
+    ACTIVATE_FORWARDING,
+    DEACTIVATE_FORWARDING,
+    OTHER
+}
+
+data class UssdRequestResult(
+    val request: String,
+    val success: Boolean,
+    val message: String? = null,
+    val type: UssdRequestType
+)
+
 /**
  * PhoneSmsUtils ist eine Utility-Klasse für SMS- und Telefonie-bezogene Funktionen.
  * Sie bietet Methoden zum Senden von SMS, USSD-Codes und zum Abrufen von SIM-Karteninformationen.
@@ -515,7 +528,12 @@ class PhoneSmsUtils private constructor() {
          * @return true, wenn der Code erfolgreich gesendet wurde, sonst false
          */
         @SuppressLint("MissingPermission")
-        fun sendUssdCode(context: Context, ussdCode: String, subscriptionId: Int = -1): Boolean {
+        fun sendUssdCode(
+            context: Context,
+            ussdCode: String,
+            subscriptionId: Int = -1,
+            onResult: ((UssdRequestResult) -> Unit)? = null
+        ): Boolean {
             if (ussdCode.isBlank()) {
                 LoggingManager.logWarning(
                     component = "PhoneSmsUtils",
@@ -561,6 +579,8 @@ class PhoneSmsUtils private constructor() {
                     baseTelephonyManager
                 }
 
+                val requestType = getUssdCodeType(context, ussdCode)
+
                 LoggingManager.logInfo(
                     component = "PhoneSmsUtils",
                     action = "SEND_USSD_PREPARE",
@@ -590,6 +610,14 @@ class PhoneSmsUtils private constructor() {
                                 )
                             )
                             SnackbarManager.showSuccess(context.getString(R.string.snackbar_mmi_response, response))
+                            onResult?.invoke(
+                                UssdRequestResult(
+                                    request = request,
+                                    success = true,
+                                    message = response.toString(),
+                                    type = requestType
+                                )
+                            )
                         }
 
                         override fun onReceiveUssdResponseFailed(
@@ -613,6 +641,14 @@ class PhoneSmsUtils private constructor() {
                                 )
                             )
                             SnackbarManager.showError(context.getString(R.string.snackbar_ussd_failure, failureReason))
+                            onResult?.invoke(
+                                UssdRequestResult(
+                                    request = request,
+                                    success = false,
+                                    message = failureReason,
+                                    type = requestType
+                                )
+                            )
                         }
                     },
                     Handler(Looper.getMainLooper())
@@ -624,7 +660,7 @@ class PhoneSmsUtils private constructor() {
                     message = "USSD-Anfrage gesendet",
                     details = mapOf(
                         "code" to ussdCode,
-                        "code_type" to getUssdCodeType(context, ussdCode),
+                        "code_type" to requestType.name.lowercase(),
                         "subscription_id" to subscriptionId,
                         "using_specific_sim" to (subscriptionId != -1)
                     )
@@ -644,6 +680,14 @@ class PhoneSmsUtils private constructor() {
                     )
                 )
                 SnackbarManager.showError(context.getString(R.string.snackbar_ussd_security_error))
+                onResult?.invoke(
+                    UssdRequestResult(
+                        request = ussdCode,
+                        success = false,
+                        message = e.message ?: "security_exception",
+                        type = getUssdCodeType(context, ussdCode)
+                    )
+                )
                 false
 
             } catch (e: Exception) {
@@ -658,19 +702,27 @@ class PhoneSmsUtils private constructor() {
                     )
                 )
                 SnackbarManager.showError(context.getString(R.string.snackbar_ussd_general_error, e.message ?: ""))
+                onResult?.invoke(
+                    UssdRequestResult(
+                        request = ussdCode,
+                        success = false,
+                        message = e.message ?: e.javaClass.simpleName,
+                        type = getUssdCodeType(context, ussdCode)
+                    )
+                )
                 false
             }
         }
 
-        private fun getUssdCodeType(context: Context, ussdCode: String): String {
+        private fun getUssdCodeType(context: Context, ussdCode: String): UssdRequestType {
             val prefsManager = SharedPreferencesManager(context)
             val activatePrefix = prefsManager.getMmiActivatePrefix()
             val deactivateCode = prefsManager.getMmiDeactivateCode()
 
             return when {
-                ussdCode.startsWith(activatePrefix) -> "activate_forwarding"
-                ussdCode == deactivateCode -> "deactivate_forwarding"
-                else -> "other"
+                ussdCode.startsWith(activatePrefix) -> UssdRequestType.ACTIVATE_FORWARDING
+                ussdCode == deactivateCode -> UssdRequestType.DEACTIVATE_FORWARDING
+                else -> UssdRequestType.OTHER
             }
         }
 

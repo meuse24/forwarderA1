@@ -450,6 +450,9 @@
     <string name="snackbar_contact_loaded">Contact loaded</string>
     <string name="snackbar_forwarding_activated">Forwarding activated</string>
     <string name="snackbar_forwarding_deactivated">Forwarding deactivated</string>
+    <string name="snackbar_forwarding_activation_failed">Call forwarding was not applied: %1$s</string>
+    <string name="snackbar_forwarding_deactivation_failed">Call forwarding could not be turned off: %1$s</string>
+    <string name="snackbar_forwarding_unknown_reason">Unknown reason</string>
     <string name="snackbar_select_contact_first">Bitte wählen Sie zuerst einen Kontakt aus</string>
     <string name="snackbar_sms_text_empty">Der SMS-Text darf nicht leer sein</string>
     <string name="snackbar_sms_permission_missing">Berechtigung zum Senden von SMS nicht erteilt</string>
@@ -468,6 +471,13 @@
     <string name="snackbar_ussd_request_sent">Folgende MMI-Anfrage wurde gesendet: %1$s</string>
     <string name="snackbar_ussd_security_error">Sicherheitsfehler beim Senden des USSD-Codes</string>
     <string name="snackbar_ussd_general_error">Fehler beim Senden des USSD-Codes: %1$s</string>
+    <string name="ussd_progress_title">Sending forwarding code</string>
+    <string name="ussd_progress_body">Please wait until the network responds…</string>
+    <string name="mmi_confirmation_title">Did the call forwarding code work?</string>
+    <string name="mmi_confirmation_body">Please confirm the result. If you do nothing, success is assumed after 4 seconds.</string>
+    <string name="mmi_confirmation_positive">Yes, it worked</string>
+    <string name="mmi_confirmation_negative">No, it failed</string>
+    <string name="mmi_confirmation_failure_reason">User reported that the forwarding code failed</string>
     <string name="snackbar_sms_send_failed">SMS an %1$s fehlgeschlagen (%2$s).</string>
     <string name="snackbar_read_phone_permission_missing">Berechtigungen für das Lesen der Telefonnummer fehlen</string>
     <string name="snackbar_read_phone_security_error">Sicherheitsfehler beim Abrufen der Telefonnummer</string>
