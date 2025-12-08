@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.BatteryFull
@@ -22,6 +25,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,9 +40,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.FilterChip
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.LoggingManager
@@ -152,45 +156,43 @@ fun AppSettingsSection(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                val languageOptions = listOf(
+                    null to R.string.language_system_default,
+                    "en" to R.string.language_english,
+                    "de" to R.string.language_german
+                )
+                val onLanguageSelected: (String?) -> Unit = { languageCode ->
+                    prefsManager.setAppLanguage(languageCode)
+                    currentLanguage = languageCode
+                    (context as? android.app.Activity)?.recreate()
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectableGroup(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // System Default Button
-                    FilterChip(
-                        selected = currentLanguage == null,
-                        onClick = {
-                            prefsManager.setAppLanguage(null)
-                            currentLanguage = null
-                            (context as? android.app.Activity)?.recreate()
-                        },
-                        label = { Text(stringResource(R.string.language_system_default)) },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // English Button
-                    FilterChip(
-                        selected = currentLanguage == "en",
-                        onClick = {
-                            prefsManager.setAppLanguage("en")
-                            currentLanguage = "en"
-                            (context as? android.app.Activity)?.recreate()
-                        },
-                        label = { Text(stringResource(R.string.language_english)) },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // German Button
-                    FilterChip(
-                        selected = currentLanguage == "de",
-                        onClick = {
-                            prefsManager.setAppLanguage("de")
-                            currentLanguage = "de"
-                            (context as? android.app.Activity)?.recreate()
-                        },
-                        label = { Text(stringResource(R.string.language_german)) },
-                        modifier = Modifier.weight(1f)
-                    )
+                    languageOptions.forEach { (code, labelRes) ->
+                        val isSelected = currentLanguage == code
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .selectable(
+                                    selected = isSelected,
+                                    onClick = { onLanguageSelected(code) },
+                                    role = Role.RadioButton
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = null
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = stringResource(labelRes))
+                        }
+                    }
                 }
 
                 Text(

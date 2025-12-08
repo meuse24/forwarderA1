@@ -208,7 +208,7 @@ class MainActivity : ComponentActivity() {
 
                                 // Zeige LoadingScreen und starte normale Initialisierung
                                 _isLoading.value = true
-                                _loadingError.value = "Berechtigungen werden abgefragt..."
+                                _loadingError.value = getString(R.string.msg_requesting_permissions)
 
                                 lifecycleScope.launch {
                                     // Kleine Verzögerung damit LoadingScreen sichtbar wird
@@ -302,342 +302,9 @@ class MainActivity : ComponentActivity() {
                 // Special handling for encryption initialization failure
                 _loadingError.value = when (e) {
                     is info.meuse24.smsforwarderneoA1.data.local.PreferencesInitializationException -> {
-                        "SICHERHEITSFEHLER\n\n" +
-                        "Die verschlüsselte Datenspeicherung konnte nicht initialisiert werden.\n\n" +
-                        "Bitte App-Daten löschen:\n" +
-                        "Einstellungen → Apps → SMS Forwarder Neo → Speicher → Daten löschen\n\n" +
-                        "Fehlerdetails: ${e.message}"
+                        getString(R.string.error_security_storage, e.message ?: "")
                     }
-                    else -> "Initialisierungsfehler: ${e.message}"
-                }
-                Log.e("MainActivity", "Error during initialization", e)
-
-                // Ensure loading state shows error
-                _isLoading.value = false
-            }
-        }
-    }
-
-    /**
-     * Führt die Initialisierung nach erfolgreicher Berechtigungserteilung durch.
-     * Wird sowohl beim ersten Start als auch nach Nachforderung von Berechtigungen aufgerufen.
-     */
-    private fun completeInitializationAfterPermissions() {
-        // Starte Services und weitere Initialisierungen
-        SmsForegroundService.startService(this@MainActivity)
-
-        // Setup phone state listener for MMI code monitoring
-        setupPhoneStateListener()
-
-        // Prüfe Battery Optimization Status
-        checkBatteryOptimization()
-
-        // Füge kleine Verzögerung hinzu um sicherzustellen, dass
-        // Berechtigungen vollständig gewährt wurden
-        lifecycleScope.launch {
-            delay(500) // 500ms Verzögerung
-
-            // Prüfe und erfasse SIM-Telefonnummern
-            checkAndRequestSimPhoneNumbers()
-
-            viewModel.initialize() // Dies lädt nun die Kontakte
-        }
-
-        // Verstecke LoadingScreen
-        _isLoading.value = false
-    }
-
-    private fun initializeApp() {
-        lifecycleScope.launch {
-            try {
-                _loadingError.value = "Berechtigungen werden abgefragt..."
-
-                // Warte auf vollständige AppContainer Initialisierung
-                AppContainer.isInitialized.first { it }
-
-                // Prüfe und fordere Berechtigungen an
-                // WICHTIG: LoadingScreen bleibt während Permission Dialogs sichtbar
-                permissionHandler.checkPermissions(
-                    onGranted = {
-                        // Berechtigungen wurden erteilt
-                        lifecycleScope.launch {
-                            completeInitializationAfterPermissions()
-                        }
-                    },
-                    onDenied = {
-                        // Berechtigungen wurden verweigert - ERST JETZT Dialog anzeigen
-                        val missing = permissionHandler.getMissingPermissions()
-
-                        LoggingManager.logWarning(
-                            component = "MainActivity",
-                            action = "PERMISSIONS_DENIED",
-                            message = "Kritische Berechtigungen wurden beim App-Start verweigert",
-                            details = mapOf(
-                                "missing_count" to missing.size,
-                                "missing_permissions" to missing.joinToString()
-                            )
-                        )
-
-                        // Verstecke LoadingScreen und zeige kritischen Dialog
-                        _isLoading.value = false
-                        _missingPermissions.value = missing
-                        _showCriticalPermissionsDialog.value = true
-                    }
-                )
-
-            } catch (e: Exception) {
-                _loadingError.value = "Fehler bei der Initialisierung: ${e.message}"
-                LoggingManager.logError(
-                    component = "MainActivity",
-                    action = "INIT_ERROR",
-                    message = "App-Initialisierung fehlgeschlagen",
-                    error = e
-                )
-            }
-        }
-    }
-
-    /**
-     * Prüft ob Battery Optimization für die App deaktiviert ist
-     * und zeigt bei Bedarf einen Dialog an
-     */
-    private fun checkBatteryOptimization() {
-        try {
-            val powerManager = getSystemService(POWER_SERVICE) as? PowerManager
-            if (powerManager == null) {
-                LoggingManager.logWarning(
-                    component = "MainActivity",
-                    action = "CHECK_BATTERY_OPT",
-                    message = "PowerManager nicht verfügbar"
-                )
-                return
-            }
-
-            val isIgnoring = powerManager.isIgnoringBatteryOptimizations(packageName)
-
-            LoggingManager.logInfo(
-                component = "MainActivity",
-                action = "CHECK_BATTERY_OPT",
-                message = "Battery Optimization Status geprüft",
-                details = mapOf("isIgnoring" to isIgnoring)
-            )
-
-            if (!isIgnoring) {
-                showBatteryOptimizationDialog()
-            }
-        } catch (e: Exception) {
-            LoggingManager.logError(
-                component = "MainActivity",
-                action = "CHECK_BATTERY_OPT",
-                message = "Fehler beim Prüfen der Battery Optimization",
-                error = e
-            )
-        }
-    }
-
-    /**
-     * Zeigt einen Dialog zum Deaktivieren der Battery Optimization
-     */
-    private fun showBatteryOptimizationDialog() {
-        lifecycleScope.launch(Dispatchers.Main) {
-            val builder = AlertDialog.Builder(this@MainActivity)
-            builder.setTitle("Akku-Optimierung deaktivieren")
-            builder.setMessage(
-                "Für eine zuverlässige SMS-Weiterleitung im Hintergrund sollte die Akku-Optimierung " +
-                "für diese App deaktiviert werden.\n\n" +
-                "Ohne diese Einstellung kann es vorkommen, dass SMS-Weiterleitungen verzögert werden " +
-                "oder nicht funktionieren."
-            )
-            builder.setPositiveButton("Einstellungen öffnen") { dialog, _ ->
-                requestBatteryOptimizationExemption()
-                dialog.dismiss()
-            }
-            builder.setNegativeButton("Später") { dialog, _ ->
-                LoggingManager.logInfo(
-                    component = "MainActivity",
-                    action = "BATTERY_OPT_DIALOG",
-                    message = "Nutzer hat Battery Optimization Dialog abgelehnt"
-                )
-                dialog.dismiss()
-            }
-            builder.setCancelable(true)
-            builder.show()
-        }
-    }
-
-    /**
-     * Öffnet die System-Einstellungen zur Deaktivierung der Battery Optimization
-     */
-    private fun requestBatteryOptimizationExemption() {
-        try {
-            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                data = "package:$packageName".toUri()
-            }
-            startActivity(intent)
-
-            LoggingManager.logInfo(
-                component = "MainActivity",
-                action = "REQUEST_BATTERY_OPT_EXEMPTION",
-                message = "Battery Optimization Einstellungen geöffnet"
-            )
-        } catch (e: Exception) {
-            LoggingManager.logError(
-                component = "MainActivity",
-                action = "REQUEST_BATTERY_OPT_EXEMPTION",
-                message = "Fehler beim Öffnen der Battery Optimization Einstellungen",
-                error = e
-            )
-            SnackbarManager.showError("Einstellungen konnten nicht geöffnet werden")
-        }
-    }
-
-    /**
-     * Prüft SIM-Telefonnummern und fordert fehlende vom User ab
-     */
-    private suspend fun checkAndRequestSimPhoneNumbers() {
-        try {
-            val simInfoList = PhoneSmsUtils.getAllSimInfo(this)
-
-            if (simInfoList.isEmpty()) {
-                LoggingManager.logWarning(
-                    component = "MainActivity",
-                    action = "CHECK_SIM_NUMBERS",
-                    message = "Keine SIM-Karten gefunden"
-                )
-                return
-            }
-
-            val prefsManager = AppContainer.getPrefsManagerSafe()
-            if (prefsManager == null) {
-                LoggingManager.logError(
-                    component = "MainActivity",
-                    action = "CHECK_SIM_NUMBERS",
-                    message = "PreferencesManager nicht verfügbar"
-                )
-                return
-            }
-
-            val storedNumbers = prefsManager.getSimPhoneNumbers()
-            val missingSims = mutableListOf<SimInfo>()
-
-            LoggingManager.logInfo(
-                component = "MainActivity",
-                action = "CHECK_SIM_NUMBERS_DEBUG",
-                message = "SIM-Nummern-Prüfung gestartet",
-                details = mapOf(
-                    "stored_numbers" to storedNumbers.toString(),
-                    "sim_count" to simInfoList.size
-                )
-            )
-
-            // Prüfe jede SIM auf fehlende Telefonnummern
-            simInfoList.forEach { simInfo ->
-                val stored = storedNumbers[simInfo.subscriptionId]
-
-                LoggingManager.logInfo(
-                    component = "MainActivity",
-                    action = "CHECK_SIM_DEBUG",
-                    message = "Prüfe SIM-Karte",
-                    details = mapOf(
-                        "subscription_id" to simInfo.subscriptionId,
-                        "slot" to simInfo.slotIndex,
-                        "auto_detected" to (simInfo.phoneNumber ?: "null"),
-                        "stored" to (stored ?: "null"),
-                        "carrier" to (simInfo.carrierName ?: "Unknown")
-                    )
-                )
-
-                if (stored.isNullOrEmpty() && simInfo.phoneNumber.isNullOrEmpty()) {
-                    missingSims.add(simInfo)
-                    LoggingManager.logInfo(
-                        component = "MainActivity",
-                        action = "SIM_MISSING",
-                        message = "SIM-Nummer fehlt - Dialog wird angezeigt",
-                        details = mapOf("subscription_id" to simInfo.subscriptionId)
-                    )
-                } else if (!simInfo.phoneNumber.isNullOrEmpty() && stored != simInfo.phoneNumber) {
-                    // Auto-erkannte Nummer in Preferences speichern
-                    prefsManager.setSimPhoneNumber(simInfo.subscriptionId, simInfo.phoneNumber)
-                    LoggingManager.logInfo(
-                        component = "MainActivity",
-                        action = "STORE_SIM_NUMBER",
-                        message = "Auto-erkannte SIM-Nummer gespeichert",
-                        details = mapOf(
-                            "subscription_id" to simInfo.subscriptionId,
-                            "slot" to simInfo.slotIndex,
-                            "carrier" to (simInfo.carrierName ?: "Unknown")
-                        )
-                    )
-                }
-            }
-
-            // Falls SIM-Nummern fehlen, zeige Dialog
-            if (missingSims.isNotEmpty()) {
-                withContext(Dispatchers.Main) {
-                    simManagementViewModel.requestMissingSimNumbers(missingSims)
-                }
-            }
-
-            LoggingManager.logInfo(
-                component = "MainActivity",
-                action = "CHECK_SIM_NUMBERS",
-                message = "SIM-Nummern-Prüfung abgeschlossen",
-                details = mapOf(
-                    "total_sims" to simInfoList.size,
-                    "missing_numbers" to missingSims.size,
-                    "auto_detected" to simInfoList.count { !it.phoneNumber.isNullOrEmpty() }
-                )
-            )
-
-
-        } catch (e: Exception) {
-            LoggingManager.logError(
-                component = "MainActivity",
-                action = "CHECK_SIM_NUMBERS",
-                message = "Fehler bei SIM-Nummern-Prüfung",
-                error = e
-            )
-        }
-    }
-
-    // LoadingScreen moved to presentation.ui.components.dialogs.LoadingScreen
-
-    private fun retryInitialization() {
-        // Reset error state
-        _loadingError.value = null
-        _isLoading.value = true
-
-        // Restart initialization process
-        lifecycleScope.launch {
-            try {
-                // Reset AppContainer initialization state if needed
-                // (AppContainer keeps its initialization state, so we don't reset it)
-
-                // Warte auf Basis-Initialisierung
-                AppContainer.isBasicInitialized.first { it }
-
-                // Führe Activity-Initialisierung durch und prüfe Erfolg
-                AppContainer.initializeWithActivity(this@MainActivity)
-
-                // Verifiziere dass Initialisierung erfolgreich war
-                if (!AppContainer.isInitialized.value) {
-                    throw IllegalStateException("Activity initialization completed but isInitialized is still false")
-                }
-
-                // Starte vollständige App-Initialisierung
-                initializeApp()
-
-            } catch (e: Exception) {
-                // Special handling for encryption initialization failure
-                _loadingError.value = when (e) {
-                    is info.meuse24.smsforwarderneoA1.data.local.PreferencesInitializationException -> {
-                        "SICHERHEITSFEHLER\n\n" +
-                        "Die verschlüsselte Datenspeicherung konnte nicht initialisiert werden.\n\n" +
-                        "Bitte App-Daten löschen:\n" +
-                        "Einstellungen → Apps → SMS Forwarder Neo → Speicher → Daten löschen\n\n" +
-                        "Fehlerdetails: ${e.message}"
-                    }
-                    else -> "Initialisierungsfehler: ${e.message}"
+                    else -> getString(R.string.error_initialization_generic, e.message ?: "")
                 }
                 Log.e("MainActivity", "Error during retry initialization", e)
 
@@ -757,12 +424,12 @@ class MainActivity : ComponentActivity() {
      */
     fun dialCode(code: String) {
         if (code.isBlank()) {
-            SnackbarManager.showWarning("MMI-Code darf nicht leer sein")
+            SnackbarManager.showWarning(getString(R.string.snackbar_mmi_code_empty))
             return
         }
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            SnackbarManager.showError("Berechtigung für Telefon-Anrufe nicht erteilt")
+            SnackbarManager.showError(getString(R.string.snackbar_call_permission_missing))
             return
         }
 
@@ -786,7 +453,7 @@ class MainActivity : ComponentActivity() {
                     message = "Warte bis aktueller Anruf beendet ist",
                     details = mapOf("code" to normalizedCode, "callState" to currentCallState)
                 )
-                SnackbarManager.showInfo("Warte bis Anruf beendet ist...")
+                SnackbarManager.showInfo(getString(R.string.snackbar_wait_for_call_end))
 
                 // Wait until call is idle
                 callState.first { it == TelephonyManager.CALL_STATE_IDLE }
@@ -927,7 +594,7 @@ class MainActivity : ComponentActivity() {
                 error = e,
                 details = mapOf("code" to originalCode)
             )
-            SnackbarManager.showError("Fehler beim Wählen: ${e.message}")
+            SnackbarManager.showError(getString(R.string.snackbar_dial_error, e.message ?: ""))
         }
     }
 
@@ -1048,6 +715,7 @@ class MainActivity : ComponentActivity() {
         // Navigation Effect - navigate to page when navigationTarget changes
         LaunchedEffect(navigationTarget, screens) {
             navigationTarget?.let { target ->
+                showHelpScreen = false
                 val targetIndex = screens.indexOf(target)
                 if (targetIndex >= 0) {
                     pagerState.animateScrollToPage(targetIndex)
@@ -1064,6 +732,7 @@ class MainActivity : ComponentActivity() {
                         screens = screens,
                         currentPage = pagerState.currentPage,
                         onPageSelected = { page ->
+                            showHelpScreen = false
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(page)
                             }
@@ -1191,7 +860,7 @@ class MainActivity : ComponentActivity() {
                                     action = "PERMISSIONS_REGRANTED",
                                     message = "Berechtigungen wurden erfolgreich wieder erteilt"
                                 )
-                                SnackbarManager.showSuccess("Alle Berechtigungen erteilt")
+                                SnackbarManager.showSuccess(getString(R.string.snackbar_permissions_granted_all))
 
                                 // Führe vollständige Initialisierung durch (inkl. Battery Optimization)
                                 completeInitializationAfterPermissions()
@@ -1205,7 +874,7 @@ class MainActivity : ComponentActivity() {
                                         "missing_permissions" to stillMissing.joinToString()
                                     )
                                 )
-                                SnackbarManager.showError("App wird beendet - Berechtigungen fehlen")
+                                SnackbarManager.showError(getString(R.string.snackbar_permissions_missing_exit))
                                 lifecycleScope.launch {
                                     delay(2000) // Zeige Snackbar für 2 Sekunden
                                     finish()
@@ -1233,6 +902,63 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    /**
+     * Startet die App-Initialisierung nach akzeptierter Privacy Policy.
+     * Prüft Berechtigungen und zeigt bei Bedarf den CriticalPermissionsDialog.
+     */
+    private fun initializeApp() {
+        lifecycleScope.launch {
+            try {
+                _loadingError.value = getString(R.string.msg_requesting_permissions)
+
+                // Warte auf vollständige Basis-Initialisierung des AppContainers
+                AppContainer.isInitialized.first { it }
+
+                permissionHandler.checkPermissions(
+                    onGranted = {
+                        completeInitializationAfterPermissions()
+                    },
+                    onDenied = {
+                        val missing = permissionHandler.getMissingPermissions()
+                        _isLoading.value = false
+                        _missingPermissions.value = missing
+                        _showCriticalPermissionsDialog.value = true
+                    }
+                )
+            } catch (e: Exception) {
+                _loadingError.value = getString(R.string.error_initialization_generic, e.message ?: "")
+                LoggingManager.logError(
+                    component = "MainActivity",
+                    action = "INIT_ERROR",
+                    message = "App-Initialisierung fehlgeschlagen",
+                    error = e
+                )
+            }
+        }
+    }
+
+    /**
+     * Führt notwendige Schritte nach erteilten Berechtigungen aus.
+     */
+    private fun completeInitializationAfterPermissions() {
+        SmsForegroundService.startService(this@MainActivity)
+        setupPhoneStateListener()
+        lifecycleScope.launch {
+            delay(500)
+            viewModel.initialize()
+        }
+        _isLoading.value = false
+    }
+
+    /**
+     * Setzt Fehlerzustände zurück und versucht Initialisierung erneut.
+     */
+    private fun retryInitialization() {
+        _loadingError.value = null
+        _isLoading.value = true
+        initializeApp()
     }
 
     // ============================================================================
