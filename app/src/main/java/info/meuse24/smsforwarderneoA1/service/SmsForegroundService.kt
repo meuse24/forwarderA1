@@ -43,16 +43,18 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 import javax.mail.MessagingException
 
 data class SmsMessagePart(
     val body: String,
     val timestamp: Long,
-    val referenceNumber: Int,
+    val referenceNumber: Int,  // UDH concat reference number (or UUID hash for single-part)
     val sequencePosition: Int,
     val totalParts: Int,
     val sender: String,
-    val subscriptionId: Int = -1  // -1 = unbekannt/nicht verfügbar
+    val subscriptionId: Int = -1,  // -1 = unbekannt/nicht verfügbar
+    val intentId: String  // Unique ID per received Intent (prevents merging unrelated messages)
 )
 
 class SmsForegroundService : Service() {
@@ -317,17 +319,21 @@ class SmsForegroundService : Service() {
                         return@withWakeLock
                     }
 
+                // Generate unique ID for this Intent to prevent merging unrelated messages
+                val intentId = UUID.randomUUID().toString()
+
                 val messageParts = messages.mapNotNull { smsMessage ->
                     smsMessage?.originatingAddress?.let { sender ->
                         smsMessage.messageBody?.let { body ->
                             SmsMessagePart(
                                 body = body,
                                 timestamp = smsMessage.timestampMillis,
-                                referenceNumber = generateMessageGroupId(smsMessage),
+                                referenceNumber = generateMessageGroupId(smsMessage, intentId),
                                 sequencePosition = smsMessage.indexOnIcc,
                                 totalParts = messages.size,
                                 sender = sender,
-                                subscriptionId = subscriptionId
+                                subscriptionId = subscriptionId,
+                                intentId = intentId
                             )
                         }
                     }
@@ -340,8 +346,11 @@ class SmsForegroundService : Service() {
                     return@withWakeLock
                 }
 
+                // Group by sender + intentId + referenceNumber
+                // This ensures messages from the same Intent are grouped together,
+                // preventing unrelated single-part messages from being merged
                 val messageGroups = messageParts.groupBy {
-                    "${it.sender}_${it.referenceNumber}"
+                    "${it.sender}_${it.intentId}_${it.referenceNumber}"
                 }
 
                 messageGroups.forEach { (key, parts) ->
@@ -729,23 +738,32 @@ class SmsForegroundService : Service() {
     /**
      * Generate a stable group ID for multi-part SMS messages.
      *
-     * FIXED: Previously used reflection to access private mMessageRef field,
-     * which was unreliable across Android versions. Now uses a combination
-     * of timestamp and sender to group messages reliably.
+     * FIXED (v2): Now uses Intent-specific UUID instead of time window.
+     * This prevents unrelated single-part messages from being merged.
      *
-     * Multi-part messages from the same sender arrive within milliseconds,
-     * so rounding timestamp to nearest 5 seconds groups them together.
+     * Strategy:
+     * 1. Try to use indexOnIcc (sequence number in UDH) if available
+     * 2. Fall back to intentId hash (unique per Intent broadcast)
+     *
+     * This ensures:
+     * - Multi-part SMS from same Intent are grouped together
+     * - Single-part SMS from different Intents are NOT merged
+     * - No time-window collisions between unrelated messages
      */
-    private fun generateMessageGroupId(message: SmsMessage): Int {
-        // Round timestamp to nearest 5 seconds (5000ms windows)
-        // Messages in the same multi-part group arrive within ~100ms
-        val timestampWindow = (message.timestampMillis / 5000) * 5000
+    private fun generateMessageGroupId(message: SmsMessage, intentId: String): Int {
+        // indexOnIcc returns -1 for messages not stored on SIM
+        // For multi-part SMS, it typically contains the sequence number
+        val indexOnIcc = message.indexOnIcc
 
-        // Combine sender hash + timestamp window for stable grouping
-        val sender = message.originatingAddress ?: "unknown"
-        val groupKey = "$sender:$timestampWindow"
-
-        return groupKey.hashCode()
+        return if (indexOnIcc > 0) {
+            // Multi-part SMS: use indexOnIcc as part of group ID
+            // This provides stable grouping across message parts
+            indexOnIcc
+        } else {
+            // Single-part SMS or no SIM storage: use intentId hash
+            // Each Intent gets a unique UUID, preventing merging of unrelated messages
+            intentId.hashCode()
+        }
     }
 
     private suspend fun handleEmailForwarding(sender: String, messageBody: String) {
