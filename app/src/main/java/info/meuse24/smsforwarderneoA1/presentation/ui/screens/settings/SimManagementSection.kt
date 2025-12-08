@@ -42,6 +42,7 @@ import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.R
+import info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings.PhoneSettingsSection
 
 @Composable
 fun SimManagementSection(
@@ -86,6 +87,14 @@ fun SimManagementSection(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
+        PhoneSettingsSection(
+            viewModel = viewModel,
+            onFocusChanged = onFocusChanged,
+            sectionTitleStyle = sectionTitleStyle
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             text = stringResource(R.string.heading_sim_overview),
             style = sectionTitleStyle,

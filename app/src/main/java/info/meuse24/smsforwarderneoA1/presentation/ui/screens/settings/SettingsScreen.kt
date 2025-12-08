@@ -72,31 +72,28 @@ fun SettingsScreen(
     val sectionTitleStyle = MaterialTheme.typography.titleMedium
 
     // Position tracking for each section
-    var phoneSettingsPosition by remember { mutableStateOf(0f) }
     var simManagementPosition by remember { mutableStateOf(0f) }
     var simSelectionPosition by remember { mutableStateOf(0f) }
     var callForwardingPosition by remember { mutableStateOf(0f) }
-    var appSettingsPosition by remember { mutableStateOf(0f) }
     var emailSettingsPosition by remember { mutableStateOf(0f) }
+    var appSettingsPosition by remember { mutableStateOf(0f) }
     var logSettingsPosition by remember { mutableStateOf(0f) }
 
     // Expansion states for each section - alle geschlossen beim Start
-    var phoneSettingsExpanded by remember { mutableStateOf(false) }
     var simManagementExpanded by remember { mutableStateOf(false) }
     var simSelectionExpanded by remember { mutableStateOf(false) }
     var callForwardingExpanded by remember { mutableStateOf(false) }
-    var appSettingsExpanded by remember { mutableStateOf(false) }
     var emailSettingsExpanded by remember { mutableStateOf(false) }
+    var appSettingsExpanded by remember { mutableStateOf(false) }
     var logSettingsExpanded by remember { mutableStateOf(false) }
 
     // Accordion-Funktion: Schließt alle anderen Sections
     fun collapseAllExcept(section: String) {
-        if (section != "phone") phoneSettingsExpanded = false
         if (section != "simManagement") simManagementExpanded = false
         if (section != "simSelection") simSelectionExpanded = false
         if (section != "callForwarding") callForwardingExpanded = false
-        if (section != "app") appSettingsExpanded = false
         if (section != "email") emailSettingsExpanded = false
+        if (section != "app") appSettingsExpanded = false
         if (section != "log") logSettingsExpanded = false
     }
 
@@ -117,31 +114,7 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Section 1: Phone Settings
-            ExpandableSection(
-                title = stringResource(R.string.section_phone_settings),
-                expanded = phoneSettingsExpanded,
-                onExpandChange = {
-                    if (it) {
-                        collapseAllExcept("phone")
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo(phoneSettingsPosition.toInt())
-                        }
-                    }
-                    phoneSettingsExpanded = it
-                },
-                modifier = Modifier.onGloballyPositioned { coordinates ->
-                    phoneSettingsPosition = coordinates.positionInParent().y
-                }
-            ) {
-                PhoneSettingsSection(
-                    viewModel = viewModel,
-                    onFocusChanged = { isAnyFieldFocused = it },
-                    sectionTitleStyle = sectionTitleStyle
-                )
-            }
-
-            // Section 2: SIM Management
+            // Section 1: SIM Management (inkl. Telefon-Einstellungen)
             ExpandableSection(
                 title = stringResource(R.string.section_sim_management),
                 expanded = simManagementExpanded,
@@ -212,7 +185,30 @@ fun SettingsScreen(
                 )
             }
 
-            // Section 5: App Settings
+            // Section 5: Email Settings
+            ExpandableSection(
+                title = stringResource(R.string.section_email_settings),
+                expanded = emailSettingsExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("email")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(emailSettingsPosition.toInt())
+                        }
+                    }
+                    emailSettingsExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    emailSettingsPosition = coordinates.positionInParent().y
+                }
+            ) {
+                EmailSettingsSection(
+                    emailViewModel = emailViewModel,
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
+
+            // Section 6: App Settings
             ExpandableSection(
                 title = stringResource(R.string.section_app_settings),
                 expanded = appSettingsExpanded,
@@ -235,29 +231,6 @@ fun SettingsScreen(
                     testUtilsViewModel = testUtilsViewModel,
                     navigationViewModel = navigationViewModel,
                     onFocusChanged = { isAnyFieldFocused = it },
-                    sectionTitleStyle = sectionTitleStyle
-                )
-            }
-
-            // Section 6: Email Settings
-            ExpandableSection(
-                title = stringResource(R.string.section_email_settings),
-                expanded = emailSettingsExpanded,
-                onExpandChange = {
-                    if (it) {
-                        collapseAllExcept("email")
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo(emailSettingsPosition.toInt())
-                        }
-                    }
-                    emailSettingsExpanded = it
-                },
-                modifier = Modifier.onGloballyPositioned { coordinates ->
-                    emailSettingsPosition = coordinates.positionInParent().y
-                }
-            ) {
-                EmailSettingsSection(
-                    emailViewModel = emailViewModel,
                     sectionTitleStyle = sectionTitleStyle
                 )
             }

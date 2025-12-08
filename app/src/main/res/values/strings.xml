@@ -74,7 +74,7 @@
     <!-- ==================== SETTINGS SECTIONS ==================== -->
     <string name="section_phone_settings">Phone Settings</string>
     <string name="section_sim_management">SIM Card Management</string>
-    <string name="section_sms_sim_selection">SMS Forwarding - SIM Selection</string>
+    <string name="section_sms_sim_selection">SMS Forwarding</string>
     <string name="sim_selection_same_as_incoming">Same SIM as incoming SMS</string>
     <string name="sim_selection_always_sim1">Always SIM 1</string>
     <string name="sim_selection_always_sim2">Always SIM 2</string>
@@ -473,7 +473,7 @@
     <string name="snackbar_ussd_general_error">Fehler beim Senden des USSD-Codes: %1$s</string>
     <string name="ussd_progress_title">Sending forwarding code</string>
     <string name="ussd_progress_body">Please wait until the network responds…</string>
-    <string name="section_call_forwarding_settings">Call forwarding &amp; MMI</string>
+    <string name="section_call_forwarding_settings">Call forwarding</string>
     <string name="hint_mmi_sim_alignment">Choose the SIM for call forwarding first. The MMI/USSD codes below must match that SIM/carrier.</string>
     <string name="mmi_confirmation_title">Did the call forwarding code work?</string>
     <string name="mmi_confirmation_body">Please confirm the result. If you do nothing, success is assumed after 4 seconds.</string>
