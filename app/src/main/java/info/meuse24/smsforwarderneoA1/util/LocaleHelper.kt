@@ -44,7 +44,7 @@ object LocaleHelper {
      * @return The language code or null for system default
      */
     fun getCurrentLanguage(context: Context): String? {
-        val prefs = context.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("app_language_prefs", Context.MODE_PRIVATE)
         return prefs.getString("app_language", null)
     }
 }

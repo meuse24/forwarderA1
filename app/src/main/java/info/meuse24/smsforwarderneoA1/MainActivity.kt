@@ -225,9 +225,9 @@ class MainActivity : ComponentActivity() {
 
                                 // Zeige AlertDialog mit Begründung
                                 AlertDialog.Builder(this@MainActivity)
-                                    .setTitle("Datenschutzerklärung erforderlich")
-                                    .setMessage("Ohne Akzeptierung der Datenschutzerklärung kann die App nicht verwendet werden, da die benötigten Berechtigungen nicht angefordert werden können.")
-                                    .setPositiveButton("OK") { _, _ ->
+                                    .setTitle(getString(R.string.dialog_title_privacy_required))
+                                    .setMessage(getString(R.string.dialog_msg_privacy_required))
+                                    .setPositiveButton(getString(R.string.btn_privacy_ok)) { _, _ ->
                                         finish()
                                     }
                                     .setCancelable(false)

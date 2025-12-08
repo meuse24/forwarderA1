@@ -176,7 +176,7 @@ fun AppSettingsSection(
                             currentLanguage = "en"
                             (context as? android.app.Activity)?.recreate()
                         },
-                        label = { Text("English") },
+                        label = { Text(stringResource(R.string.language_english)) },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -188,7 +188,7 @@ fun AppSettingsSection(
                             currentLanguage = "de"
                             (context as? android.app.Activity)?.recreate()
                         },
-                        label = { Text("Deutsch") },
+                        label = { Text(stringResource(R.string.language_german)) },
                         modifier = Modifier.weight(1f)
                     )
                 }

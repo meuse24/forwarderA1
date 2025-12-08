@@ -101,6 +101,8 @@
     <!-- Language Settings -->
     <string name="label_app_language">App Language</string>
     <string name="language_system_default">System</string>
+    <string name="language_english">English</string>
+    <string name="language_german">German</string>
     <string name="desc_app_language">App will restart to apply language change</string>
 
     <!-- Battery Optimization -->
@@ -252,26 +254,87 @@
     <string name="link_project_subtitle">Documentation &amp; Downloads</string>
     <string name="desc_open_link">Open link</string>
 
+    <!-- Info Screen - Author Block -->
+    <string name="label_version">Version</string>
+    <string name="label_build">Build:</string>
+
     <!-- Info Screen - HTML Content -->
     <string name="html_heading_main_features">Main Features</string>
+
+    <!-- Contact Picker Feature -->
     <string name="html_feature_contact_picker">Contact Selection via Android Contact Picker</string>
-    <string name="html_feature_contact_picker_desc">Simple selection of forwarding destination directly from phone contacts</string>
+    <string name="html_feature_contact_picker_intro">The app uses the native Android Contact Picker for simple and fast contact selection:</string>
+    <string name="html_feature_contact_picker_1">One-click selection via native Android Contact Picker</string>
+    <string name="html_feature_contact_picker_2">Persistent encrypted storage of selection</string>
+    <string name="html_feature_contact_picker_3">Clear contact card with name, number and type display</string>
+    <string name="html_feature_contact_picker_4">Quick change or deactivation of selected contact</string>
+    <string name="html_feature_contact_picker_5">Integrated test SMS function directly from contact card</string>
+    <string name="html_feature_contact_picker_6">Status query for active forwardings</string>
+    <string name="html_feature_contact_picker_7">Central reset of all forwardings</string>
+
+    <!-- SMS Forwarding Feature -->
     <string name="html_feature_sms_forwarding">SMS Forwarding</string>
-    <string name="html_feature_sms_forwarding_desc">Automatic forwarding of received SMS messages to configured contact</string>
+    <string name="html_feature_sms_forwarding_intro">SMS forwarding offers two independent forwarding paths that you can use individually or combined:</string>
+    <string name="html_feature_sms_forwarding_1">SMS-to-SMS: Direct forwarding to a selected phone number</string>
+    <string name="html_feature_sms_forwarding_2">SMS-to-Email: Forwarding to any number of email addresses</string>
+    <string name="html_feature_sms_forwarding_3">Formatted forwardings with sender and timestamp</string>
+    <string name="html_feature_sms_forwarding_4">Test functions for both forwarding paths</string>
+
+    <!-- Email Configuration Feature -->
     <string name="html_feature_email_config">Email Configuration</string>
-    <string name="html_feature_email_config_desc">Optional forwarding to multiple email addresses with SMTP configuration (Gmail, GMX support)</string>
+    <string name="html_feature_email_config_intro">Email forwarding offers extensive configuration options:</string>
+    <string name="html_feature_email_config_1">Support for various email providers (Gmail, custom SMTP servers)</string>
+    <string name="html_feature_email_config_2">Encrypted storage of credentials</string>
+    <string name="html_feature_email_config_3">Individual test emails to each configured address</string>
+    <string name="html_feature_email_config_4">Detailed error diagnosis for delivery problems</string>
+
+    <!-- SIM Selection Feature -->
     <string name="html_feature_sim_selection">SIM Card Selection (Dual-SIM Support)</string>
-    <string name="html_feature_sim_selection_desc">Selection of SIM card for sending SMS on devices with multiple SIM cards</string>
+    <string name="html_feature_sim_selection_intro">For devices with multiple SIM cards, the app offers comprehensive management options:</string>
+    <string name="html_feature_sim_selection_1">Automatic detection of all available SIM cards</string>
+    <string name="html_feature_sim_selection_2">Flexible SIM selection for SMS forwarding (Automatic, SIM 1, SIM 2)</string>
+    <string name="html_feature_sim_selection_3">Clear display of SIM card details (provider, phone number)</string>
+    <string name="html_feature_sim_selection_4">Individual configuration for each SIM card</string>
+
+    <!-- Call Forwarding Feature -->
     <string name="html_feature_call_forwarding">Call Forwarding</string>
-    <string name="html_feature_call_forwarding_desc">Automatic setup and deactivation of network-based call forwarding via MMI codes</string>
+    <string name="html_feature_call_forwarding_intro">Call forwarding uses the native phone function of your device:</string>
+    <string name="html_feature_call_forwarding_1">Automatic forwarding of all incoming calls</string>
+    <string name="html_feature_call_forwarding_2">Use of MMI/USSD codes for maximum compatibility</string>
+    <string name="html_feature_call_forwarding_3">Simultaneous activation with SMS forwarding</string>
+    <string name="html_feature_call_forwarding_4">Status display of active forwarding</string>
+
+    <!-- MMI Code Settings Feature -->
     <string name="html_feature_mmi_codes">MMI Code Settings</string>
-    <string name="html_feature_mmi_codes_desc">Configurable MMI codes for activation/deactivation and status query with provider presets (A1 Austria)</string>
+    <string name="html_feature_mmi_codes_intro">Advanced configuration for mobile network forwardings via MMI codes:</string>
+    <string name="html_feature_mmi_codes_1">Configurable MMI/USSD codes for call forwarding</string>
+    <string name="html_feature_mmi_codes_2">Network-specific adjustments (Standard, Telekom, Vodafone, etc.)</string>
+    <string name="html_feature_mmi_codes_3">Status queries for active network forwardings</string>
+    <string name="html_feature_mmi_codes_4">Automatic reset of all forwardings</string>
+
+    <!-- Test and Monitoring Feature -->
     <string name="html_feature_testing">Test and Monitoring</string>
-    <string name="html_feature_testing_desc">Test functions for SMS and email, comprehensive logging with PIN protection, configurable log size and rotation</string>
+    <string name="html_feature_testing_intro">Comprehensive test and monitoring functions for all forwardings:</string>
+    <string name="html_feature_testing_1">Test SMS with customizable content</string>
+    <string name="html_feature_testing_2">Separate test emails to individual addresses</string>
+    <string name="html_feature_testing_3">Detailed logging of all activities</string>
+    <string name="html_feature_testing_4">Export of logs in CSV format</string>
+
+    <!-- User Interface Feature -->
     <string name="html_feature_ui">User Interface</string>
-    <string name="html_feature_ui_desc">Modern Material Design 3 with Dark Mode support, intuitive navigation, expandable settings sections</string>
+    <string name="html_feature_ui_intro">The user interface has been optimized for intuitive operation:</string>
+    <string name="html_feature_ui_1">Separate areas for SMS and email configuration</string>
+    <string name="html_feature_ui_2">Clear status displays</string>
+    <string name="html_feature_ui_3">Color-coded log view</string>
+    <string name="html_feature_ui_4">Adaptation to tablets and landscape format</string>
+
+    <!-- Security and Privacy Feature -->
     <string name="html_feature_security">Security and Privacy</string>
-    <string name="html_feature_security_desc">Encrypted storage of sensitive data (SMTP password, PIN), no data collection, open source</string>
+    <string name="html_feature_security_intro">The app places special emphasis on security and privacy:</string>
+    <string name="html_feature_security_1">Encrypted storage of sensitive data</string>
+    <string name="html_feature_security_2">Secure handling of email credentials</string>
+    <string name="html_feature_security_3">Automatic cleanup on exit</string>
+    <string name="html_feature_security_4">No permanent storage of SMS contents</string>
 
     <!-- System Information -->
     <string name="html_heading_system_info">System Information</string>
@@ -296,10 +359,12 @@
     <string name="html_label_min_sdk">Min SDK</string>
     <string name="html_label_target_sdk">Target SDK</string>
     <string name="html_label_jdk">JDK</string>
-    <string name="html_footnote_development">This app was developed following modern Android development practices and privacy guidelines…</string>
+    <string name="html_footnote_development">This app was developed following modern Android development practices and privacy guidelines. It runs energy-efficiently in the background while ensuring reliable forwarding of your messages and calls.</string>
 
     <!-- Privacy Policy Screen -->
     <string name="btn_privacy_ok">OK</string>
+    <string name="dialog_title_privacy_required">Privacy Policy Required</string>
+    <string name="dialog_msg_privacy_required">Without accepting the Privacy Policy, the app cannot be used, as the necessary permissions cannot be requested.</string>
 
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Error loading contact: %1$s</string>
@@ -327,7 +392,5 @@
     <string name="btn_back">Back</string>
     <string name="btn_close">Close</string>
     <string name="btn_confirm">Confirm</string>
-    <string name="label_version">Version</string>
-    <string name="label_build">Build:</string>
     <string name="copyright_notice">(C) 2025</string>
 </resources>

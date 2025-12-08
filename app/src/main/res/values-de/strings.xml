@@ -101,6 +101,8 @@
     <!-- Language Settings -->
     <string name="label_app_language">App-Sprache</string>
     <string name="language_system_default">System</string>
+    <string name="language_english">Englisch</string>
+    <string name="language_german">Deutsch</string>
     <string name="desc_app_language">App wird neu gestartet, um Sprachwechsel anzuwenden</string>
 
     <!-- Battery Optimization -->
@@ -252,26 +254,87 @@
     <string name="link_project_subtitle">Documentation &amp; Downloads</string>
     <string name="desc_open_link">Öffnen</string>
 
+    <!-- Info Screen - Author Block -->
+    <string name="label_version">Version</string>
+    <string name="label_build">Build:</string>
+
     <!-- Info Screen - HTML Content -->
     <string name="html_heading_main_features">Hauptfunktionen</string>
+
+    <!-- Contact Picker Feature -->
     <string name="html_feature_contact_picker">Kontaktauswahl per Android Contact Picker</string>
-    <string name="html_feature_contact_picker_desc">Einfache Auswahl des Weiterleitungsziels direkt aus den Telefonkontakten</string>
+    <string name="html_feature_contact_picker_intro">Die App nutzt den nativen Android Contact Picker für eine einfache und schnelle Kontaktauswahl:</string>
+    <string name="html_feature_contact_picker_1">Ein-Klick Auswahl über den nativen Android Contact Picker</string>
+    <string name="html_feature_contact_picker_2">Persistente verschlüsselte Speicherung der Auswahl</string>
+    <string name="html_feature_contact_picker_3">Übersichtliche Kontaktkarte mit Name, Nummer und Typ-Anzeige</string>
+    <string name="html_feature_contact_picker_4">Schnelle Änderung oder Deaktivierung des ausgewählten Kontakts</string>
+    <string name="html_feature_contact_picker_5">Integrierte Test-SMS Funktion direkt aus der Kontaktkarte</string>
+    <string name="html_feature_contact_picker_6">Status-Abfrage für aktive Weiterleitungen</string>
+    <string name="html_feature_contact_picker_7">Zentrale Zurücksetzung aller Weiterleitungen</string>
+
+    <!-- SMS Forwarding Feature -->
     <string name="html_feature_sms_forwarding">Weiterleitung von SMS</string>
-    <string name="html_feature_sms_forwarding_desc">Automatische Weiterleitung empfangener SMS-Nachrichten an konfigurierten Kontakt</string>
+    <string name="html_feature_sms_forwarding_intro">Die SMS-Weiterleitung bietet zwei unabhängige Weiterleitungswege, die Sie einzeln oder kombiniert nutzen können:</string>
+    <string name="html_feature_sms_forwarding_1">SMS-zu-SMS: Direkte Weiterleitung an eine ausgewählte Telefonnummer</string>
+    <string name="html_feature_sms_forwarding_2">SMS-zu-Email: Weiterleitung an beliebig viele Email-Adressen</string>
+    <string name="html_feature_sms_forwarding_3">Formatierte Weiterleitungen mit Absender und Zeitstempel</string>
+    <string name="html_feature_sms_forwarding_4">Test-Funktionen für beide Weiterleitungswege</string>
+
+    <!-- Email Configuration Feature -->
     <string name="html_feature_email_config">Email-Konfiguration</string>
-    <string name="html_feature_email_config_desc">Optionale Weiterleitung an mehrere Email-Adressen mit SMTP-Konfiguration (Gmail, GMX Unterstützung)</string>
+    <string name="html_feature_email_config_intro">Die Email-Weiterleitung bietet umfangreiche Konfigurationsmöglichkeiten:</string>
+    <string name="html_feature_email_config_1">Unterstützung für verschiedene Email-Provider (Gmail, eigene SMTP-Server)</string>
+    <string name="html_feature_email_config_2">Verschlüsselte Speicherung der Zugangsdaten</string>
+    <string name="html_feature_email_config_3">Individuelle Test-Emails an jede konfigurierte Adresse</string>
+    <string name="html_feature_email_config_4">Detaillierte Fehlerdiagnose bei Zustellungsproblemen</string>
+
+    <!-- SIM Selection Feature -->
     <string name="html_feature_sim_selection">SIM-Karten Auswahl (Dual-SIM Unterstützung)</string>
-    <string name="html_feature_sim_selection_desc">Auswahl der SIM-Karte für SMS-Versand auf Geräten mit mehreren SIM-Karten</string>
+    <string name="html_feature_sim_selection_intro">Für Geräte mit mehreren SIM-Karten bietet die App umfassende Verwaltungsmöglichkeiten:</string>
+    <string name="html_feature_sim_selection_1">Automatische Erkennung aller verfügbaren SIM-Karten</string>
+    <string name="html_feature_sim_selection_2">Flexible SIM-Auswahl für SMS-Weiterleitung (Automatisch, SIM 1, SIM 2)</string>
+    <string name="html_feature_sim_selection_3">Übersichtliche Anzeige der SIM-Karten Details (Anbieter, Rufnummer)</string>
+    <string name="html_feature_sim_selection_4">Individuelle Konfiguration für jede SIM-Karte</string>
+
+    <!-- Call Forwarding Feature -->
     <string name="html_feature_call_forwarding">Anrufweiterleitung</string>
-    <string name="html_feature_call_forwarding_desc">Automatische Einrichtung und Deaktivierung der netzbasierten Anrufweiterleitung über MMI Codes</string>
+    <string name="html_feature_call_forwarding_intro">Die Anrufweiterleitung nutzt die native Telefonfunktion Ihres Geräts:</string>
+    <string name="html_feature_call_forwarding_1">Automatische Weiterleitung aller eingehenden Anrufe</string>
+    <string name="html_feature_call_forwarding_2">Verwendung von MMI/USSD-Codes für maximale Kompatibilität</string>
+    <string name="html_feature_call_forwarding_3">Gleichzeitige Aktivierung mit SMS-Weiterleitung</string>
+    <string name="html_feature_call_forwarding_4">Status-Anzeige der aktiven Weiterleitung</string>
+
+    <!-- MMI Code Settings Feature -->
     <string name="html_feature_mmi_codes">MMI Code Einstellungen</string>
-    <string name="html_feature_mmi_codes_desc">Konfigurierbare MMI Codes für Aktivierung/Deaktivierung und Statusabfrage mit Provider-Presets (A1 Österreich)</string>
+    <string name="html_feature_mmi_codes_intro">Erweiterte Konfiguration für Mobilfunk-Weiterleitungen via MMI-Codes:</string>
+    <string name="html_feature_mmi_codes_1">Konfigurierbare MMI/USSD-Codes für Anrufweiterleitung</string>
+    <string name="html_feature_mmi_codes_2">Netzwerkspezifische Anpassungen (Standard, Telekom, Vodafone, etc.)</string>
+    <string name="html_feature_mmi_codes_3">Status-Abfragen der aktiven Netzwerk-Weiterleitungen</string>
+    <string name="html_feature_mmi_codes_4">Automatische Zurücksetzung aller Weiterleitungen</string>
+
+    <!-- Test and Monitoring Feature -->
     <string name="html_feature_testing">Test und Überwachung</string>
-    <string name="html_feature_testing_desc">Testfunktionen für SMS und Email, umfassendes Logging mit PIN-Schutz, konfigurierbare Log-Größe und Rotation</string>
+    <string name="html_feature_testing_intro">Umfangreiche Test- und Überwachungsfunktionen für alle Weiterleitungen:</string>
+    <string name="html_feature_testing_1">Test-SMS mit anpassbarem Inhalt</string>
+    <string name="html_feature_testing_2">Separate Test-Emails an einzelne Adressen</string>
+    <string name="html_feature_testing_3">Detaillierte Protokollierung aller Aktivitäten</string>
+    <string name="html_feature_testing_4">Export von Protokollen im CSV-Format</string>
+
+    <!-- User Interface Feature -->
     <string name="html_feature_ui">Benutzeroberfläche</string>
-    <string name="html_feature_ui_desc">Modernes Material Design 3 mit Dark Mode Unterstützung, intuitive Navigation, ausklappbare Einstellungsbereiche</string>
+    <string name="html_feature_ui_intro">Die Benutzeroberfläche wurde für intuitive Bedienung optimiert:</string>
+    <string name="html_feature_ui_1">Separate Bereiche für SMS- und Email-Konfiguration</string>
+    <string name="html_feature_ui_2">Übersichtliche Statusanzeigen</string>
+    <string name="html_feature_ui_3">Farbkodierte Protokollansicht</string>
+    <string name="html_feature_ui_4">Anpassung an Tablets und Querformat</string>
+
+    <!-- Security and Privacy Feature -->
     <string name="html_feature_security">Sicherheit und Datenschutz</string>
-    <string name="html_feature_security_desc">Verschlüsselte Speicherung sensibler Daten (SMTP-Passwort, PIN), keine Datenerfassung, Open Source</string>
+    <string name="html_feature_security_intro">Die App legt besonderen Wert auf Sicherheit und Datenschutz:</string>
+    <string name="html_feature_security_1">Verschlüsselte Speicherung sensibler Daten</string>
+    <string name="html_feature_security_2">Sichere Handhabung von Email-Zugangsdaten</string>
+    <string name="html_feature_security_3">Automatische Bereinigung beim Beenden</string>
+    <string name="html_feature_security_4">Keine dauerhafte Speicherung von SMS-Inhalten</string>
 
     <!-- System Information -->
     <string name="html_heading_system_info">System-Information</string>
@@ -296,10 +359,12 @@
     <string name="html_label_min_sdk">Min SDK</string>
     <string name="html_label_target_sdk">Target SDK</string>
     <string name="html_label_jdk">JDK</string>
-    <string name="html_footnote_development">Die App wurde unter Berücksichtigung moderner Android-Entwicklungspraktiken und Datenschutzrichtlinien entwickelt…</string>
+    <string name="html_footnote_development">Die App wurde unter Berücksichtigung moderner Android-Entwicklungspraktiken und Datenschutzrichtlinien entwickelt. Sie läuft energieeffizient im Hintergrund und gewährleistet dabei eine zuverlässige Weiterleitung Ihrer Nachrichten und Anrufe.</string>
 
     <!-- Privacy Policy Screen -->
     <string name="btn_privacy_ok">OK</string>
+    <string name="dialog_title_privacy_required">Datenschutzerklärung erforderlich</string>
+    <string name="dialog_msg_privacy_required">Ohne Akzeptierung der Datenschutzerklärung kann die App nicht verwendet werden, da die benötigten Berechtigungen nicht angefordert werden können.</string>
 
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Fehler beim Laden des Kontakts: %1$s</string>
@@ -327,7 +392,5 @@
     <string name="btn_back">Zurück</string>
     <string name="btn_close">Schließen</string>
     <string name="btn_confirm">Bestätigen</string>
-    <string name="label_version">Version</string>
-    <string name="label_build">Build:</string>
     <string name="copyright_notice">(C) 2025</string>
 </resources>

@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -158,12 +159,12 @@ fun InfoScreen() {
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Version ${packageInfo.versionName} (${packageInfo.longVersionCode})",
+                            text = "${stringResource(R.string.label_version)} ${packageInfo.versionName} (${packageInfo.longVersionCode})",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Build: ${BuildConfig.BUILD_TIME}",
+                            text = "${stringResource(R.string.label_build)} ${BuildConfig.BUILD_TIME}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -188,7 +189,7 @@ fun InfoScreen() {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Links",
+                        text = stringResource(R.string.heading_links),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -197,24 +198,24 @@ fun InfoScreen() {
 
                     LinkItem(
                         icon = Icons.Outlined.Language,
-                        title = "Author Website",
-                        subtitle = "www.meuse24.info",
+                        title = stringResource(R.string.link_author_website),
+                        subtitle = stringResource(R.string.link_author_website_url),
                         url = "https://www.meuse24.info",
                         context = context
                     )
 
                     LinkItem(
                         icon = Icons.Outlined.Code,
-                        title = "GitHub Repository",
-                        subtitle = "Source Code & Issues",
+                        title = stringResource(R.string.link_github_repo),
+                        subtitle = stringResource(R.string.link_github_subtitle),
                         url = "https://github.com/meuse24/forwarderA1",
                         context = context
                     )
 
                     LinkItem(
                         icon = Icons.Outlined.Language,
-                        title = "Project Website",
-                        subtitle = "Documentation & Downloads",
+                        title = stringResource(R.string.link_project_website),
+                        subtitle = stringResource(R.string.link_project_subtitle),
                         url = "https://meuse24.github.io/forwarderA1/",
                         context = context
                     )
@@ -235,12 +236,12 @@ fun InfoScreen() {
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Security,
-                    contentDescription = "Datenschutzerklärung",
+                    contentDescription = stringResource(R.string.btn_privacy_policy),
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Datenschutzerklärung",
+                    text = stringResource(R.string.btn_privacy_policy),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -315,9 +316,12 @@ private fun getHtmlContent(isDarkTheme: Boolean, context: Context): String {
     val minSDKVersion = context.applicationInfo.minSdkVersion
     val targetSDKVersion = context.applicationInfo.targetSdkVersion
 
+    // Get current locale
+    val locale = context.resources.configuration.locales[0].language
+
     return """
 <!DOCTYPE html>
-<html lang="de">
+<html lang="$locale">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -395,124 +399,124 @@ private fun getHtmlContent(isDarkTheme: Boolean, context: Context): String {
 </head>
 <body>
     <div class="section-container">
-        <h2>Hauptfunktionen</h2>
+        <h2>${context.getString(R.string.html_heading_main_features)}</h2>
         <ul class="feature-list">
             <li class="feature-item">
-                <div class="feature-title">Kontaktauswahl per Android Contact Picker</div>
+                <div class="feature-title">${context.getString(R.string.html_feature_contact_picker)}</div>
                 <div class="feature-description">
-                    Die App nutzt den nativen Android Contact Picker für eine einfache und schnelle Kontaktauswahl:
+                    ${context.getString(R.string.html_feature_contact_picker_intro)}
                     <ul>
-                        <li>Ein-Klick Auswahl über den nativen Android Contact Picker</li>
-                        <li>Persistente verschlüsselte Speicherung der Auswahl</li>
-                        <li>Übersichtliche Kontaktkarte mit Name, Nummer und Typ-Anzeige</li>
-                        <li>Schnelle Änderung oder Deaktivierung des ausgewählten Kontakts</li>
-                        <li>Integrierte Test-SMS Funktion direkt aus der Kontaktkarte</li>
-                        <li>Status-Abfrage für aktive Weiterleitungen</li>
-                        <li>Zentrale Zurücksetzung aller Weiterleitungen</li>
-                    </ul>
-                </div>
-            </li>
-            
-            <li class="feature-item">
-                <div class="feature-title">Weiterleitung von SMS</div>
-                <div class="feature-description">
-                    Die SMS-Weiterleitung bietet zwei unabhängige Weiterleitungswege, die Sie einzeln oder kombiniert nutzen können:
-                    <ul>
-                        <li>SMS-zu-SMS: Direkte Weiterleitung an eine ausgewählte Telefonnummer</li>
-                        <li>SMS-zu-Email: Weiterleitung an beliebig viele Email-Adressen</li>
-                        <li>Formatierte Weiterleitungen mit Absender und Zeitstempel</li>
-                        <li>Test-Funktionen für beide Weiterleitungswege</li>
-                    </ul>
-                </div>
-            </li>
-            
-            <li class="feature-item">
-                <div class="feature-title">Email-Konfiguration</div>
-                <div class="feature-description">
-                    Die Email-Weiterleitung bietet umfangreiche Konfigurationsmöglichkeiten:
-                    <ul>
-                        <li>Unterstützung für verschiedene Email-Provider (Gmail, eigene SMTP-Server)</li>
-                        <li>Verschlüsselte Speicherung der Zugangsdaten</li>
-                        <li>Individuelle Test-Emails an jede konfigurierte Adresse</li>
-                        <li>Detaillierte Fehlerdiagnose bei Zustellungsproblemen</li>
+                        <li>${context.getString(R.string.html_feature_contact_picker_1)}</li>
+                        <li>${context.getString(R.string.html_feature_contact_picker_2)}</li>
+                        <li>${context.getString(R.string.html_feature_contact_picker_3)}</li>
+                        <li>${context.getString(R.string.html_feature_contact_picker_4)}</li>
+                        <li>${context.getString(R.string.html_feature_contact_picker_5)}</li>
+                        <li>${context.getString(R.string.html_feature_contact_picker_6)}</li>
+                        <li>${context.getString(R.string.html_feature_contact_picker_7)}</li>
                     </ul>
                 </div>
             </li>
 
             <li class="feature-item">
-                <div class="feature-title">SIM-Karten Auswahl (Dual-SIM Unterstützung)</div>
+                <div class="feature-title">${context.getString(R.string.html_feature_sms_forwarding)}</div>
                 <div class="feature-description">
-                    Für Geräte mit mehreren SIM-Karten bietet die App umfassende Verwaltungsmöglichkeiten:
+                    ${context.getString(R.string.html_feature_sms_forwarding_intro)}
                     <ul>
-                        <li>Automatische Erkennung aller verfügbaren SIM-Karten</li>
-                        <li>Flexible SIM-Auswahl für SMS-Weiterleitung (Automatisch, SIM 1, SIM 2)</li>
-                        <li>Übersichtliche Anzeige der SIM-Karten Details (Anbieter, Rufnummer)</li>
-                        <li>Individuelle Konfiguration für jede SIM-Karte</li>
+                        <li>${context.getString(R.string.html_feature_sms_forwarding_1)}</li>
+                        <li>${context.getString(R.string.html_feature_sms_forwarding_2)}</li>
+                        <li>${context.getString(R.string.html_feature_sms_forwarding_3)}</li>
+                        <li>${context.getString(R.string.html_feature_sms_forwarding_4)}</li>
                     </ul>
                 </div>
             </li>
 
             <li class="feature-item">
-                <div class="feature-title">Anrufweiterleitung</div>
+                <div class="feature-title">${context.getString(R.string.html_feature_email_config)}</div>
                 <div class="feature-description">
-                    Die Anrufweiterleitung nutzt die native Telefonfunktion Ihres Geräts:
+                    ${context.getString(R.string.html_feature_email_config_intro)}
                     <ul>
-                        <li>Automatische Weiterleitung aller eingehenden Anrufe</li>
-                        <li>Verwendung von MMI/USSD-Codes für maximale Kompatibilität</li>
-                        <li>Gleichzeitige Aktivierung mit SMS-Weiterleitung</li>
-                        <li>Status-Anzeige der aktiven Weiterleitung</li>
+                        <li>${context.getString(R.string.html_feature_email_config_1)}</li>
+                        <li>${context.getString(R.string.html_feature_email_config_2)}</li>
+                        <li>${context.getString(R.string.html_feature_email_config_3)}</li>
+                        <li>${context.getString(R.string.html_feature_email_config_4)}</li>
                     </ul>
                 </div>
             </li>
 
             <li class="feature-item">
-                <div class="feature-title">MMI Code Einstellungen</div>
+                <div class="feature-title">${context.getString(R.string.html_feature_sim_selection)}</div>
                 <div class="feature-description">
-                    Erweiterte Konfiguration für Mobilfunk-Weiterleitungen via MMI-Codes:
+                    ${context.getString(R.string.html_feature_sim_selection_intro)}
                     <ul>
-                        <li>Konfigurierbare MMI/USSD-Codes für Anrufweiterleitung</li>
-                        <li>Netzwerkspezifische Anpassungen (Standard, Telekom, Vodafone, etc.)</li>
-                        <li>Status-Abfragen der aktiven Netzwerk-Weiterleitungen</li>
-                        <li>Automatische Zurücksetzung aller Weiterleitungen</li>
+                        <li>${context.getString(R.string.html_feature_sim_selection_1)}</li>
+                        <li>${context.getString(R.string.html_feature_sim_selection_2)}</li>
+                        <li>${context.getString(R.string.html_feature_sim_selection_3)}</li>
+                        <li>${context.getString(R.string.html_feature_sim_selection_4)}</li>
                     </ul>
                 </div>
             </li>
 
             <li class="feature-item">
-                <div class="feature-title">Test und Überwachung</div>
+                <div class="feature-title">${context.getString(R.string.html_feature_call_forwarding)}</div>
                 <div class="feature-description">
-                    Umfangreiche Test- und Überwachungsfunktionen für alle Weiterleitungen:
+                    ${context.getString(R.string.html_feature_call_forwarding_intro)}
                     <ul>
-                        <li>Test-SMS mit anpassbarem Inhalt</li>
-                        <li>Separate Test-Emails an einzelne Adressen</li>
-                        <li>Detaillierte Protokollierung aller Aktivitäten</li>
-                        <li>Export von Protokollen im CSV-Format</li>
+                        <li>${context.getString(R.string.html_feature_call_forwarding_1)}</li>
+                        <li>${context.getString(R.string.html_feature_call_forwarding_2)}</li>
+                        <li>${context.getString(R.string.html_feature_call_forwarding_3)}</li>
+                        <li>${context.getString(R.string.html_feature_call_forwarding_4)}</li>
                     </ul>
                 </div>
             </li>
-            
+
             <li class="feature-item">
-                <div class="feature-title">Benutzeroberfläche</div>
+                <div class="feature-title">${context.getString(R.string.html_feature_mmi_codes)}</div>
                 <div class="feature-description">
-                    Die Benutzeroberfläche wurde für intuitive Bedienung optimiert:
+                    ${context.getString(R.string.html_feature_mmi_codes_intro)}
                     <ul>
-                        <li>Separate Bereiche für SMS- und Email-Konfiguration</li>
-                        <li>Übersichtliche Statusanzeigen</li>
-                        <li>Farbkodierte Protokollansicht</li>
-                        <li>Anpassung an Tablets und Querformat</li>
+                        <li>${context.getString(R.string.html_feature_mmi_codes_1)}</li>
+                        <li>${context.getString(R.string.html_feature_mmi_codes_2)}</li>
+                        <li>${context.getString(R.string.html_feature_mmi_codes_3)}</li>
+                        <li>${context.getString(R.string.html_feature_mmi_codes_4)}</li>
                     </ul>
                 </div>
             </li>
-            
+
             <li class="feature-item">
-                <div class="feature-title">Sicherheit und Datenschutz</div>
+                <div class="feature-title">${context.getString(R.string.html_feature_testing)}</div>
                 <div class="feature-description">
-                    Die App legt besonderen Wert auf Sicherheit und Datenschutz:
+                    ${context.getString(R.string.html_feature_testing_intro)}
                     <ul>
-                        <li>Verschlüsselte Speicherung sensibler Daten</li>
-                        <li>Sichere Handhabung von Email-Zugangsdaten</li>
-                        <li>Automatische Bereinigung beim Beenden</li>
-                        <li>Keine dauerhafte Speicherung von SMS-Inhalten</li>
+                        <li>${context.getString(R.string.html_feature_testing_1)}</li>
+                        <li>${context.getString(R.string.html_feature_testing_2)}</li>
+                        <li>${context.getString(R.string.html_feature_testing_3)}</li>
+                        <li>${context.getString(R.string.html_feature_testing_4)}</li>
+                    </ul>
+                </div>
+            </li>
+
+            <li class="feature-item">
+                <div class="feature-title">${context.getString(R.string.html_feature_ui)}</div>
+                <div class="feature-description">
+                    ${context.getString(R.string.html_feature_ui_intro)}
+                    <ul>
+                        <li>${context.getString(R.string.html_feature_ui_1)}</li>
+                        <li>${context.getString(R.string.html_feature_ui_2)}</li>
+                        <li>${context.getString(R.string.html_feature_ui_3)}</li>
+                        <li>${context.getString(R.string.html_feature_ui_4)}</li>
+                    </ul>
+                </div>
+            </li>
+
+            <li class="feature-item">
+                <div class="feature-title">${context.getString(R.string.html_feature_security)}</div>
+                <div class="feature-description">
+                    ${context.getString(R.string.html_feature_security_intro)}
+                    <ul>
+                        <li>${context.getString(R.string.html_feature_security_1)}</li>
+                        <li>${context.getString(R.string.html_feature_security_2)}</li>
+                        <li>${context.getString(R.string.html_feature_security_3)}</li>
+                        <li>${context.getString(R.string.html_feature_security_4)}</li>
                     </ul>
                 </div>
             </li>
@@ -520,82 +524,81 @@ private fun getHtmlContent(isDarkTheme: Boolean, context: Context): String {
     </div>
 
     <div class="section-container">
-        <h2>System-Information</h2>
+        <h2>${context.getString(R.string.html_heading_system_info)}</h2>
 
         <div class="info-item">
-            <div class="info-label">Programmiersprache</div>
-            <div class="info-value">Kotlin ${BuildConfig.KOTLIN_VERSION}</div>
+            <div class="info-label">${context.getString(R.string.html_label_language)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_kotlin)} ${BuildConfig.KOTLIN_VERSION}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">UI-Framework</div>
-            <div class="info-value">Jetpack Compose</div>
+            <div class="info-label">${context.getString(R.string.html_label_ui_framework)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_jetpack_compose)}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Build-System</div>
-            <div class="info-value">Gradle ${BuildConfig.GRADLE_VERSION} mit AGP ${BuildConfig.AGP_VERSION}</div>
+            <div class="info-label">${context.getString(R.string.html_label_build_system)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_gradle)} ${BuildConfig.GRADLE_VERSION} mit AGP ${BuildConfig.AGP_VERSION}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Build Tools</div>
+            <div class="info-label">${context.getString(R.string.html_label_build_tools)}</div>
             <div class="info-value">${BuildConfig.BUILD_TOOLS_VERSION}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Build Zeitpunkt</div>
+            <div class="info-label">${context.getString(R.string.html_label_build_time)}</div>
             <div class="info-value">${BuildConfig.BUILD_TIME}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Build Typ</div>
+            <div class="info-label">${context.getString(R.string.html_label_build_type)}</div>
             <div class="info-value"><span class="badge">${BuildConfig.BUILD_TYPE}</span></div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Architektur</div>
-            <div class="info-value">MVVM (Model-View-ViewModel) mit Repository-Pattern</div>
+            <div class="info-label">${context.getString(R.string.html_label_architecture)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_architecture)}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Nebenläufigkeit</div>
-            <div class="info-value">Coroutines und Flow</div>
+            <div class="info-label">${context.getString(R.string.html_label_concurrency)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_concurrency)}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Datenspeicherung</div>
-            <div class="info-value">Verschlüsselte SharedPreferences</div>
+            <div class="info-label">${context.getString(R.string.html_label_data_storage)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_encrypted_prefs)}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Hintergrunddienst</div>
-            <div class="info-value">Foreground Service</div>
+            <div class="info-label">${context.getString(R.string.html_label_background_service)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_foreground_service)}</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Android Version</div>
+            <div class="info-label">${context.getString(R.string.html_label_android_version)}</div>
             <div class="info-value">Android $currentAndroidVersion (API Level $currentSDKVersion)</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Min SDK</div>
+            <div class="info-label">${context.getString(R.string.html_label_min_sdk)}</div>
             <div class="info-value">Android ${getAndroidVersionName(minSDKVersion)} (API Level $minSDKVersion)</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">Target SDK</div>
+            <div class="info-label">${context.getString(R.string.html_label_target_sdk)}</div>
             <div class="info-value">Android ${getAndroidVersionName(targetSDKVersion)} (API Level $targetSDKVersion)</div>
         </div>
 
         <div class="info-item">
-            <div class="info-label">JDK</div>
+            <div class="info-label">${context.getString(R.string.html_label_jdk)}</div>
             <div class="info-value">${BuildConfig.JDK_VERSION}</div>
         </div>
     </div>
 
     <p class="footnote">
-        Die App wurde unter Berücksichtigung moderner Android-Entwicklungspraktiken und Datenschutzrichtlinien entwickelt. 
-        Sie läuft energieeffizient im Hintergrund und gewährleistet dabei eine zuverlässige Weiterleitung Ihrer Nachrichten und Anrufe.
+        ${context.getString(R.string.html_footnote_development)}
     </p>
 </body>
 </html>

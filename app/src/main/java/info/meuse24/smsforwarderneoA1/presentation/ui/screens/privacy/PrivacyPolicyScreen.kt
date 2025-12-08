@@ -11,12 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import info.meuse24.smsforwarderneoA1.R
 
 /**
  * Privacy Policy Screen - Shown before permission requests
@@ -153,12 +155,12 @@ private fun PrivacyPolicyHeader(
             FilterChip(
                 selected = selectedLanguage == "DE",
                 onClick = { onLanguageChange("DE") },
-                label = { Text("Deutsch") }
+                label = { Text(stringResource(R.string.language_german)) }
             )
             FilterChip(
                 selected = selectedLanguage == "EN",
                 onClick = { onLanguageChange("EN") },
-                label = { Text("English") }
+                label = { Text(stringResource(R.string.language_english)) }
             )
         }
     }
