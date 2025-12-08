@@ -213,4 +213,19 @@ SmsForegroundService.stopService(context)
 - ✅ Clean loading state without buttons during initialization
 - ✅ Conditional button display via nullable callbacks
 
+**UI Design Enhancements (2025-12-08):**
+- ✅ Custom warm golden gradient (`WarmContactGradient`) matching wallpaper colors
+  - Light golden yellow (#E8C547, 70% opacity) → Darker golden/tan (#D4A853, 60% opacity)
+  - Applied to all 4 main action buttons on Home Screen
+- ✅ Consistent button styling across Home Screen:
+  - Contact selection button (75% width, 120dp height)
+  - 3 action buttons (Help, Status, Reset) in horizontal row
+  - All buttons: RoundedCornerShape(12.dp), black border (2dp, 80% opacity)
+  - All buttons grouped in rotated container (2° counter-clockwise)
+- ✅ Rotation consistency via parent container instead of individual button rotation
+- **Components:**
+  - `Gradient.kt`: New `WarmContactGradient` definition
+  - `AnimatedButton.kt`: `GradientButton` component with border support
+  - `HomeScreen.kt`: Unified button container with consistent rotation
+
 **App is stable and production-ready.**
