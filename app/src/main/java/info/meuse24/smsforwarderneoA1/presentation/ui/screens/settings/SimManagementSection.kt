@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +41,7 @@ import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
+import info.meuse24.smsforwarderneoA1.R
 
 @Composable
 fun SimManagementSection(
@@ -85,7 +87,7 @@ fun SimManagementSection(
             .padding(16.dp)
     ) {
         Text(
-            text = "SIM-Karten Übersicht",
+            text = stringResource(R.string.heading_sim_overview),
             style = sectionTitleStyle,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -119,12 +121,12 @@ fun SimManagementSection(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Keine SIM-Karten gefunden",
+                        text = stringResource(R.string.error_no_sims_found),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                     Text(
-                        text = "Stellen Sie sicher, dass Berechtigungen erteilt wurden",
+                        text = stringResource(R.string.msg_check_permissions),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -153,7 +155,7 @@ fun SimManagementSection(
                         ) {
                             Column {
                                 Text(
-                                    text = "SIM ${sim.slotIndex + 1}",
+                                    text = stringResource(R.string.label_sim_number, sim.slotIndex + 1),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -188,9 +190,9 @@ fun SimManagementSection(
                                     ) {
                                         Text(
                                             text = when {
-                                                isDefaultSms && isDefaultVoice -> "Standard"
-                                                isDefaultSms -> "Standard SMS"
-                                                else -> "Standard Voice"
+                                                isDefaultSms && isDefaultVoice -> stringResource(R.string.badge_default)
+                                                isDefaultSms -> stringResource(R.string.badge_default_sms)
+                                                else -> stringResource(R.string.badge_default_voice)
                                             },
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                             style = MaterialTheme.typography.labelSmall,
@@ -206,7 +208,7 @@ fun SimManagementSection(
                                         color = MaterialTheme.colorScheme.primaryContainer
                                     ) {
                                         Text(
-                                            text = "Auto",
+                                            text = stringResource(R.string.badge_auto_detected),
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -224,7 +226,11 @@ fun SimManagementSection(
                                     }
                                 ) {
                                     Text(
-                                        text = if (currentNumber.isNotEmpty()) "Konfiguriert" else "Fehlend",
+                                        text = if (currentNumber.isNotEmpty()) {
+                                            stringResource(R.string.badge_configured)
+                                        } else {
+                                            stringResource(R.string.badge_missing)
+                                        },
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = if (currentNumber.isNotEmpty()) {
@@ -253,7 +259,7 @@ fun SimManagementSection(
                                 text = if (currentNumber.isNotEmpty()) {
                                     currentNumber
                                 } else {
-                                    "Nicht konfiguriert"
+                                    stringResource(R.string.msg_not_configured)
                                 },
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = if (currentNumber.isNotEmpty()) {
@@ -286,17 +292,17 @@ fun SimManagementSection(
                                         modifier = Modifier.size(16.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = if (sim.isAutoDetected) {
-                                            "Automatisch erkannt"
-                                        } else {
-                                            "Manuell eingegeben"
-                                        },
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (sim.isAutoDetected) {
+                                    stringResource(R.string.label_auto_detected)
+                                } else {
+                                    stringResource(R.string.label_manually_entered)
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                             }
                         }
                     }
@@ -315,24 +321,24 @@ fun SimManagementSection(
                         modifier = Modifier.padding(12.dp)
                     ) {
                         Text(
-                            text = "Zusammenfassung:",
+                            text = stringResource(R.string.heading_summary),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "• ${simInfoList.size} SIM-Karte(n) erkannt",
+                            text = stringResource(R.string.msg_sim_count_detected, simInfoList.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         val autoDetected = simInfoList.count { !it.phoneNumber.isNullOrEmpty() }
                         Text(
-                            text = "• $autoDetected automatisch erkannt",
+                            text = stringResource(R.string.msg_sim_auto_detected, autoDetected),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         val withStoredNumbers = storedNumbers.values.count { it.isNotEmpty() }
                         Text(
-                            text = "• $withStoredNumbers Nummer(n) konfiguriert",
+                            text = stringResource(R.string.msg_sim_numbers_configured, withStoredNumbers),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -341,7 +347,7 @@ fun SimManagementSection(
                         if (withStoredNumbers < simInfoList.size) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "ℹ️ Fehlende Nummern werden beim App-Start abgefragt",
+                                text = stringResource(R.string.info_missing_numbers_on_start),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )

@@ -13,10 +13,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
+import info.meuse24.smsforwarderneoA1.R
 
 @Composable
 fun PhoneSettingsSection(
@@ -35,7 +37,7 @@ fun PhoneSettingsSection(
     ) {
         Column {
             Text(
-                text = "Erkannte Ländervorwahl",
+                text = stringResource(R.string.label_detected_country_code),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -47,12 +49,12 @@ fun PhoneSettingsSection(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                    .padding(16.dp)
                 ) {
                     Text(text = PhoneSmsUtils.getCountryNameForCode(countryCode))
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Quelle: $countryCodeSource",
+                        text = stringResource(R.string.label_source) + countryCodeSource,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

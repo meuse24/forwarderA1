@@ -139,11 +139,11 @@ fun MmiCodeSettingsSection(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "4-Sekunden-Warnung vor Wählvorgang",
+                    text = stringResource(R.string.toggle_mmi_warning),
                     style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Zeigt Hinweis vor MMI-Code-Ausführung",
+                    text = stringResource(R.string.desc_mmi_warning),
                     style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                     color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                 )
