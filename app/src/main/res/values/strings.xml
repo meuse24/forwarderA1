@@ -145,6 +145,7 @@
     <string name="msg_gmail_setup_info">Enter username and app-specific password.</string>
     <string name="msg_gmx_setup_info">Enter email address and password.</string>
     <string name="note_email_setup_info">Note: Gmail requires an app-specific password, and GMX requires IMAP or POP3 to be enabled in settings.</string>
+    <string name="label_mail_tab_visible">Show Mail tab</string>
 
     <!-- ==================== LOG SETTINGS SECTION ==================== -->
     <string name="label_max_log_size">Maximum Log Size (MB)</string>
