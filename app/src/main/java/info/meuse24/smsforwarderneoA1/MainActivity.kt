@@ -65,6 +65,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.screens.home.HomeScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.info.InfoScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.logs.LogScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.mail.MailScreen
+import info.meuse24.smsforwarderneoA1.presentation.ui.screens.privacy.PrivacyPolicyScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings.SettingsScreen
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
@@ -109,6 +110,9 @@ class MainActivity : ComponentActivity() {
 
     // State für MMI Warning Dialog
     private val _showMmiWarningDialog = MutableStateFlow(false)
+
+    // State für Privacy Policy
+    private val _showPrivacyPolicy = MutableStateFlow(false)
 
     // Contact Picker Launcher
     private val contactPickerLauncher = registerForActivityResult(
@@ -178,8 +182,51 @@ class MainActivity : ComponentActivity() {
                 val error by _loadingError.collectAsState()
                 val isFullyInitialized by AppContainer.isInitialized.collectAsState()
                 val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
+                val showPrivacyPolicy by _showPrivacyPolicy.collectAsState()
 
                 when {
+                    // Zeige Privacy Policy Screen als allererstes (wenn noch nicht akzeptiert)
+                    showPrivacyPolicy -> {
+                        PrivacyPolicyScreen(
+                            onAccept = {
+                                AppContainer.requirePrefsManager().setPrivacyPolicyAccepted(true)
+                                _showPrivacyPolicy.value = false
+
+                                LoggingManager.logInfo(
+                                    component = "MainActivity",
+                                    action = "PRIVACY_POLICY_ACCEPTED",
+                                    message = "Datenschutzerklärung akzeptiert"
+                                )
+
+                                // Zeige LoadingScreen und starte normale Initialisierung
+                                _isLoading.value = true
+                                _loadingError.value = "Berechtigungen werden abgefragt..."
+
+                                lifecycleScope.launch {
+                                    // Kleine Verzögerung damit LoadingScreen sichtbar wird
+                                    delay(300)
+                                    initializeApp()
+                                }
+                            },
+                            onDecline = {
+                                LoggingManager.logWarning(
+                                    component = "MainActivity",
+                                    action = "PRIVACY_POLICY_DECLINED",
+                                    message = "Datenschutzerklärung abgelehnt - App wird beendet"
+                                )
+
+                                // Zeige AlertDialog mit Begründung
+                                AlertDialog.Builder(this@MainActivity)
+                                    .setTitle("Datenschutzerklärung erforderlich")
+                                    .setMessage("Ohne Akzeptierung der Datenschutzerklärung kann die App nicht verwendet werden, da die benötigten Berechtigungen nicht angefordert werden können.")
+                                    .setPositiveButton("OK") { _, _ ->
+                                        finish()
+                                    }
+                                    .setCancelable(false)
+                                    .show()
+                            }
+                        )
+                    }
                     // Zeige LoadingScreen nur wenn nicht der CriticalPermissionsDialog aktiv ist
                     (!isFullyInitialized || isLoading) && !showCriticalPermissionsDialog -> {
                         LoadingScreen(
@@ -225,11 +272,36 @@ class MainActivity : ComponentActivity() {
                     throw IllegalStateException("Activity initialization completed but isInitialized is still false")
                 }
 
-                // Starte vollständige App-Initialisierung
-                initializeApp()
+                // Prüfe ob Privacy Policy bereits akzeptiert wurde
+                val privacyAccepted = AppContainer.requirePrefsManager().isPrivacyPolicyAccepted()
+
+                if (!privacyAccepted) {
+                    // Zeige Privacy Policy Screen
+                    _isLoading.value = false
+                    _showPrivacyPolicy.value = true
+
+                    LoggingManager.logInfo(
+                        component = "MainActivity",
+                        action = "SHOW_PRIVACY_POLICY",
+                        message = "Datenschutzerklärung wird angezeigt (erster App-Start)"
+                    )
+                } else {
+                    // Privacy Policy bereits akzeptiert - normale Initialisierung
+                    initializeApp()
+                }
 
             } catch (e: Exception) {
-                _loadingError.value = "Initialisierungsfehler: ${e.message}"
+                // Special handling for encryption initialization failure
+                _loadingError.value = when (e) {
+                    is info.meuse24.smsforwarderneoA1.data.local.PreferencesInitializationException -> {
+                        "SICHERHEITSFEHLER\n\n" +
+                        "Die verschlüsselte Datenspeicherung konnte nicht initialisiert werden.\n\n" +
+                        "Bitte App-Daten löschen:\n" +
+                        "Einstellungen → Apps → SMS Forwarder Neo → Speicher → Daten löschen\n\n" +
+                        "Fehlerdetails: ${e.message}"
+                    }
+                    else -> "Initialisierungsfehler: ${e.message}"
+                }
                 Log.e("MainActivity", "Error during initialization", e)
 
                 // Ensure loading state shows error
@@ -270,17 +342,22 @@ class MainActivity : ComponentActivity() {
     private fun initializeApp() {
         lifecycleScope.launch {
             try {
-                _loadingError.value = "Initialisiere App..."
+                _loadingError.value = "Berechtigungen werden abgefragt..."
 
                 // Warte auf vollständige AppContainer Initialisierung
                 AppContainer.isInitialized.first { it }
 
                 // Prüfe und fordere Berechtigungen an
+                // WICHTIG: LoadingScreen bleibt während Permission Dialogs sichtbar
                 permissionHandler.checkPermissions(
                     onGranted = {
-                        completeInitializationAfterPermissions()
+                        // Berechtigungen wurden erteilt
+                        lifecycleScope.launch {
+                            completeInitializationAfterPermissions()
+                        }
                     },
                     onDenied = {
+                        // Berechtigungen wurden verweigert - ERST JETZT Dialog anzeigen
                         val missing = permissionHandler.getMissingPermissions()
 
                         LoggingManager.logWarning(
@@ -543,7 +620,17 @@ class MainActivity : ComponentActivity() {
                 initializeApp()
 
             } catch (e: Exception) {
-                _loadingError.value = "Initialisierungsfehler: ${e.message}"
+                // Special handling for encryption initialization failure
+                _loadingError.value = when (e) {
+                    is info.meuse24.smsforwarderneoA1.data.local.PreferencesInitializationException -> {
+                        "SICHERHEITSFEHLER\n\n" +
+                        "Die verschlüsselte Datenspeicherung konnte nicht initialisiert werden.\n\n" +
+                        "Bitte App-Daten löschen:\n" +
+                        "Einstellungen → Apps → SMS Forwarder Neo → Speicher → Daten löschen\n\n" +
+                        "Fehlerdetails: ${e.message}"
+                    }
+                    else -> "Initialisierungsfehler: ${e.message}"
+                }
                 Log.e("MainActivity", "Error during retry initialization", e)
 
                 // Ensure loading state shows error
@@ -844,7 +931,11 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         // Nur prüfen wenn App vollständig initialisiert ist UND nicht mehr im Loading-State
-        if (!AppContainer.isInitialized.value || !::permissionHandler.isInitialized || _isLoading.value) {
+        // UND Privacy Policy nicht angezeigt wird
+        if (!AppContainer.isInitialized.value ||
+            !::permissionHandler.isInitialized ||
+            _isLoading.value ||
+            _showPrivacyPolicy.value) {
             return
         }
 

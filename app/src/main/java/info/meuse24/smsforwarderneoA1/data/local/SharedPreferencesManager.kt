@@ -288,7 +288,13 @@ class SharedPreferencesManager(private val context: Context) {
             createEncryptedPreferences()
         } catch (e: Exception) {
             handlePreferencesError(e)
-            createUnencryptedPreferences()
+            // SECURITY: Do NOT fallback to unencrypted preferences
+            // Instead, rethrow the exception to prevent app from running with compromised security
+            throw PreferencesInitializationException(
+                "Verschlüsselte Datenspeicherung konnte nicht initialisiert werden. " +
+                "Bitte App-Daten löschen und neu starten.",
+                e
+            )
         }
     }
 
@@ -310,8 +316,7 @@ class SharedPreferencesManager(private val context: Context) {
         }
     }
 
-    private fun createUnencryptedPreferences(): SharedPreferences =
-        context.getSharedPreferences(PREFS_NAME_FALLBACK, Context.MODE_PRIVATE)
+    // REMOVED: createUnencryptedPreferences() - no longer needed, no plaintext fallback for security
 
     private fun handlePreferencesError(error: Exception) {
         LoggingManager.log(
@@ -546,6 +551,20 @@ class SharedPreferencesManager(private val context: Context) {
     fun getMaxLogSizeMB(): Int =
         getPreference(KEY_MAX_LOG_SIZE_MB, DEFAULT_MAX_LOG_SIZE_MB)
 
+    /**
+     * Speichert, ob die Datenschutzerklärung akzeptiert wurde.
+     * @param accepted true wenn akzeptiert, false wenn abgelehnt
+     */
+    fun setPrivacyPolicyAccepted(accepted: Boolean) =
+        setPreference(KEY_PRIVACY_POLICY_ACCEPTED, accepted)
+
+    /**
+     * Prüft, ob die Datenschutzerklärung akzeptiert wurde.
+     * @return true wenn akzeptiert, false wenn noch nicht angezeigt/abgelehnt
+     */
+    fun isPrivacyPolicyAccepted(): Boolean =
+        getPreference(KEY_PRIVACY_POLICY_ACCEPTED, false)
+
     companion object {
         private const val KEY_TEST_EMAIL_TEXT = "test_email_text"
         private const val KEY_FORWARD_SMS_TO_EMAIL = "forward_sms_to_email"
@@ -561,8 +580,8 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_SMTP_PASSWORD = "smtp_password"
         private const val DEFAULT_SMTP_HOST = "smtp.gmail.com"
         private const val DEFAULT_SMTP_PORT = 587
-        private const val PREFS_NAME = "SMSForwarderEncryptedPrefs"
-        private const val PREFS_NAME_FALLBACK = "SMSForwarderPrefs"
+        private const val PREFS_NAME = "sms_forwarder_secure_prefs"
+        // REMOVED: PREFS_NAME_FALLBACK - no plaintext fallback for security
         private const val DEFAULT_TEST_SMS_TEXT = "Das ist eine Test-SMS"
         private const val DEFAULT_TEST_EMAIL_TEXT = "Das ist eine Test-Email"
         private const val DEFAULT_FILTER_TEXT = ""
@@ -580,6 +599,7 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_INTERNATIONAL_DIAL_PREFIX = "international_dial_prefix"
         private const val KEY_MMI_WARNING_ENABLED = "mmi_warning_enabled"
         private const val KEY_MAX_LOG_SIZE_MB = "max_log_size_mb"
+        private const val KEY_PRIVACY_POLICY_ACCEPTED = "privacy_policy_accepted"
 
         // BMI/A1 Codes (New Defaults)
         private const val DEFAULT_MMI_ACTIVATE_PREFIX = "*21*"

@@ -25,13 +25,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,11 +51,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import info.meuse24.smsforwarderneoA1.BuildConfig
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.GradientBorderCard
+import info.meuse24.smsforwarderneoA1.presentation.ui.screens.privacy.PrivacyPolicyScreen
 import info.meuse24.smsforwarderneoA1.ui.theme.PrimaryGradient
 
 @Composable
@@ -58,6 +68,7 @@ fun InfoScreen() {
     val packageInfo = remember {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
+    var showPrivacyPolicy by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -210,6 +221,31 @@ fun InfoScreen() {
                 }
             }
 
+            // Datenschutzerklärung Button
+            Button(
+                onClick = { showPrivacyPolicy = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.95f },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Security,
+                    contentDescription = "Datenschutzerklärung",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Datenschutzerklärung",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
             // HTML-Content Card
             Card(
                 modifier = Modifier
@@ -249,6 +285,21 @@ fun InfoScreen() {
                         )
                     },
                     modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        // Privacy Policy Dialog
+        if (showPrivacyPolicy) {
+            Dialog(
+                onDismissRequest = { showPrivacyPolicy = false },
+                properties = DialogProperties(
+                    usePlatformDefaultWidth = false
+                )
+            ) {
+                PrivacyPolicyScreen(
+                    viewMode = true,
+                    onDismiss = { showPrivacyPolicy = false }
                 )
             }
         }

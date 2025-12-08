@@ -34,9 +34,12 @@ class PermissionHandler(private val activity: MainActivity) {
         onDenied: () -> Unit
     ) {
         if (hasPermissions()) {
+            Log.d(TAG, "checkPermissions: All permissions already granted")
             onGranted()
         } else {
+            Log.d(TAG, "checkPermissions: Requesting permissions...")
             permissionCallback = { granted ->
+                Log.d(TAG, "checkPermissions: Callback received - granted=$granted")
                 if (granted) onGranted() else onDenied()
             }
             requestPermissions()

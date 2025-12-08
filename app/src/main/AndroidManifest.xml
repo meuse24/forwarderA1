@@ -15,8 +15,10 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <!-- Optional: Um Telefondienste zu verwenden -->
-    <uses-feature android:name="android.hardware.telephony" android:required="false"/>
+
+    <!-- Declare required hardware features -->
+    <uses-feature android:name="android.hardware.telephony" android:required="true"/>
+    <uses-feature android:name="android.software.sip" android:required="false"/>
 
     <application
         android:name=".SmsForwarderApplication"
@@ -28,6 +30,9 @@
         android:roundIcon="@mipmap/ic_launcher1_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SMSForwarderNeoA1"
+        android:usesCleartextTraffic="false"
+        android:requestLegacyExternalStorage="false"
+        android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31"
         tools:ignore="ForegroundServicePermission">
 

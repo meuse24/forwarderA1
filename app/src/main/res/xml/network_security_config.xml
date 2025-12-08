@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Only allow HTTPS connections by default -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Trust system certificate authorities -->
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Allow cleartext only for SMTP if needed (port 587 STARTTLS) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Common SMTP servers that might use STARTTLS -->
+        <domain includeSubdomains="false">smtp.gmail.com</domain>
+        <domain includeSubdomains="false">smtp.office365.com</domain>
+        <domain includeSubdomains="false">smtp-mail.outlook.com</domain>
+    </domain-config>
+</network-security-config>
