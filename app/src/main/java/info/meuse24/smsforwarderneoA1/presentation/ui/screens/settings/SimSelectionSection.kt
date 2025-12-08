@@ -112,8 +112,9 @@ fun SimSelectionSection(
 
 /**
  * Erstellt das Label für einen SIM-Auswahl-Modus.
- * Bei ALWAYS_SIM_1/2 wird "(Standard-SMS)" angehängt, falls zutreffend.
+ * Bei ALWAYS_SIM_1/2 wird ein lokalisierter Suffix angehängt (Standard-SMS / nicht verfügbar).
  */
+@Composable
 private fun buildLabel(
     mode: SimSelectionMode,
     simCount: Int,
@@ -121,24 +122,33 @@ private fun buildLabel(
     sim1SubId: Int?,
     sim2SubId: Int?
 ): String {
+    val baseLabel = when (mode) {
+        SimSelectionMode.SAME_AS_INCOMING -> stringResource(R.string.sim_selection_same_as_incoming)
+        SimSelectionMode.ALWAYS_SIM_1 -> stringResource(R.string.sim_selection_always_sim1)
+        SimSelectionMode.ALWAYS_SIM_2 -> stringResource(R.string.sim_selection_always_sim2)
+    }
+
+    val defaultSuffix = stringResource(R.string.suffix_default_sms)
+    val notAvailableSuffix = stringResource(R.string.suffix_not_available)
+
     return when (mode) {
-        SimSelectionMode.SAME_AS_INCOMING -> mode.displayName
+        SimSelectionMode.SAME_AS_INCOMING -> baseLabel
 
         SimSelectionMode.ALWAYS_SIM_1 -> {
             val isDefault = sim1SubId == defaultSmsSubId && sim1SubId != -1
-            val suffix = if (isDefault) " (Standard-SMS)" else ""
-            "${mode.displayName}$suffix"
+            val suffix = if (isDefault) " $defaultSuffix" else ""
+            "$baseLabel$suffix"
         }
 
         SimSelectionMode.ALWAYS_SIM_2 -> {
             val isDefault = sim2SubId == defaultSmsSubId && sim2SubId != -1
             val isAvailable = simCount >= 2
             val suffix = when {
-                !isAvailable -> " (nicht verfügbar)"
-                isDefault -> " (Standard-SMS)"
+                !isAvailable -> " $notAvailableSuffix"
+                isDefault -> " $defaultSuffix"
                 else -> ""
             }
-            "${mode.displayName}$suffix"
+            "$baseLabel$suffix"
         }
     }
 }
