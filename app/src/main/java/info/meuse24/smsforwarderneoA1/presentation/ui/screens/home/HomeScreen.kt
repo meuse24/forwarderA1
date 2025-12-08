@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
@@ -291,9 +293,11 @@ fun PortraitLayout(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Bottom area: Contact selection + Buttons
+        // Bottom area: Contact selection + Buttons (rotated container)
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer { rotationZ = -2f },
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -316,10 +320,20 @@ fun PortraitLayout(
                 // Help Button
                 FloatingActionButton(
                     onClick = onNavigateToHelp,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = Color.Transparent,
+                    contentColor = Color.Black,
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
-                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .border(
+                            width = 2.dp,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .background(
+                            brush = WarmContactGradient,
+                            shape = RoundedCornerShape(12.dp)
+                        )
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Help,
@@ -333,10 +347,20 @@ fun PortraitLayout(
                 // Status Info Button
                 FloatingActionButton(
                     onClick = { viewModel.queryForwardingStatus() },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = Color.Transparent,
+                    contentColor = Color.Black,
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
-                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .border(
+                            width = 2.dp,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .background(
+                            brush = WarmContactGradient,
+                            shape = RoundedCornerShape(12.dp)
+                        )
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
@@ -353,10 +377,20 @@ fun PortraitLayout(
                         emailViewModel.updateForwardSmsToEmail(false)
                         viewModel.resetAllForwarding()
                     },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = Color.Transparent,
+                    contentColor = Color.Black,
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
-                    modifier = Modifier.graphicsLayer { alpha = 0.7f }
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .border(
+                            width = 2.dp,
+                            color = Color.Black.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .background(
+                            brush = WarmContactGradient,
+                            shape = RoundedCornerShape(12.dp)
+                        )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
@@ -392,10 +426,9 @@ fun ContactSelectionSection(
             onClick = onSelectContact,
             enabled = !isCallActive,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.75f)
                 .height(120.dp)
-                .scale(if (!isCallActive) pulseScale else 1f)
-                .graphicsLayer { rotationZ = -2f },
+                .scale(if (!isCallActive) pulseScale else 1f),
             gradient = WarmContactGradient
         ) {
             Column(
