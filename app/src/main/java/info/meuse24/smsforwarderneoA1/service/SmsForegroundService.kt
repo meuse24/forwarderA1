@@ -1,17 +1,21 @@
 package info.meuse24.smsforwarderneoA1.service
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Telephony
 import android.telephony.SmsMessage
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.BuildConfig
 import info.meuse24.smsforwarderneoA1.LoggingManager
@@ -110,6 +114,31 @@ class SmsForegroundService : Service() {
     }
 
     private fun setupService() {
+        // ANDROID 13+ FIX: Check POST_NOTIFICATIONS permission before starting foreground
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasNotificationPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasNotificationPermission) {
+                LoggingManager.logError(
+                    component = "SmsForegroundService",
+                    action = "START_FAILED",
+                    message = "POST_NOTIFICATIONS permission missing (Android 13+)",
+                    details = mapOf(
+                        "sdk_version" to Build.VERSION.SDK_INT,
+                        "required_permission" to "POST_NOTIFICATIONS"
+                    )
+                )
+
+                // Cannot start foreground service without notification permission
+                // Stop service gracefully instead of crashing
+                stopSelf()
+                return
+            }
+        }
+
         val notification = createNotification(DEFAULT_NOTIFICATION_TEXT)
         startForeground(NOTIFICATION_ID, notification)
         isRunning = true
@@ -117,7 +146,11 @@ class SmsForegroundService : Service() {
         LoggingManager.logInfo(
             component = "SmsForegroundService",
             action = "START",
-            message = "Service started successfully"
+            message = "Service started successfully",
+            details = mapOf(
+                "sdk_version" to Build.VERSION.SDK_INT,
+                "notification_permission" to "granted"
+            )
         )
     }
 
@@ -290,7 +323,7 @@ class SmsForegroundService : Service() {
                             SmsMessagePart(
                                 body = body,
                                 timestamp = smsMessage.timestampMillis,
-                                referenceNumber = smsMessage.messageRef,
+                                referenceNumber = generateMessageGroupId(smsMessage),
                                 sequencePosition = smsMessage.indexOnIcc,
                                 totalParts = messages.size,
                                 sender = sender,
@@ -693,14 +726,27 @@ class SmsForegroundService : Service() {
         }
     }
 
-    private val SmsMessage.messageRef: Int
-        get() = try {
-            val field = SmsMessage::class.java.getDeclaredField("mMessageRef")
-            field.isAccessible = true
-            field.getInt(this)
-        } catch (e: Exception) {
-            0
-        }
+    /**
+     * Generate a stable group ID for multi-part SMS messages.
+     *
+     * FIXED: Previously used reflection to access private mMessageRef field,
+     * which was unreliable across Android versions. Now uses a combination
+     * of timestamp and sender to group messages reliably.
+     *
+     * Multi-part messages from the same sender arrive within milliseconds,
+     * so rounding timestamp to nearest 5 seconds groups them together.
+     */
+    private fun generateMessageGroupId(message: SmsMessage): Int {
+        // Round timestamp to nearest 5 seconds (5000ms windows)
+        // Messages in the same multi-part group arrive within ~100ms
+        val timestampWindow = (message.timestampMillis / 5000) * 5000
+
+        // Combine sender hash + timestamp window for stable grouping
+        val sender = message.originatingAddress ?: "unknown"
+        val groupKey = "$sender:$timestampWindow"
+
+        return groupKey.hashCode()
+    }
 
     private suspend fun handleEmailForwarding(sender: String, messageBody: String) {
         // Nutze structured concurrency - kein neuer serviceScope.launch!
