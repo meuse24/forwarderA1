@@ -75,6 +75,7 @@ fun SettingsScreen(
     var phoneSettingsPosition by remember { mutableStateOf(0f) }
     var simManagementPosition by remember { mutableStateOf(0f) }
     var simSelectionPosition by remember { mutableStateOf(0f) }
+    var mmiSimSelectionPosition by remember { mutableStateOf(0f) }
     var appSettingsPosition by remember { mutableStateOf(0f) }
     var mmiCodeSettingsPosition by remember { mutableStateOf(0f) }
     var emailSettingsPosition by remember { mutableStateOf(0f) }
@@ -84,6 +85,7 @@ fun SettingsScreen(
     var phoneSettingsExpanded by remember { mutableStateOf(false) }
     var simManagementExpanded by remember { mutableStateOf(false) }
     var simSelectionExpanded by remember { mutableStateOf(false) }
+    var mmiSimSelectionExpanded by remember { mutableStateOf(false) }
     var appSettingsExpanded by remember { mutableStateOf(false) }
     var mmiCodeSettingsExpanded by remember { mutableStateOf(false) }
     var emailSettingsExpanded by remember { mutableStateOf(false) }
@@ -94,6 +96,7 @@ fun SettingsScreen(
         if (section != "phone") phoneSettingsExpanded = false
         if (section != "simManagement") simManagementExpanded = false
         if (section != "simSelection") simSelectionExpanded = false
+        if (section != "mmiSimSelection") mmiSimSelectionExpanded = false
         if (section != "app") appSettingsExpanded = false
         if (section != "mmi") mmiCodeSettingsExpanded = false
         if (section != "email") emailSettingsExpanded = false
@@ -183,6 +186,31 @@ fun SettingsScreen(
                 }
             ) {
                 SimSelectionSection(
+                    viewModel = viewModel,
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Section 3b: MMI SIM Selection
+            ExpandableSection(
+                title = stringResource(R.string.section_mmi_sim_selection),
+                expanded = mmiSimSelectionExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("mmiSimSelection")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(mmiSimSelectionPosition.toInt())
+                        }
+                    }
+                    mmiSimSelectionExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    mmiSimSelectionPosition = coordinates.positionInParent().y
+                }
+            ) {
+                MmiSimSelectionSection(
                     viewModel = viewModel,
                     sectionTitleStyle = sectionTitleStyle
                 )

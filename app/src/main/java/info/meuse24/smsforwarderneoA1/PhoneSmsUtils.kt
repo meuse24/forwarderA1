@@ -12,6 +12,8 @@ import android.os.Looper
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
+import android.telecom.PhoneAccountHandle
+import android.telecom.TelecomManager
 import androidx.core.content.ContextCompat
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import android.net.ConnectivityManager
@@ -19,6 +21,7 @@ import android.telephony.ServiceState
 import android.telephony.SubscriptionInfo
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.R
+import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
@@ -505,13 +508,14 @@ class PhoneSmsUtils private constructor() {
         }
 
         /**
-         * Sendet einen USSD-Code.
+         * Sendet einen USSD-Code mit optionaler SIM-Auswahl.
          * @param context Der Anwendungskontext
          * @param ussdCode Der zu sendende USSD-Code
+         * @param subscriptionId Die Subscription-ID der gewünschten SIM (-1 für Standard)
          * @return true, wenn der Code erfolgreich gesendet wurde, sonst false
          */
         @SuppressLint("MissingPermission")
-        fun sendUssdCode(context: Context, ussdCode: String): Boolean {
+        fun sendUssdCode(context: Context, ussdCode: String, subscriptionId: Int = -1): Boolean {
             if (ussdCode.isBlank()) {
                 LoggingManager.logWarning(
                     component = "PhoneSmsUtils",
@@ -538,8 +542,8 @@ class PhoneSmsUtils private constructor() {
             }
 
             return try {
-                val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-                if (telephonyManager == null) {
+                var baseTelephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+                if (baseTelephonyManager == null) {
                     LoggingManager.logError(
                         component = "PhoneSmsUtils",
                         action = "SEND_USSD",
@@ -549,6 +553,23 @@ class PhoneSmsUtils private constructor() {
                     SnackbarManager.showError(context.getString(R.string.snackbar_phone_service_unavailable))
                     return false
                 }
+
+                // Wenn eine spezifische SIM gewählt wurde, erstelle TelephonyManager für diese SIM
+                val telephonyManager = if (subscriptionId != -1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    baseTelephonyManager.createForSubscriptionId(subscriptionId)
+                } else {
+                    baseTelephonyManager
+                }
+
+                LoggingManager.logInfo(
+                    component = "PhoneSmsUtils",
+                    action = "SEND_USSD_PREPARE",
+                    message = "USSD-Request vorbereitet",
+                    details = mapOf(
+                        "subscription_id" to subscriptionId,
+                        "using_specific_sim" to (subscriptionId != -1)
+                    )
+                )
 
                 telephonyManager.sendUssdRequest(
                     ussdCode,
@@ -603,7 +624,9 @@ class PhoneSmsUtils private constructor() {
                     message = "USSD-Anfrage gesendet",
                     details = mapOf(
                         "code" to ussdCode,
-                        "code_type" to getUssdCodeType(context, ussdCode)
+                        "code_type" to getUssdCodeType(context, ussdCode),
+                        "subscription_id" to subscriptionId,
+                        "using_specific_sim" to (subscriptionId != -1)
                     )
                 )
                 SnackbarManager.showInfo(context.getString(R.string.snackbar_ussd_request_sent, ussdCode))
@@ -765,6 +788,152 @@ class PhoneSmsUtils private constructor() {
                     error = e
                 )
                 null
+            }
+        }
+
+        /**
+         * Ermittelt den PhoneAccountHandle für eine spezifische Subscription ID.
+         * Wird für SIM-Auswahl bei MMI-Code-Ausführung verwendet.
+         *
+         * @param context Der Anwendungskontext
+         * @param subscriptionId Die Subscription-ID der gewünschten SIM-Karte
+         * @return PhoneAccountHandle oder null wenn nicht verfügbar
+         */
+        @SuppressLint("MissingPermission")
+        fun getPhoneAccountHandleForSubscription(
+            context: Context,
+            subscriptionId: Int
+        ): PhoneAccountHandle? {
+            return try {
+                val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+                    ?: return null
+
+                val phoneAccounts = telecomManager.callCapablePhoneAccounts
+                if (phoneAccounts.isEmpty()) {
+                    LoggingManager.logWarning(
+                        component = "PhoneSmsUtils",
+                        action = "GET_PHONE_ACCOUNT_HANDLE",
+                        message = "Keine call-capable Phone Accounts gefunden"
+                    )
+                    return null
+                }
+
+                val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+                    ?: return null
+
+                val subInfo = subscriptionManager.getActiveSubscriptionInfo(subscriptionId)
+                    ?: return null
+
+                // Strategie 1: Versuche direkte Zuordnung über Subscription-ID
+                val matchedAccount = phoneAccounts.find { account ->
+                    telecomManager.getPhoneAccount(account)?.extras
+                        ?.getString("android.telephony.extra.SUBSCRIPTION_ID")
+                        ?.toIntOrNull() == subscriptionId
+                }
+
+                if (matchedAccount != null) {
+                    LoggingManager.logInfo(
+                        component = "PhoneSmsUtils",
+                        action = "GET_PHONE_ACCOUNT_HANDLE",
+                        message = "PhoneAccountHandle gefunden (via Subscription-ID)",
+                        details = mapOf(
+                            "subscription_id" to subscriptionId,
+                            "sim_slot" to subInfo.simSlotIndex
+                        )
+                    )
+                    return matchedAccount
+                }
+
+                // Strategie 2: Fallback auf Slot-Index
+                val fallbackAccount = phoneAccounts.getOrNull(subInfo.simSlotIndex)
+                if (fallbackAccount != null) {
+                    LoggingManager.logInfo(
+                        component = "PhoneSmsUtils",
+                        action = "GET_PHONE_ACCOUNT_HANDLE",
+                        message = "PhoneAccountHandle gefunden (via Slot-Index)",
+                        details = mapOf(
+                            "subscription_id" to subscriptionId,
+                            "sim_slot" to subInfo.simSlotIndex
+                        )
+                    )
+                }
+
+                fallbackAccount
+
+            } catch (e: Exception) {
+                LoggingManager.logError(
+                    component = "PhoneSmsUtils",
+                    action = "GET_PHONE_ACCOUNT_HANDLE",
+                    message = "Fehler beim Ermitteln des PhoneAccountHandle",
+                    error = e,
+                    details = mapOf("subscription_id" to subscriptionId)
+                )
+                null
+            }
+        }
+
+        /**
+         * Bestimmt die Ziel-Subscription-ID für MMI-Code-Ausführung basierend auf dem ausgewählten Modus.
+         *
+         * @param context Der Anwendungskontext
+         * @param mmiSimSelectionMode Der gewählte MMI-SIM-Auswahl-Modus
+         * @return Subscription-ID oder -1 wenn nicht verfügbar/Standard
+         */
+        fun determineTargetSubscriptionIdForMmi(
+            context: Context,
+            mmiSimSelectionMode: MmiSimSelectionMode
+        ): Int {
+            return when (mmiSimSelectionMode) {
+                MmiSimSelectionMode.DEFAULT_VOICE_SIM -> {
+                    // Verwende System-Standard-Sprach-SIM
+                    val defaultIds = getDefaultSimIds(context)
+                    val voiceSubId = defaultIds?.second ?: -1
+
+                    LoggingManager.logInfo(
+                        component = "PhoneSmsUtils",
+                        action = "DETERMINE_MMI_SUB_ID",
+                        message = "DEFAULT_VOICE_SIM ausgewählt",
+                        details = mapOf(
+                            "voice_sub_id" to voiceSubId
+                        )
+                    )
+
+                    voiceSubId
+                }
+                MmiSimSelectionMode.ALWAYS_SIM_1 -> {
+                    val sim1 = getAllSimInfo(context).find { it.slotIndex == 0 }
+                    val subId = sim1?.subscriptionId ?: -1
+
+                    LoggingManager.logInfo(
+                        component = "PhoneSmsUtils",
+                        action = "DETERMINE_MMI_SUB_ID",
+                        message = "ALWAYS_SIM_1 ausgewählt",
+                        details = mapOf(
+                            "subscription_id" to subId,
+                            "available" to (sim1 != null),
+                            "carrier" to (sim1?.carrierName ?: "N/A")
+                        )
+                    )
+
+                    subId
+                }
+                MmiSimSelectionMode.ALWAYS_SIM_2 -> {
+                    val sim2 = getAllSimInfo(context).find { it.slotIndex == 1 }
+                    val subId = sim2?.subscriptionId ?: -1
+
+                    LoggingManager.logInfo(
+                        component = "PhoneSmsUtils",
+                        action = "DETERMINE_MMI_SUB_ID",
+                        message = "ALWAYS_SIM_2 ausgewählt",
+                        details = mapOf(
+                            "subscription_id" to subId,
+                            "available" to (sim2 != null),
+                            "carrier" to (sim2?.carrierName ?: "N/A")
+                        )
+                    )
+
+                    subId
+                }
             }
         }
 

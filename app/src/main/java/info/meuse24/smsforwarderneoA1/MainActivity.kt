@@ -2,6 +2,7 @@ package info.meuse24.smsforwarderneoA1
 
 // Removed unsafe direct import - use AppContainer.requirePrefsManager() instead
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -11,8 +12,11 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.os.PowerManager
 import android.provider.Settings
+import android.telecom.PhoneAccountHandle
+import android.telecom.TelecomManager
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
@@ -50,6 +54,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import info.meuse24.smsforwarderneoA1.AppContainer.prefsManager
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
+import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupErrorDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupProgressDialog
@@ -500,8 +505,99 @@ class MainActivity : ComponentActivity() {
      */
     private fun dialCodeNow(normalizedCode: String, originalCode: String) {
         try {
+            // Determine which SIM to use for MMI code
+            val mmiSimMode = prefsManager.getMmiSimSelectionMode()
+            val targetSubscriptionId = PhoneSmsUtils.determineTargetSubscriptionIdForMmi(
+                this,
+                mmiSimMode
+            )
+
+            // **WICHTIG: Unterscheide zwischen USSD (endet mit #) und MMI (endet mit *)**
+            // USSD-Codes müssen direkt über TelephonyManager.sendUssdRequest() gesendet werden
+            // MMI-Codes können über den Dialer gewählt werden
+            val isUssdCode = normalizedCode.endsWith("#")
+
+            if (isUssdCode) {
+                // USSD-Code (z.B. ##21#, *#21#): Direkt senden, kein Dialer
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "DIAL_USSD_DETECTED",
+                    message = "USSD-Code erkannt (endet mit #), verwende direkten USSD-Request",
+                    details = mapOf(
+                        "code" to normalizedCode,
+                        "mmi_sim_mode" to mmiSimMode.name,
+                        "target_sub_id" to targetSubscriptionId
+                    )
+                )
+
+                val success = PhoneSmsUtils.sendUssdCode(this, normalizedCode, targetSubscriptionId)
+
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "DIAL_USSD_CODE",
+                    message = if (success) "USSD-Code erfolgreich gesendet" else "USSD-Code senden fehlgeschlagen",
+                    details = mapOf(
+                        "original_code" to originalCode,
+                        "normalized_code" to normalizedCode,
+                        "mmi_sim_mode" to mmiSimMode.name,
+                        "target_sub_id" to targetSubscriptionId,
+                        "success" to success
+                    )
+                )
+                return // Beende Funktion nach USSD-Request
+            }
+
+            // Ab hier: MMI-Code (endet mit * oder **), verwende Dialer-Ansatz
+            LoggingManager.logInfo(
+                component = "MainActivity",
+                action = "DIAL_MMI_DETECTED",
+                message = "MMI-Code erkannt (endet mit *), verwende Dialer",
+                details = mapOf(
+                    "code" to normalizedCode,
+                    "mmi_sim_mode" to mmiSimMode.name,
+                    "target_sub_id" to targetSubscriptionId
+                )
+            )
+
+            // Get PhoneAccountHandle - IMMER holen, auch für DEFAULT_VOICE_SIM
+            val phoneAccountHandle = if (targetSubscriptionId != -1) {
+                PhoneSmsUtils.getPhoneAccountHandleForSubscription(this, targetSubscriptionId)
+            } else {
+                null
+            }
+
             val intent = Intent(Intent.ACTION_CALL).apply {
                 data = "tel:${Uri.encode(normalizedCode)}".toUri()
+
+                // Add PhoneAccountHandle if available - verwende ALLE möglichen Keys für maximale Kompatibilität
+                if (phoneAccountHandle != null) {
+                    putExtra("android.telecom.extra.PHONE_ACCOUNT_HANDLE", phoneAccountHandle as Parcelable)
+                    // Zusätzliche Keys für verschiedene Android-Versionen/Hersteller
+                    putExtra("com.android.phone.extra.PHONE_ACCOUNT_HANDLE", phoneAccountHandle as Parcelable)
+                    putExtra("phone_account_handle", phoneAccountHandle as Parcelable)
+
+                    LoggingManager.logInfo(
+                        component = "MainActivity",
+                        action = "DIAL_MMI_PHONE_ACCOUNT",
+                        message = "PhoneAccountHandle zum Intent hinzugefügt",
+                        details = mapOf(
+                            "subscription_id" to targetSubscriptionId,
+                            "mode" to mmiSimMode.name
+                        )
+                    )
+                } else if (targetSubscriptionId != -1) {
+                    // Fallback: Versuche mit subscription_id
+                    putExtra("subscription", targetSubscriptionId)
+                    putExtra("com.android.phone.extra.slot", if (targetSubscriptionId > 0) 1 else 0)
+
+                    LoggingManager.logWarning(
+                        component = "MainActivity",
+                        action = "DIAL_MMI_FALLBACK",
+                        message = "PhoneAccountHandle nicht verfügbar, verwende subscription_id Fallback",
+                        details = mapOf("subscription_id" to targetSubscriptionId)
+                    )
+                }
+
                 // Set speakerphone as default for this call
                 putExtra("android.telecom.extra.START_CALL_WITH_SPEAKERPHONE", true)
             }
@@ -571,17 +667,68 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            startActivity(intent)
+            // Versuche ERST mit TelecomManager direkt zu wählen (funktioniert besser für MMI-Codes)
+            var callPlaced = false
+            if (phoneAccountHandle != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                try {
+                    val telecomManager = getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+                    if (telecomManager != null) {
+                        val uri = "tel:${Uri.encode(normalizedCode)}".toUri()
+                        telecomManager.placeCall(uri, intent.extras)
+                        callPlaced = true
 
+                        LoggingManager.logInfo(
+                            component = "MainActivity",
+                            action = "DIAL_MMI_TELECOM",
+                            message = "MMI-Code direkt über TelecomManager gewählt",
+                            details = mapOf(
+                                "original_code" to originalCode,
+                                "normalized_code" to normalizedCode,
+                                "method" to "TelecomManager.placeCall"
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    LoggingManager.logWarning(
+                        component = "MainActivity",
+                        action = "DIAL_MMI_TELECOM_FAILED",
+                        message = "TelecomManager.placeCall fehlgeschlagen, verwende Intent Fallback",
+                        details = mapOf("error" to e.message.orEmpty())
+                    )
+                }
+            }
+
+            // Fallback: Verwende Intent.ACTION_CALL wenn TelecomManager nicht funktioniert hat
+            if (!callPlaced) {
+                startActivity(intent)
+
+                LoggingManager.logInfo(
+                    component = "MainActivity",
+                    action = "DIAL_MMI_INTENT",
+                    message = "MMI-Code über Intent.ACTION_CALL gewählt",
+                    details = mapOf(
+                        "original_code" to originalCode,
+                        "normalized_code" to normalizedCode,
+                        "method" to "Intent Fallback"
+                    )
+                )
+            }
+
+            // Finales Logging mit allen Details (nur für MMI, nicht USSD)
             LoggingManager.logInfo(
                 component = "MainActivity",
                 action = "DIAL_MMI_CODE",
-                message = "MMI-Code gewählt mit Lautsprecher",
+                message = "MMI-Code gewählt mit Lautsprecher (endet mit *)",
                 details = mapOf(
                     "original_code" to originalCode,
                     "normalized_code" to normalizedCode,
+                    "code_type" to "MMI (Dialer)",
                     "speakerphone" to true,
-                    "plus_replaced" to (originalCode != normalizedCode)
+                    "plus_replaced" to (originalCode != normalizedCode),
+                    "mmi_sim_mode" to mmiSimMode.name,
+                    "target_sub_id" to targetSubscriptionId,
+                    "phone_account_handle" to (phoneAccountHandle != null),
+                    "call_placed_via" to if (callPlaced) "TelecomManager" else "Intent"
                 )
             )
 

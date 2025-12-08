@@ -7,6 +7,7 @@ import androidx.security.crypto.MasterKey
 import info.meuse24.smsforwarderneoA1.LogLevel
 import info.meuse24.smsforwarderneoA1.LogMetadata
 import info.meuse24.smsforwarderneoA1.LoggingManager
+import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import java.io.File
 
@@ -501,6 +502,29 @@ class SharedPreferencesManager(private val context: Context) {
     }
 
     /**
+     * Speichert den SIM-Auswahl-Modus für MMI-Code-Ausführung.
+     * @param mode Der gewünschte MMI-SIM-Auswahl-Modus
+     */
+    fun setMmiSimSelectionMode(mode: MmiSimSelectionMode) {
+        setPreference(KEY_MMI_SIM_SELECTION_MODE, mode.name)
+        LoggingManager.logInfo(
+            component = "SharedPreferencesManager",
+            action = "SET_MMI_SIM_SELECTION_MODE",
+            message = "MMI SIM-Auswahl-Modus gespeichert",
+            details = mapOf("mode" to mode.name)
+        )
+    }
+
+    /**
+     * Liest den gespeicherten MMI-SIM-Auswahl-Modus.
+     * @return Der gespeicherte Modus oder DEFAULT_VOICE_SIM als Standard
+     */
+    fun getMmiSimSelectionMode(): MmiSimSelectionMode {
+        val value = getPreference(KEY_MMI_SIM_SELECTION_MODE, "")
+        return MmiSimSelectionMode.fromString(value)
+    }
+
+    /**
      * Speichert die internationale Anschaltziffernfolge.
      * @param prefix Die Anschaltziffernfolge (z.B. "00" für Österreich)
      */
@@ -629,6 +653,7 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_MMI_DEACTIVATE_CODE = "mmi_deactivate_code"
         private const val KEY_MMI_STATUS_CODE = "mmi_status_code"
         private const val KEY_SIM_SELECTION_MODE = "sim_selection_mode"
+        private const val KEY_MMI_SIM_SELECTION_MODE = "mmi_sim_selection_mode"
         private const val KEY_INTERNATIONAL_DIAL_PREFIX = "international_dial_prefix"
         private const val KEY_MMI_WARNING_ENABLED = "mmi_warning_enabled"
         private const val KEY_MAX_LOG_SIZE_MB = "max_log_size_mb"

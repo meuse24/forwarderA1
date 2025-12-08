@@ -78,6 +78,9 @@
     <string name="sim_selection_same_as_incoming">Gleiche SIM wie SMS-Eingang</string>
     <string name="sim_selection_always_sim1">Immer SIM 1</string>
     <string name="sim_selection_always_sim2">Immer SIM 2</string>
+    <string name="section_mmi_sim_selection">SIM-Auswahl für Rufumleitung (MMI-Codes)</string>
+    <string name="desc_mmi_sim_selection">Bestimmt, mit welcher SIM-Karte Rufumleitungen aktiviert/deaktiviert werden.</string>
+    <string name="suffix_default_voice">(Standard-Sprach-SIM)</string>
     <string name="section_app_settings">App-Einstellungen</string>
     <string name="section_mmi_code_settings">MMI Code Einstellungen</string>
     <string name="section_email_settings">Email-Einstellungen</string>

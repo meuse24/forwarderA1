@@ -228,4 +228,52 @@ SmsForegroundService.stopService(context)
   - `AnimatedButton.kt`: `GradientButton` component with border support
   - `HomeScreen.kt`: Unified button container with consistent rotation
 
+**Multi-SIM MMI Implementation (2025-12-08):**
+- ✅ Phase 1: Domain Model & Data Layer
+  - Created MmiSimSelectionMode enum with 3 modes (DEFAULT_VOICE_SIM, ALWAYS_SIM_1, ALWAYS_SIM_2)
+  - Extended SharedPreferencesManager with encrypted preference storage
+  - Added KEY_MMI_SIM_SELECTION_MODE constant and getter/setter methods
+- ✅ Phase 2: Utility Functions
+  - Implemented getPhoneAccountHandleForSubscription() in PhoneSmsUtils (2 matching strategies)
+  - Added determineTargetSubscriptionIdForMmi() function with comprehensive logging
+  - Added TelecomManager and PhoneAccountHandle imports
+- ✅ Phase 3: ViewModel Extensions
+  - Added mmiSimSelectionMode and defaultVoiceSubscriptionId StateFlows to ContactsViewModel
+  - Updated initializeSimSelection() to load MMI mode and track default voice SIM
+  - Implemented setMmiSimSelectionMode() with persistence and logging
+- ✅ Phase 4: MainActivity MMI Logic
+  - Modified dialCodeNow() to determine target SIM based on MMI selection mode
+  - Added PhoneAccountHandle retrieval and attachment to MMI intent
+  - Updated logging to include mmi_sim_mode, target_sub_id, and phone_account_handle
+  - Added imports: Parcelable, PhoneAccountHandle, TelecomManager, MmiSimSelectionMode
+- ✅ Phase 5: UI Components
+  - Created MmiSimSelectionSection.kt with radio button UI (follows SimSelectionSection pattern)
+  - Dynamic labels showing carrier names and marking default voice SIM
+  - Integrated into SettingsScreen.kt with accordion pattern
+  - Added position tracking and expansion state management
+- ✅ Phase 6: String Resources
+  - Added section_mmi_sim_selection and desc_mmi_sim_selection to both strings.xml files
+  - Added suffix_default_voice string resource (German & English)
+  - Reuses existing suffix_not_available string
+- **Components:**
+  - `MmiSimSelectionMode.kt`: 3-mode enum (DEFAULT_VOICE_SIM, ALWAYS_SIM_1, ALWAYS_SIM_2)
+  - `PhoneSmsUtils.kt`: PhoneAccountHandle resolution for specific SIM
+  - `MainActivity.kt`: MMI code execution with SIM selection via PhoneAccountHandle
+  - `MmiSimSelectionSection.kt`: Settings UI with dynamic carrier name labels
+  - `ContactsViewModel.kt`: State management and preference persistence
+  - `SharedPreferencesManager.kt`: Encrypted storage for MMI SIM preference
+
+**USSD vs MMI Code Handling (2025-12-08):**
+- ✅ Automatic detection: Codes ending with `#` → USSD, codes ending with `*` → MMI
+- ✅ USSD codes (Standard format like `##21#`, `*#21#`):
+  - Sent directly via `TelephonyManager.sendUssdRequest()` with SIM selection
+  - No Dialer UI, automatic execution
+  - Response shown via callback in Snackbar
+- ✅ MMI codes (BMI format like `**21**`, `*021**`):
+  - Executed via Dialer with PhoneAccountHandle for SIM selection
+  - Voice feedback via speakerphone
+  - Uses TelecomManager.placeCall() (primary) or Intent.ACTION_CALL (fallback)
+- ✅ Extended `sendUssdCode()` in PhoneSmsUtils with optional subscriptionId parameter
+- ✅ Multi-SIM support for both USSD and MMI codes
+
 **App is stable and production-ready.**

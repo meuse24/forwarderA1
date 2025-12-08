@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
+import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
@@ -96,6 +97,13 @@ class ContactsViewModel(
 
     private val _defaultSmsSubscriptionId = MutableStateFlow(-1)
     val defaultSmsSubscriptionId: StateFlow<Int> = _defaultSmsSubscriptionId.asStateFlow()
+
+    // MMI SIM Selection StateFlows
+    private val _mmiSimSelectionMode = MutableStateFlow(MmiSimSelectionMode.DEFAULT_VOICE_SIM)
+    val mmiSimSelectionMode: StateFlow<MmiSimSelectionMode> = _mmiSimSelectionMode.asStateFlow()
+
+    private val _defaultVoiceSubscriptionId = MutableStateFlow(-1)
+    val defaultVoiceSubscriptionId: StateFlow<Int> = _defaultVoiceSubscriptionId.asStateFlow()
 
     class Factory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -854,22 +862,28 @@ class ContactsViewModel(
                 // Lade gespeicherten SIM-Auswahl-Modus
                 _simSelectionMode.value = prefsManager.getSimSelectionMode()
 
+                // Lade gespeicherten MMI-SIM-Auswahl-Modus
+                _mmiSimSelectionMode.value = prefsManager.getMmiSimSelectionMode()
+
                 // Ermittle verfügbare SIM-Karten
                 val sims = PhoneSmsUtils.getAllSimInfo(application)
                 _availableSimCards.value = sims
 
-                // Ermittle Standard-SMS-SIM
+                // Ermittle Standard-SMS-SIM und Standard-Sprach-SIM
                 val defaultSims = PhoneSmsUtils.getDefaultSimIds(application)
                 _defaultSmsSubscriptionId.value = defaultSims?.first ?: -1
+                _defaultVoiceSubscriptionId.value = defaultSims?.second ?: -1
 
                 LoggingManager.logInfo(
                     component = "ContactsViewModel",
                     action = "INIT_SIM_SELECTION",
                     message = "SIM-Auswahl initialisiert",
                     details = mapOf(
-                        "mode" to _simSelectionMode.value.name,
+                        "sms_mode" to _simSelectionMode.value.name,
+                        "mmi_mode" to _mmiSimSelectionMode.value.name,
                         "available_sims" to sims.size,
-                        "default_sms_sub_id" to _defaultSmsSubscriptionId.value
+                        "default_sms_sub_id" to _defaultSmsSubscriptionId.value,
+                        "default_voice_sub_id" to _defaultVoiceSubscriptionId.value
                     )
                 )
             } catch (e: Exception) {
@@ -895,6 +909,23 @@ class ContactsViewModel(
                 component = "ContactsViewModel",
                 action = "SET_SIM_SELECTION",
                 message = "SIM-Auswahl-Modus geändert",
+                details = mapOf("mode" to mode.name)
+            )
+        }
+    }
+
+    /**
+     * Setzt den MMI-SIM-Auswahl-Modus und speichert ihn persistent.
+     */
+    fun setMmiSimSelectionMode(mode: MmiSimSelectionMode) {
+        viewModelScope.launch(Dispatchers.IO) {
+            prefsManager.setMmiSimSelectionMode(mode)
+            _mmiSimSelectionMode.value = mode
+
+            LoggingManager.logInfo(
+                component = "ContactsViewModel",
+                action = "SET_MMI_SIM_SELECTION",
+                message = "MMI SIM-Auswahl-Modus geändert",
                 details = mapOf("mode" to mode.name)
             )
         }
