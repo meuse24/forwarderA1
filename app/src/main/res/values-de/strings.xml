@@ -607,6 +607,8 @@
     <string name="snackbar_ussd_security_error">USSD-Sicherheitsfehler</string>
     <string name="ussd_progress_title">Rufumleitung wird gesendet</string>
     <string name="ussd_progress_body">Bitte warten, bis das Netz geantwortet hat…</string>
+    <string name="section_call_forwarding_settings">Rufumleitung &amp; MMI</string>
+    <string name="hint_mmi_sim_alignment">Wähle zuerst die SIM für die Rufumleitung. Die MMI/USSD-Codes darunter müssen zu dieser SIM bzw. dem Netzbetreiber passen.</string>
     <string name="mmi_confirmation_title">Hat die Rufumleitung funktioniert?</string>
     <string name="mmi_confirmation_body">Bitte kurz bestätigen. Ohne Eingabe wird nach 4 Sekunden ein Erfolg angenommen.</string>
     <string name="mmi_confirmation_positive">Ja, hat funktioniert</string>

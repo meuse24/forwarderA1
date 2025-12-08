@@ -75,9 +75,8 @@ fun SettingsScreen(
     var phoneSettingsPosition by remember { mutableStateOf(0f) }
     var simManagementPosition by remember { mutableStateOf(0f) }
     var simSelectionPosition by remember { mutableStateOf(0f) }
-    var mmiSimSelectionPosition by remember { mutableStateOf(0f) }
+    var callForwardingPosition by remember { mutableStateOf(0f) }
     var appSettingsPosition by remember { mutableStateOf(0f) }
-    var mmiCodeSettingsPosition by remember { mutableStateOf(0f) }
     var emailSettingsPosition by remember { mutableStateOf(0f) }
     var logSettingsPosition by remember { mutableStateOf(0f) }
 
@@ -85,9 +84,8 @@ fun SettingsScreen(
     var phoneSettingsExpanded by remember { mutableStateOf(false) }
     var simManagementExpanded by remember { mutableStateOf(false) }
     var simSelectionExpanded by remember { mutableStateOf(false) }
-    var mmiSimSelectionExpanded by remember { mutableStateOf(false) }
+    var callForwardingExpanded by remember { mutableStateOf(false) }
     var appSettingsExpanded by remember { mutableStateOf(false) }
-    var mmiCodeSettingsExpanded by remember { mutableStateOf(false) }
     var emailSettingsExpanded by remember { mutableStateOf(false) }
     var logSettingsExpanded by remember { mutableStateOf(false) }
 
@@ -96,9 +94,8 @@ fun SettingsScreen(
         if (section != "phone") phoneSettingsExpanded = false
         if (section != "simManagement") simManagementExpanded = false
         if (section != "simSelection") simSelectionExpanded = false
-        if (section != "mmiSimSelection") mmiSimSelectionExpanded = false
+        if (section != "callForwarding") callForwardingExpanded = false
         if (section != "app") appSettingsExpanded = false
-        if (section != "mmi") mmiCodeSettingsExpanded = false
         if (section != "email") emailSettingsExpanded = false
         if (section != "log") logSettingsExpanded = false
     }
@@ -191,32 +188,31 @@ fun SettingsScreen(
                 )
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            // Section 3b: MMI SIM Selection
+            // Section 4: Call Forwarding (MMI SIM + Codes)
             ExpandableSection(
-                title = stringResource(R.string.section_mmi_sim_selection),
-                expanded = mmiSimSelectionExpanded,
+                title = stringResource(R.string.section_call_forwarding_settings),
+                expanded = callForwardingExpanded,
                 onExpandChange = {
                     if (it) {
-                        collapseAllExcept("mmiSimSelection")
+                        collapseAllExcept("callForwarding")
                         coroutineScope.launch {
-                            scrollState.animateScrollTo(mmiSimSelectionPosition.toInt())
+                            scrollState.animateScrollTo(callForwardingPosition.toInt())
                         }
                     }
-                    mmiSimSelectionExpanded = it
+                    callForwardingExpanded = it
                 },
                 modifier = Modifier.onGloballyPositioned { coordinates ->
-                    mmiSimSelectionPosition = coordinates.positionInParent().y
+                    callForwardingPosition = coordinates.positionInParent().y
                 }
             ) {
-                MmiSimSelectionSection(
+                CallForwardingSettingsSection(
                     viewModel = viewModel,
-                    sectionTitleStyle = sectionTitleStyle
+                    sectionTitleStyle = sectionTitleStyle,
+                    onFocusChanged = { isAnyFieldFocused = it }
                 )
             }
 
-            // Section 4: App Settings
+            // Section 5: App Settings
             ExpandableSection(
                 title = stringResource(R.string.section_app_settings),
                 expanded = appSettingsExpanded,
@@ -238,30 +234,6 @@ fun SettingsScreen(
                     emailViewModel = emailViewModel,
                     testUtilsViewModel = testUtilsViewModel,
                     navigationViewModel = navigationViewModel,
-                    onFocusChanged = { isAnyFieldFocused = it },
-                    sectionTitleStyle = sectionTitleStyle
-                )
-            }
-
-            // Section 5: MMI Code Settings
-            ExpandableSection(
-                title = "MMI-Code Einstellungen",
-                expanded = mmiCodeSettingsExpanded,
-                onExpandChange = {
-                    if (it) {
-                        collapseAllExcept("mmi")
-                        coroutineScope.launch {
-                            scrollState.animateScrollTo(mmiCodeSettingsPosition.toInt())
-                        }
-                    }
-                    mmiCodeSettingsExpanded = it
-                },
-                modifier = Modifier.onGloballyPositioned { coordinates ->
-                    mmiCodeSettingsPosition = coordinates.positionInParent().y
-                }
-            ) {
-                MmiCodeSettingsSection(
-                    viewModel = viewModel,
                     onFocusChanged = { isAnyFieldFocused = it },
                     sectionTitleStyle = sectionTitleStyle
                 )
@@ -411,5 +383,31 @@ private fun ExpandableSection(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CallForwardingSettingsSection(
+    viewModel: ContactsViewModel,
+    sectionTitleStyle: androidx.compose.ui.text.TextStyle,
+    onFocusChanged: (Boolean) -> Unit
+        ) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = stringResource(R.string.hint_mmi_sim_alignment),
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        MmiSimSelectionSection(
+            viewModel = viewModel,
+            sectionTitleStyle = sectionTitleStyle
+        )
+
+        MmiCodeSettingsSection(
+            viewModel = viewModel,
+            onFocusChanged = onFocusChanged,
+            sectionTitleStyle = sectionTitleStyle
+        )
     }
 }
