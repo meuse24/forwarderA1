@@ -58,6 +58,44 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     /**
+     * Prüft, ob SMS von der angegebenen SIM-Karte weitergeleitet werden sollen.
+     * @param context Android Context
+     * @param subscriptionId Die Subscription ID der empfangenden SIM-Karte
+     * @return true wenn Weiterleitung erlaubt, false wenn gefiltert
+     */
+    private fun shouldForwardFromSubscription(context: Context, subscriptionId: Int): Boolean {
+        val prefsManager = info.meuse24.smsforwarderneoA1.AppContainer.requirePrefsManager()
+
+        // Ermittle alle SIM-Karten und finde die Slot-Nummer für diese Subscription
+        val allSims = info.meuse24.smsforwarderneoA1.PhoneSmsUtils.getAllSimInfo(context)
+        val sim = allSims.find { it.subscriptionId == subscriptionId }
+
+        // Prüfe ob diese SIM-Karte für Empfang aktiviert ist
+        val shouldForward = when (sim?.slotIndex) {
+            0 -> prefsManager.isSim1ReceiveEnabled()  // SIM 1 (slot 0)
+            1 -> prefsManager.isSim2ReceiveEnabled()  // SIM 2 (slot 1)
+            else -> {
+                // Unbekannte SIM oder subscription_id = -1
+                LoggingManager.logWarning(
+                    component = "SmsReceiver",
+                    action = "UNKNOWN_SIM_DETECTED",
+                    message = "SMS von unbekannter SIM empfangen",
+                    details = mapOf(
+                        "subscription_id" to subscriptionId,
+                        "sim_found" to (sim != null),
+                        "slot_index" to (sim?.slotIndex ?: "null"),
+                        "available_sims_count" to allSims.size,
+                        "note" to "SMS wird geblockt (Fail-Closed-Verhalten)"
+                    )
+                )
+                false  // Unbekannte SIM, nicht weiterleiten (Fail-Closed)
+            }
+        }
+
+        return shouldForward
+    }
+
+    /**
      * Verarbeitet eingehende SMS-Nachrichten.
      * Wenn die Weiterleitung aktiviert ist, werden die Nachrichten zusammengeführt und weitergeleitet.
      */
@@ -67,6 +105,22 @@ class SmsReceiver : BroadcastReceiver() {
             intent.extras?.getInt("subscription", -1) ?: -1
         } else {
             -1
+        }
+
+        // Prüfe SIM-Filter: Soll SMS von dieser SIM-Karte weitergeleitet werden?
+        if (!shouldForwardFromSubscription(context, subscriptionId)) {
+            val prefsManager = info.meuse24.smsforwarderneoA1.AppContainer.requirePrefsManager()
+            LoggingManager.logWarning(
+                component = "SmsReceiver",
+                action = "SIM_FILTER_BLOCKED",
+                message = "SMS von gefilterter SIM-Karte nicht weitergeleitet",
+                details = mapOf(
+                    "subscription_id" to subscriptionId,
+                    "sim1_enabled" to prefsManager.isSim1ReceiveEnabled(),
+                    "sim2_enabled" to prefsManager.isSim2ReceiveEnabled()
+                )
+            )
+            return  // SMS wird nicht weitergeleitet - Service wird nicht gestartet
         }
 
         val serviceIntent = Intent(context, SmsForegroundService::class.java).apply {

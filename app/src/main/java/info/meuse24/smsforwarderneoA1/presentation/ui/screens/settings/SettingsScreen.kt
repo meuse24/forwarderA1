@@ -138,7 +138,7 @@ fun SettingsScreen(
                 )
             }
 
-            // Section 3: SIM Selection
+            // Section 3: SIM Selection (inkl. SMS-Empfangsfilter)
             ExpandableSection(
                 title = stringResource(R.string.section_sms_sim_selection),
                 expanded = simSelectionExpanded,
@@ -180,7 +180,8 @@ fun SettingsScreen(
             ) {
                 EmailSettingsSection(
                     emailViewModel = emailViewModel,
-                    sectionTitleStyle = sectionTitleStyle
+                    sectionTitleStyle = sectionTitleStyle,
+                    onMailTabVisibilityChanged = viewModel::updateMailScreenVisibility
                 )
             }
 
@@ -380,7 +381,8 @@ private fun CallForwardingSettingsSection(
         MmiCodeSettingsSection(
             viewModel = viewModel,
             onFocusChanged = onFocusChanged,
-            sectionTitleStyle = sectionTitleStyle
+            sectionTitleStyle = sectionTitleStyle,
+            showMmiWarningToggle = true
         )
     }
 }

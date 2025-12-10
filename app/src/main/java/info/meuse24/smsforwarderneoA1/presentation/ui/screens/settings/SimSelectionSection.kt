@@ -4,10 +4,15 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -38,6 +43,8 @@ fun SimSelectionSection(
     val selectedMode by viewModel.simSelectionMode.collectAsState()
     val availableSims by viewModel.availableSimCards.collectAsState()
     val defaultSmsSubId by viewModel.defaultSmsSubscriptionId.collectAsState()
+    val sim1ReceiveEnabled by viewModel.sim1ReceiveEnabled.collectAsState()
+    val sim2ReceiveEnabled by viewModel.sim2ReceiveEnabled.collectAsState()
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -104,6 +111,75 @@ fun SimSelectionSection(
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
+                }
+
+                // Divider vor SMS-Empfangsfilter
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = 1.dp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // SMS-Empfangsfilter
+                Text(
+                    text = stringResource(R.string.section_sms_receive_filter),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                Text(
+                    text = stringResource(R.string.desc_sms_receive_filter),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // SIM 1 checkbox
+                val sim1 = availableSims.getOrNull(0)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = sim1ReceiveEnabled,
+                        onCheckedChange = { viewModel.setSim1ReceiveEnabled(it) }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (sim1 != null) {
+                            "SIM 1: ${sim1.carrierName}${if (sim1.phoneNumber != null) " (${sim1.phoneNumber})" else ""}"
+                        } else {
+                            "SIM 1: ${stringResource(R.string.suffix_not_available)}"
+                        },
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                // SIM 2 checkbox
+                val sim2 = availableSims.getOrNull(1)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = sim2ReceiveEnabled,
+                        onCheckedChange = { viewModel.setSim2ReceiveEnabled(it) }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (sim2 != null) {
+                            "SIM 2: ${sim2.carrierName}${if (sim2.phoneNumber != null) " (${sim2.phoneNumber})" else ""}"
+                        } else {
+                            "SIM 2: ${stringResource(R.string.suffix_not_available)}"
+                        },
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }

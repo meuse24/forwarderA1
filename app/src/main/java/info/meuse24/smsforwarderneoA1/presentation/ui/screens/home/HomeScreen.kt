@@ -207,6 +207,8 @@ fun LandscapeLayout(
                     selectedContact = selectedContact,
                     forwardingActive = forwardingActive,
                     isCallActive = isCallActive,
+                    viewModel = viewModel,
+                    emailViewModel = emailViewModel,
                     onSelectContact = { viewModel.launchContactPicker() },
                     onDeactivate = { viewModel.deactivateCurrentForwarding() },
                     onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
@@ -306,6 +308,8 @@ fun PortraitLayout(
                 selectedContact = selectedContact,
                 forwardingActive = forwardingActive,
                 isCallActive = isCallActive,
+                viewModel = viewModel,
+                emailViewModel = emailViewModel,
                 onSelectContact = { viewModel.launchContactPicker() },
                 onDeactivate = { viewModel.deactivateCurrentForwarding() },
                 onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
@@ -411,10 +415,22 @@ fun ContactSelectionSection(
     selectedContact: Contact?,
     forwardingActive: Boolean,
     isCallActive: Boolean,
+    viewModel: ContactsViewModel,
+    emailViewModel: EmailViewModel,
     onSelectContact: () -> Unit,
     onDeactivate: () -> Unit,
     onSendTestSms: () -> Unit
 ) {
+    // Collect states for service info
+    val mmiSimSelectionMode by viewModel.mmiSimSelectionMode.collectAsState()
+    val defaultVoiceSubscriptionId by viewModel.defaultVoiceSubscriptionId.collectAsState()
+    val availableSimCards by viewModel.availableSimCards.collectAsState()
+    val forwardSmsToEmail by emailViewModel.forwardSmsToEmail.collectAsState()
+    val sim1ReceiveEnabled by viewModel.sim1ReceiveEnabled.collectAsState()
+    val sim2ReceiveEnabled by viewModel.sim2ReceiveEnabled.collectAsState()
+    val simSelectionMode by viewModel.simSelectionMode.collectAsState()
+    val defaultSmsSubscriptionId by viewModel.defaultSmsSubscriptionId.collectAsState()
+
     // Animated visibility for contact card
     val isContactSelected = selectedContact != null && forwardingActive
 
@@ -479,9 +495,11 @@ fun ContactSelectionSection(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = stringResource(R.string.heading_active_forwarding),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            text = stringResource(R.string.heading_active_forwarding).uppercase(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            letterSpacing = 1.2.sp
                         )
                         AnimatedAppLogo()
                     }
@@ -501,11 +519,188 @@ fun ContactSelectionSection(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
-                        if (selectedContact.description.isNotEmpty() && selectedContact.description != selectedContact.phoneNumber) {
+                    }
+
+                    // Service info section
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // SIM card info for call forwarding (MMI)
+                        val simInfo = when (mmiSimSelectionMode) {
+                            info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode.DEFAULT_VOICE_SIM -> {
+                                // Find default voice SIM
+                                val defaultSim = availableSimCards.find {
+                                    it.subscriptionId == defaultVoiceSubscriptionId
+                                }
+                                if (defaultSim != null) {
+                                    "${defaultSim.carrierName} (${defaultSim.phoneNumber ?: stringResource(R.string.suffix_not_available)})"
+                                } else {
+                                    stringResource(R.string.badge_default_voice)
+                                }
+                            }
+                            info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode.ALWAYS_SIM_1 -> {
+                                val sim = availableSimCards.getOrNull(0)
+                                if (sim != null) {
+                                    "SIM 1: ${sim.carrierName} (${sim.phoneNumber ?: stringResource(R.string.suffix_not_available)})"
+                                } else {
+                                    "SIM 1: ${stringResource(R.string.suffix_not_available)}"
+                                }
+                            }
+                            info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode.ALWAYS_SIM_2 -> {
+                                val sim = availableSimCards.getOrNull(1)
+                                if (sim != null) {
+                                    "SIM 2: ${sim.carrierName} (${sim.phoneNumber ?: stringResource(R.string.suffix_not_available)})"
+                                } else {
+                                    "SIM 2: ${stringResource(R.string.suffix_not_available)}"
+                                }
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = selectedContact.description,
+                                text = simInfo,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            )
+                        }
+
+                        // SMS Eingang (Receive Filter info)
+                        val smsEingangInfo = buildString {
+                            val enabledSims = mutableListOf<String>()
+                            if (sim1ReceiveEnabled) {
+                                val sim1 = availableSimCards.getOrNull(0)
+                                enabledSims.add(if (sim1 != null) "SIM 1 (${sim1.carrierName})" else "SIM 1")
+                            }
+                            if (sim2ReceiveEnabled) {
+                                val sim2 = availableSimCards.getOrNull(1)
+                                enabledSims.add(if (sim2 != null) "SIM 2 (${sim2.carrierName})" else "SIM 2")
+                            }
+
+                            append("SMS Eingang: ")
+                            if (enabledSims.isEmpty()) {
+                                append("⚠️ Keine")
+                            } else {
+                                append(enabledSims.joinToString(", "))
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (!sim1ReceiveEnabled && !sim2ReceiveEnabled) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = smsEingangInfo,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = if (!sim1ReceiveEnabled && !sim2ReceiveEnabled) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                }
+                            )
+                        }
+
+                        // SMS Ausgang (Send SIM Selection)
+                        val smsAusgangInfo = buildString {
+                            append("SMS Ausgang: ")
+                            when (simSelectionMode) {
+                                info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode.SAME_AS_INCOMING -> {
+                                    append("Gleiche SIM wie Eingang")
+                                }
+                                info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode.ALWAYS_SIM_1 -> {
+                                    val sim1 = availableSimCards.getOrNull(0)
+                                    if (sim1 != null) {
+                                        val isDefault = sim1.subscriptionId == defaultSmsSubscriptionId && defaultSmsSubscriptionId != -1
+                                        append("SIM 1 (${sim1.carrierName})")
+                                        if (isDefault) append(" - Standard")
+                                    } else {
+                                        append("SIM 1 (nicht verfügbar)")
+                                    }
+                                }
+                                info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode.ALWAYS_SIM_2 -> {
+                                    val sim2 = availableSimCards.getOrNull(1)
+                                    if (sim2 != null) {
+                                        val isDefault = sim2.subscriptionId == defaultSmsSubscriptionId && defaultSmsSubscriptionId != -1
+                                        append("SIM 2 (${sim2.carrierName})")
+                                        if (isDefault) append(" - Standard")
+                                    } else {
+                                        append("SIM 2 (nicht verfügbar)")
+                                    }
+                                }
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = smsAusgangInfo,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            )
+                        }
+
+                        // Active services
+                        val services = buildList {
+                            add("SMS")
+                            add("Call")
+                            if (forwardSmsToEmail) add("E-Mail")
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Dienste: ${services.joinToString(", ")}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                             )
                         }
                     }

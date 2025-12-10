@@ -439,6 +439,7 @@ private fun getHtmlContent(isDarkTheme: Boolean, context: Context): String {
                         <li>${context.getString(R.string.html_feature_email_config_2)}</li>
                         <li>${context.getString(R.string.html_feature_email_config_3)}</li>
                         <li>${context.getString(R.string.html_feature_email_config_4)}</li>
+                        <li>${context.getString(R.string.html_feature_email_config_5)}</li>
                     </ul>
                 </div>
             </li>

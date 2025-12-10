@@ -408,6 +408,40 @@ private fun getHelpHtmlContent(
         </div>
     </div>
 
+    <h2>${context.getString(R.string.help_email_heading)}</h2>
+
+    <p style="margin-bottom: 12px; line-height: 1.5;">
+        ${context.getString(R.string.help_email_intro)}
+    </p>
+
+    <div class="step">
+        <span class="step-number">1.</span>
+        <div class="step-content">
+            <strong>${context.getString(R.string.help_email_step1_title)}</strong>
+            ${context.getString(R.string.help_email_step1_body)}
+        </div>
+    </div>
+
+    <div class="step">
+        <span class="step-number">2.</span>
+        <div class="step-content">
+            <strong>${context.getString(R.string.help_email_step2_title)}</strong>
+            ${context.getString(R.string.help_email_step2_body)}
+        </div>
+    </div>
+
+    <div class="step">
+        <span class="step-number">3.</span>
+        <div class="step-content">
+            <strong>${context.getString(R.string.help_email_step3_title)}</strong>
+            ${context.getString(R.string.help_email_step3_body)}
+        </div>
+    </div>
+
+    <div class="note">
+        ${context.getString(R.string.help_email_note)}
+    </div>
+
 </body>
 </html>
 """.trimIndent()

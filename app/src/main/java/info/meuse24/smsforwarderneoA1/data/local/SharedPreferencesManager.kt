@@ -259,9 +259,6 @@ class SharedPreferencesManager(private val context: Context) {
         }
     }
 
-    fun saveFilterText(filterText: String) =
-        setPreference(KEY_FILTER_TEXT, filterText)
-
     fun saveTestSmsText(text: String) =
         setPreference(KEY_TEST_SMS_TEXT, text)
 
@@ -372,9 +369,6 @@ class SharedPreferencesManager(private val context: Context) {
 
     fun getSmtpPort(): Int =
         getPreference(KEY_SMTP_PORT, DEFAULT_SMTP_PORT)
-
-    fun getFilterText(): String =
-        getPreference(KEY_FILTER_TEXT, DEFAULT_FILTER_TEXT)
 
     // SIM-spezifische Telefonnummern-Verwaltung
     fun setSimPhoneNumbers(simNumbers: Map<Int, String>) {
@@ -590,6 +584,34 @@ class SharedPreferencesManager(private val context: Context) {
         getPreference(KEY_PRIVACY_POLICY_ACCEPTED, false)
 
     /**
+     * Aktiviert/deaktiviert SMS-Empfang von SIM 1.
+     * @param enabled true = Empfangen aktiviert (Standard), false = Empfang deaktiviert
+     */
+    fun setSim1ReceiveEnabled(enabled: Boolean) =
+        setPreference(KEY_SIM1_RECEIVE_ENABLED, enabled)
+
+    /**
+     * Prüft, ob SMS-Empfang von SIM 1 aktiviert ist.
+     * @return true wenn aktiviert (Standard), false wenn deaktiviert
+     */
+    fun isSim1ReceiveEnabled(): Boolean =
+        getPreference(KEY_SIM1_RECEIVE_ENABLED, true)
+
+    /**
+     * Aktiviert/deaktiviert SMS-Empfang von SIM 2.
+     * @param enabled true = Empfangen aktiviert (Standard), false = Empfang deaktiviert
+     */
+    fun setSim2ReceiveEnabled(enabled: Boolean) =
+        setPreference(KEY_SIM2_RECEIVE_ENABLED, enabled)
+
+    /**
+     * Prüft, ob SMS-Empfang von SIM 2 aktiviert ist.
+     * @return true wenn aktiviert (Standard), false wenn deaktiviert
+     */
+    fun isSim2ReceiveEnabled(): Boolean =
+        getPreference(KEY_SIM2_RECEIVE_ENABLED, true)
+
+    /**
      * Speichert die ausgewählte App-Sprache.
      * WICHTIG: Wird in normalen (unverschlüsselten) Preferences gespeichert,
      * da sie in attachBaseContext() gelesen werden muss (vor verschlüsselter Initialisierung).
@@ -627,7 +649,6 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_FORWARD_SMS_TO_EMAIL = "forward_sms_to_email"
         private const val KEY_EMAIL_ADDRESSES = "email_addresses"
         private const val KEY_LOG_PIN = "log_pin"
-        private const val KEY_FILTER_TEXT = "filter_text"
         private const val KEY_TEST_SMS_TEXT = "test_sms_text"
         private const val KEY_SIM_PHONE_NUMBERS = "sim_phone_numbers"
         private const val KEY_COUNTRY_CODE = "country_code"
@@ -641,7 +662,6 @@ class SharedPreferencesManager(private val context: Context) {
         // REMOVED: PREFS_NAME_FALLBACK - no plaintext fallback for security
         private const val DEFAULT_TEST_SMS_TEXT = "Test: GSM-7 Extended Chars -> {€}[^]|~\\ <- prüft korrekte Kodierung (2 Septets je Zeichen)"
         private const val DEFAULT_TEST_EMAIL_TEXT = "Das ist eine Test-Email"
-        private const val DEFAULT_FILTER_TEXT = ""
         private const val DEFAULT_COUNTRY_CODE = "+43"
         private const val KEY_FORWARDING_ACTIVE = "forwarding_active"
         private const val KEY_SELECTED_PHONE = "selected_phone_number"
@@ -659,6 +679,8 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_MAX_LOG_SIZE_MB = "max_log_size_mb"
         private const val KEY_PRIVACY_POLICY_ACCEPTED = "privacy_policy_accepted"
         private const val KEY_APP_LANGUAGE = "app_language"
+        private const val KEY_SIM1_RECEIVE_ENABLED = "sim1_receive_enabled"
+        private const val KEY_SIM2_RECEIVE_ENABLED = "sim2_receive_enabled"
 
         // BMI/A1 Codes (New Defaults)
         private const val DEFAULT_MMI_ACTIVATE_PREFIX = "*21*"

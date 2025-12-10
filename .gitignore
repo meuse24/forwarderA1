@@ -56,6 +56,10 @@ CLAUDE.md
 backup_ui_versions/
 wallpaper.png
 
+# Email configuration
+email.txt
+mail.txt
+
 # Kotlin compiler sessions
 .kotlin/
 barracuda.png

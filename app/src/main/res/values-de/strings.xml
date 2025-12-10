@@ -36,7 +36,7 @@
     <string name="btn_reset_all_forwarding">Alle Weiterleitungen zurücksetzen</string>
     <string name="btn_select_contact">Kontakt auswählen</string>
     <string name="heading_active_forwarding">Aktive Weiterleitung</string>
-    <string name="btn_change_contact">Kontakt ändern</string>
+    <string name="btn_change_contact">Ändern</string>
     <string name="btn_test_sms">Test-SMS</string>
     <string name="btn_deactivate">Deaktivieren</string>
 
@@ -78,6 +78,11 @@
     <string name="sim_selection_same_as_incoming">Gleiche SIM wie SMS-Eingang</string>
     <string name="sim_selection_always_sim1">Immer SIM 1</string>
     <string name="sim_selection_always_sim2">Immer SIM 2</string>
+
+    <!-- SMS Empfangsfilter -->
+    <string name="section_sms_receive_filter">SMS-Empfangsfilter</string>
+    <string name="desc_sms_receive_filter">Wählen Sie, von welchen SIM-Karten SMS empfangen werden sollen</string>
+
     <string name="section_mmi_sim_selection">SIM-Auswahl für Rufumleitung (MMI-Codes)</string>
     <string name="desc_mmi_sim_selection">Bestimmt, mit welcher SIM-Karte Rufumleitungen aktiviert/deaktiviert werden.</string>
     <string name="suffix_default_voice">(Standard-Sprach-SIM)</string>
@@ -102,6 +107,7 @@
     <string name="toggle_show_mail_tab">Mail-Tab anzeigen</string>
     <string name="desc_show_mail_tab">Zeigt den Mail-Tab in der unteren Navigation an</string>
     <string name="msg_smtp_settings_required">SMTP-Einstellungen müssen vollständig sein</string>
+    <string name="desc_mail_tab_requires_smtp">Der E-Mail-Tab wird nur angezeigt, wenn die SMTP-Einstellungen korrekt eingerichtet sind.</string>
     <string name="warning_incomplete_smtp_settings">Bitte konfigurieren Sie zuerst die SMTP-Einstellungen (Server, Benutzername, Passwort) im Abschnitt \'E-Mail-Einstellungen\'</string>
 
     <!-- Language Settings -->
@@ -290,10 +296,11 @@
     <!-- Email Configuration Feature -->
     <string name="html_feature_email_config">Email-Konfiguration</string>
     <string name="html_feature_email_config_intro">Die Email-Weiterleitung bietet umfangreiche Konfigurationsmöglichkeiten:</string>
-    <string name="html_feature_email_config_1">Unterstützung für verschiedene Email-Provider (Gmail, eigene SMTP-Server)</string>
-    <string name="html_feature_email_config_2">Verschlüsselte Speicherung der Zugangsdaten</string>
+    <string name="html_feature_email_config_1">Unterstützung für verschiedene Email-Provider (Gmail, GMX, eigene SMTP-Server)</string>
+    <string name="html_feature_email_config_2">Verschlüsselte Speicherung der Zugangsdaten (SMTP-Passwörter)</string>
     <string name="html_feature_email_config_3">Individuelle Test-Emails an jede konfigurierte Adresse</string>
     <string name="html_feature_email_config_4">Detaillierte Fehlerdiagnose bei Zustellungsproblemen</string>
+    <string name="html_feature_email_config_5">Der Mail-Tab erscheint automatisch nach erfolgreicher SMTP-Konfiguration</string>
 
     <!-- SIM Selection Feature -->
     <string name="html_feature_sim_selection">SIM-Karten Auswahl (Dual-SIM Unterstützung)</string>
@@ -396,6 +403,16 @@
     <string name="help_btn_status_desc">Fragt den aktuellen Status der Rufumleitung beim Netzbetreiber ab und gibt akustisches Feedback.</string>
     <string name="help_btn_reset_title">Reset</string>
     <string name="help_btn_reset_desc">Setzt alle Einstellungen auf Standard (deaktiviert) zurück, falls sich die App unerwartet verhält.</string>
+
+    <string name="help_email_heading">Email-Weiterleitung (optional)</string>
+    <string name="help_email_intro">Zusätzlich zur SMS-Weiterleitung können Sie SMS auch an beliebig viele Email-Adressen weiterleiten:</string>
+    <string name="help_email_step1_title">SMTP-Server konfigurieren:</string>
+    <string name="help_email_step1_body">Öffnen Sie den &lt;b&gt;Setup&lt;/b&gt; Tab und scrollen Sie zu &lt;b&gt;Email-Weiterleitung&lt;/b&gt;. Konfigurieren Sie Ihren SMTP-Server (Gmail, GMX, etc.) mit Server-Adresse, Port, Benutzername und Passwort. Verwenden Sie die Voreinstellungen für gängige Anbieter.</string>
+    <string name="help_email_step2_title">Email-Adressen hinzufügen:</string>
+    <string name="help_email_step2_body">Sobald der SMTP-Server konfiguriert ist, erscheint der &lt;b&gt;Mail&lt;/b&gt; Tab in der Navigation. Dort können Sie Email-Adressen hinzufügen, löschen und Test-Emails versenden.</string>
+    <string name="help_email_step3_title">Weiterleitung aktivieren:</string>
+    <string name="help_email_step3_body">Aktivieren Sie im &lt;b&gt;Mail&lt;/b&gt; Tab den Schalter &lt;i&gt;\"SMS an alle E-Mails weiterleiten\"&lt;/i&gt;. Eingehende SMS werden nun parallel per SMS und Email weitergeleitet.</string>
+    <string name="help_email_note">Die Email-Weiterleitung funktioniert unabhängig von der SMS-Weiterleitung. Sie können beide Kanäle einzeln oder kombiniert nutzen.</string>
 
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Fehler beim Laden des Kontakts: %1$s</string>

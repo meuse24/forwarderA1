@@ -105,6 +105,13 @@ class ContactsViewModel(
     private val _defaultVoiceSubscriptionId = MutableStateFlow(-1)
     val defaultVoiceSubscriptionId: StateFlow<Int> = _defaultVoiceSubscriptionId.asStateFlow()
 
+    // SMS Receive Filter StateFlows
+    private val _sim1ReceiveEnabled = MutableStateFlow(true)
+    val sim1ReceiveEnabled: StateFlow<Boolean> = _sim1ReceiveEnabled.asStateFlow()
+
+    private val _sim2ReceiveEnabled = MutableStateFlow(true)
+    val sim2ReceiveEnabled: StateFlow<Boolean> = _sim2ReceiveEnabled.asStateFlow()
+
     private val _pendingForwardingRequest = MutableStateFlow<PendingForwardingRequest?>(null)
     val pendingForwardingRequest: StateFlow<PendingForwardingRequest?> = _pendingForwardingRequest.asStateFlow()
 
@@ -1008,6 +1015,10 @@ class ContactsViewModel(
                 _defaultSmsSubscriptionId.value = defaultSims?.first ?: -1
                 _defaultVoiceSubscriptionId.value = defaultSims?.second ?: -1
 
+                // Lade SMS-Empfangsfilter-Einstellungen
+                _sim1ReceiveEnabled.value = prefsManager.isSim1ReceiveEnabled()
+                _sim2ReceiveEnabled.value = prefsManager.isSim2ReceiveEnabled()
+
                 LoggingManager.logInfo(
                     component = "ContactsViewModel",
                     action = "INIT_SIM_SELECTION",
@@ -1017,7 +1028,9 @@ class ContactsViewModel(
                         "mmi_mode" to _mmiSimSelectionMode.value.name,
                         "available_sims" to sims.size,
                         "default_sms_sub_id" to _defaultSmsSubscriptionId.value,
-                        "default_voice_sub_id" to _defaultVoiceSubscriptionId.value
+                        "default_voice_sub_id" to _defaultVoiceSubscriptionId.value,
+                        "sim1_receive_enabled" to _sim1ReceiveEnabled.value,
+                        "sim2_receive_enabled" to _sim2ReceiveEnabled.value
                     )
                 )
             } catch (e: Exception) {
@@ -1061,6 +1074,74 @@ class ContactsViewModel(
                 action = "SET_MMI_SIM_SELECTION",
                 message = "MMI SIM-Auswahl-Modus geändert",
                 details = mapOf("mode" to mode.name)
+            )
+        }
+    }
+
+    /**
+     * Aktiviert/deaktiviert SMS-Empfang von SIM 1.
+     */
+    fun setSim1ReceiveEnabled(enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            prefsManager.setSim1ReceiveEnabled(enabled)
+            _sim1ReceiveEnabled.value = enabled
+
+            // Prüfe ob beide SIM-Karten deaktiviert sind und Weiterleitung aktiv ist
+            if (!enabled && !_sim2ReceiveEnabled.value && _forwardingActive.value) {
+                withContext(Dispatchers.Main) {
+                    SnackbarManager.showWarning("⚠️ Keine SIM-Karte für SMS-Empfang aktiviert - SMS-Weiterleitung inaktiv!")
+                }
+                LoggingManager.logWarning(
+                    component = "ContactsViewModel",
+                    action = "ALL_SIMS_DISABLED",
+                    message = "Alle SIM-Karten für Empfang deaktiviert bei aktiver Weiterleitung",
+                    details = mapOf(
+                        "sim1_enabled" to enabled,
+                        "sim2_enabled" to _sim2ReceiveEnabled.value,
+                        "forwarding_active" to _forwardingActive.value
+                    )
+                )
+            }
+
+            LoggingManager.logInfo(
+                component = "ContactsViewModel",
+                action = "UPDATE_SIM1_RECEIVE",
+                message = "SIM 1 Empfang geändert",
+                details = mapOf("enabled" to enabled)
+            )
+        }
+    }
+
+    /**
+     * Aktiviert/deaktiviert SMS-Empfang von SIM 2.
+     */
+    fun setSim2ReceiveEnabled(enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            prefsManager.setSim2ReceiveEnabled(enabled)
+            _sim2ReceiveEnabled.value = enabled
+
+            // Prüfe ob beide SIM-Karten deaktiviert sind und Weiterleitung aktiv ist
+            if (!enabled && !_sim1ReceiveEnabled.value && _forwardingActive.value) {
+                withContext(Dispatchers.Main) {
+                    SnackbarManager.showWarning("⚠️ Keine SIM-Karte für SMS-Empfang aktiviert - SMS-Weiterleitung inaktiv!")
+                }
+                LoggingManager.logWarning(
+                    component = "ContactsViewModel",
+                    action = "ALL_SIMS_DISABLED",
+                    message = "Alle SIM-Karten für Empfang deaktiviert bei aktiver Weiterleitung",
+                    details = mapOf(
+                        "sim1_enabled" to _sim1ReceiveEnabled.value,
+                        "sim2_enabled" to enabled,
+                        "forwarding_active" to _forwardingActive.value
+                    )
+                )
+            }
+
+            LoggingManager.logInfo(
+                component = "ContactsViewModel",
+                action = "UPDATE_SIM2_RECEIVE",
+                message = "SIM 2 Empfang geändert",
+                details = mapOf("enabled" to enabled)
             )
         }
     }

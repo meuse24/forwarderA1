@@ -36,7 +36,7 @@
     <string name="btn_reset_all_forwarding">Reset All Forwarding</string>
     <string name="btn_select_contact">Select Contact</string>
     <string name="heading_active_forwarding">Active Forwarding</string>
-    <string name="btn_change_contact">Change Contact</string>
+    <string name="btn_change_contact">Change</string>
     <string name="btn_test_sms">Test SMS</string>
     <string name="btn_deactivate">Deactivate</string>
 
@@ -78,6 +78,10 @@
     <string name="sim_selection_same_as_incoming">Same SIM as incoming SMS</string>
     <string name="sim_selection_always_sim1">Always SIM 1</string>
     <string name="sim_selection_always_sim2">Always SIM 2</string>
+
+    <!-- SMS Receive Filter -->
+    <string name="section_sms_receive_filter">SMS Receive Filter</string>
+    <string name="desc_sms_receive_filter">Select which SIM cards to receive SMS from</string>
     <string name="section_mmi_sim_selection">SIM Selection for Call Forwarding (MMI Codes)</string>
     <string name="desc_mmi_sim_selection">Determines which SIM card to use for activating/deactivating call forwarding.</string>
     <string name="suffix_default_voice">(Default Voice SIM)</string>
@@ -102,6 +106,7 @@
     <string name="toggle_show_mail_tab">Show Mail Tab</string>
     <string name="desc_show_mail_tab">Displays the Mail tab in bottom navigation</string>
     <string name="msg_smtp_settings_required">SMTP settings must be complete</string>
+    <string name="desc_mail_tab_requires_smtp">Mail tab is only available when SMTP settings are configured correctly.</string>
     <string name="warning_incomplete_smtp_settings">Please configure SMTP settings first (Server, Username, Password) in \'Email Settings\' section</string>
 
     <!-- Language Settings -->
@@ -290,10 +295,11 @@
     <!-- Email Configuration Feature -->
     <string name="html_feature_email_config">Email Configuration</string>
     <string name="html_feature_email_config_intro">Email forwarding offers extensive configuration options:</string>
-    <string name="html_feature_email_config_1">Support for various email providers (Gmail, custom SMTP servers)</string>
-    <string name="html_feature_email_config_2">Encrypted storage of credentials</string>
+    <string name="html_feature_email_config_1">Support for various email providers (Gmail, GMX, custom SMTP servers)</string>
+    <string name="html_feature_email_config_2">Encrypted storage of credentials (SMTP passwords)</string>
     <string name="html_feature_email_config_3">Individual test emails to each configured address</string>
     <string name="html_feature_email_config_4">Detailed error diagnosis for delivery problems</string>
+    <string name="html_feature_email_config_5">The Mail tab appears automatically after successful SMTP configuration</string>
 
     <!-- SIM Selection Feature -->
     <string name="html_feature_sim_selection">SIM Card Selection (Dual-SIM Support)</string>
@@ -445,6 +451,16 @@
     <string name="help_btn_status_desc">Queries the current call forwarding status from the carrier and plays audio feedback.</string>
     <string name="help_btn_reset_title">Reset</string>
     <string name="help_btn_reset_desc">Resets all settings to default (disabled) if the app behaves unexpectedly.</string>
+
+    <string name="help_email_heading">Email Forwarding (Optional)</string>
+    <string name="help_email_intro">In addition to SMS forwarding, you can also forward SMS to any number of email addresses:</string>
+    <string name="help_email_step1_title">Configure SMTP Server:</string>
+    <string name="help_email_step1_body">Open the &lt;b&gt;Setup&lt;/b&gt; tab and scroll to &lt;b&gt;Email Forwarding&lt;/b&gt;. Configure your SMTP server (Gmail, GMX, etc.) with server address, port, username and password. Use the presets for common providers.</string>
+    <string name="help_email_step2_title">Add Email Addresses:</string>
+    <string name="help_email_step2_body">Once the SMTP server is configured, the &lt;b&gt;Mail&lt;/b&gt; tab appears in the navigation. There you can add, delete and send test emails to addresses.</string>
+    <string name="help_email_step3_title">Activate Forwarding:</string>
+    <string name="help_email_step3_body">In the &lt;b&gt;Mail&lt;/b&gt; tab, enable the &lt;i&gt;\"Forward SMS to all emails\"&lt;/i&gt; toggle. Incoming SMS will now be forwarded in parallel via SMS and email.</string>
+    <string name="help_email_note">Email forwarding works independently from SMS forwarding. You can use both channels individually or combined.</string>
 
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Error loading contact: %1$s</string>
