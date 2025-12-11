@@ -14,6 +14,7 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 ### Erweiterte Funktionen
 - **Kontaktverwaltung**: Intelligente Auswahl von Weiterleitungsempfängern aus Kontakten
 - **SIM-Karten-Verwaltung**: Unterstützung für Dual-SIM-Geräte
+- **Loop Protection**: Verhindert Endlosschleifen durch intelligente Erkennung eigener SIM-Karten
 - **Strukturiertes Logging**: XML-basierte Protokollierung mit automatischer Rotation
 - **Log-Export**: Exportiere Protokolle für Fehleranalyse und Monitoring
 - **Verschlüsselte Einstellungen**: Sichere Speicherung von Credentials und Konfiguration
@@ -482,11 +483,12 @@ Dieses Projekt ist für den privaten Gebrauch bestimmt. Alle Rechte vorbehalten.
 
 ---
 
-**Version**: Anchovy (versionCode 3)
+**Version**: Barracuda (versionCode 4)
 **Build**: Debug/Release
-**Letzte Aktualisierung**: 2025-01-30
+**Letzte Aktualisierung**: 2025-12-11
 
-### Neueste Änderungen (2025-01-30)
+### Neueste Änderungen (2025-12-11)
+- ✅ **Loop Protection**: Kritischer Schutzmechanismus gegen SMS-Endlosschleifen implementiert (Sender- und Own-SIM-Check)
 - ✅ Verbesserte Benutzerführung bei MMI-Code-Wählvorgängen
 - ✅ 4-Sekunden-Warnung vor jedem Wählvorgang mit zentrierter Formatierung
 - ✅ Deutliche Warnung: "⚠️ BITTE WARTEN ⚠️ - NICHT BEDIENEN!"
