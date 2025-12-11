@@ -83,7 +83,7 @@
     <string name="section_sms_receive_filter">SMS-Empfangsfilter</string>
     <string name="desc_sms_receive_filter">Wählen Sie, von welchen SIM-Karten SMS empfangen werden sollen</string>
 
-    <string name="section_mmi_sim_selection">SIM-Auswahl für Rufumleitung (MMI-Codes)</string>
+    <string name="section_mmi_sim_selection">SIM-Auswahl für Rufumleitung</string>
     <string name="desc_mmi_sim_selection">Bestimmt, mit welcher SIM-Karte Rufumleitungen aktiviert/deaktiviert werden.</string>
     <string name="suffix_default_voice">(Standard-Sprach-SIM)</string>
     <string name="section_app_settings">App-Einstellungen</string>
@@ -126,15 +126,16 @@
     <string name="error_open_settings_failed">Einstellungen konnten nicht geöffnet werden</string>
 
     <!-- ==================== MMI CODE SETTINGS SECTION ==================== -->
-    <string name="label_mmi_activate_prefix">Aktivierungscode Prefix (z.B. *21*)</string>
+    <string name="section_mmi_ussd_codes">MMI/USSD Codes</string>
+    <string name="label_mmi_activate_prefix">Aktivierung Prefix (z.B. *21*)</string>
     <string name="placeholder_mmi_prefix">*21*</string>
-    <string name="label_mmi_activate_suffix">Aktivierungscode Suffix (z.B. **)</string>
+    <string name="label_mmi_activate_suffix">Aktivierung Suffix (z.B. **)</string>
     <string name="placeholder_mmi_suffix">**</string>
-    <string name="label_mmi_deactivate_code">Deaktivierungscode (z.B. **21**)</string>
+    <string name="label_mmi_deactivate_code">Deaktivierung (z.B. **21**)</string>
     <string name="placeholder_mmi_deactivate">**21**</string>
-    <string name="label_mmi_status_code">Statusabfrage (z.B. *021**)</string>
+    <string name="label_mmi_status_code">Status (z.B. *021**)</string>
     <string name="placeholder_mmi_status">*021**</string>
-    <string name="btn_preset_a1_austria">A1 (BMI)</string>
+    <string name="btn_preset_a1_austria">A1</string>
     <string name="btn_preset_standard">Standard</string>
     <string name="toggle_mmi_warning">4-Sekunden-Warnung vor Wählvorgang</string>
     <string name="desc_mmi_warning">Zeigt Hinweis vor MMI-Code-Ausführung</string>
@@ -206,6 +207,13 @@
     <string name="warning_await_dialing">Automatischer Wählvorgang abwarten!</string>
     <string name="btn_execute_now">Jetzt wählen</string>
 
+    <!-- Loop Protection Dialog -->
+    <string name="loop_protection_title">⚠️ LOOP-SCHUTZ!</string>
+    <string name="loop_protection_message">Weiterleitung an eigene SIM-Karte nicht möglich!\nDies würde eine Endlosschleife verursachen.</string>
+    <string name="loop_protection_target">Ziel:</string>
+    <string name="loop_protection_own_sim">Eigene SIM:</string>
+    <string name="btn_understand">Verstanden</string>
+
     <!-- PIN Entry Dialog -->
     <string name="dialog_title_enter_pin">PIN eingeben</string>
     <string name="label_pin_input">PIN</string>
@@ -259,12 +267,12 @@
     <!-- ==================== INFO SCREEN ==================== -->
     <string name="btn_privacy_policy">Datenschutzerklärung</string>
     <string name="heading_links">Links</string>
-    <string name="link_author_website">Author Website</string>
+    <string name="link_author_website">Autoren-Webseite</string>
     <string name="link_author_website_url">www.meuse24.info</string>
     <string name="link_github_repo">GitHub Repository</string>
-    <string name="link_github_subtitle">Source Code &amp; Issues</string>
-    <string name="link_project_website">Project Website</string>
-    <string name="link_project_subtitle">Documentation &amp; Downloads</string>
+    <string name="link_github_subtitle">Quellcode &amp; Fehler</string>
+    <string name="link_project_website">Projekt-Webseite</string>
+    <string name="link_project_subtitle">Dokumentation &amp; Downloads</string>
     <string name="desc_open_link">Öffnen</string>
 
     <!-- Info Screen - Author Block -->
@@ -370,10 +378,20 @@
     <string name="html_label_background_service">Hintergrunddienst</string>
     <string name="html_value_foreground_service">Foreground Service</string>
     <string name="html_label_android_version">Android Version</string>
+    <string name="html_label_compile_sdk">Compile SDK</string>
     <string name="html_label_min_sdk">Min SDK</string>
     <string name="html_label_target_sdk">Target SDK</string>
     <string name="html_label_jdk">JDK</string>
-    <string name="html_footnote_development">Die App wurde unter Berücksichtigung moderner Android-Entwicklungspraktiken und Datenschutzrichtlinien entwickelt. Sie läuft energieeffizient im Hintergrund und gewährleistet dabei eine zuverlässige Weiterleitung Ihrer Nachrichten und Anrufe.</string>
+    <string name="html_heading_dependencies">Wichtige Abhängigkeiten</string>
+    <string name="html_label_compose_bom">Compose BOM</string>
+    <string name="html_label_core_ktx">Core KTX</string>
+    <string name="html_label_lifecycle">Lifecycle Runtime</string>
+    <string name="html_label_navigation">Navigation Compose</string>
+    <string name="html_label_security_crypto">Security Crypto</string>
+    <string name="html_label_libphonenumber">libphonenumber</string>
+    <string name="html_label_javamail">JavaMail</string>
+    <string name="html_label_compose_icons">Material Icons</string>
+    <string name="html_footnote_development">Die App wurde unter Berücksichtigung moderner Android-Entwicklungspraktiken und Datenschutzrichtlinien entwickelt. Sie läuft energieeffizient im Hintergrund und gewährleistet dabei eine zuverlässige Weiterleitung Ihrer Nachrichten und Anrufe.\n\nEntwickelt mit Unterstützung von KI-Programmierassistenten: Claude Code (CLI), Gemini und Codex.</string>
 
     <!-- Privacy Policy Screen -->
     <string name="btn_privacy_ok">OK</string>
@@ -599,6 +617,7 @@
 
     <!-- SMS -->
     <string name="snackbar_sms_error_code">SMS-Fehlercode: %d</string>
+    <string name="snackbar_loop_protection_own_sim">Loop-Schutz: Weiterleitung an eigene SIM-Karte nicht möglich!</string>
     <string name="snackbar_sms_error_generic">Fehler beim SMS-Versand</string>
     <string name="snackbar_sms_error_no_service">Kein SMS-Dienst verfügbar</string>
     <string name="snackbar_sms_error_null_pdu">SMS-Fehler: Null PDU</string>
@@ -635,6 +654,6 @@
     <string name="snackbar_wait_for_call_end">Bitte warten Sie, bis der aktuelle Anruf beendet ist</string>
 
     <!-- ==================== TEXT/OTHERS ==================== -->
-    <string name="text_author_name">Autor: Ihr Name</string>
-    <string name="text_copyright">© 2025 SMS Forwarder Neo</string>
+    <string name="text_author_name">Günther Meusburger</string>
+    <string name="text_copyright">© 2025</string>
 </resources>

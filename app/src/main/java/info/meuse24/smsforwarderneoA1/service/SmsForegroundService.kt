@@ -414,14 +414,53 @@ class SmsForegroundService : Service() {
                 if (prefsManager.isForwardingActive()) {
                     launch {
                         prefsManager.getSelectedPhoneNumber().let { forwardToNumber ->
-                            // Loop Protection: Verhindere Weiterleitung, wenn Absender == Zielnummer
+                            // Erweiterte Loop Protection: Verhindere Endlosschleifen
                             val validator = PhoneNumberValidator(applicationContext)
+
+                            // 1. Prüfung: Verhindere Weiterleitung, wenn Absender == Zielnummer
                             if (validator.areSameNumber(sender, forwardToNumber)) {
                                 LoggingManager.logWarning(
                                     component = "SmsForegroundService",
-                                    action = "LOOP_PROTECTION",
+                                    action = "LOOP_PROTECTION_SENDER",
                                     message = "Weiterleitung gestoppt: Absender entspricht Zielrufnummer",
-                                    details = mapOf("number" to sender)
+                                    details = mapOf("sender" to sender, "target" to forwardToNumber)
+                                )
+                                return@launch
+                            }
+
+                            // 2. Prüfung: Verhindere Weiterleitung an eigene SIM-Karte (kritisch!)
+                            val ownNumbers = mutableListOf<String>()
+
+                            // Sammle auto-erkannte SIM-Nummern
+                            val simInfos = PhoneSmsUtils.getAllSimInfo(applicationContext)
+                            simInfos.forEach { sim ->
+                                sim.phoneNumber?.let { ownNumbers.add(it) }
+                            }
+
+                            // Sammle manuell gespeicherte SIM-Nummern (wichtig, da Auto-Erkennung oft fehlschlägt)
+                            val manualNumbers = prefsManager.getSimPhoneNumbers()
+                            manualNumbers.values.forEach { num ->
+                                ownNumbers.add(num)
+                            }
+
+                            // Prüfe ob Zielrufnummer eine eigene SIM-Karte ist
+                            val isOwnNumber = ownNumbers.any { ownNum ->
+                                validator.areSameNumber(ownNum, forwardToNumber)
+                            }
+
+                            if (isOwnNumber) {
+                                LoggingManager.logError(
+                                    component = "SmsForegroundService",
+                                    action = "LOOP_PROTECTION_CRITICAL",
+                                    message = "Weiterleitung gestoppt: Zielnummer ist eine eigene SIM-Karte!",
+                                    details = mapOf(
+                                        "target" to forwardToNumber,
+                                        "own_numbers_count" to ownNumbers.size,
+                                        "sender" to sender
+                                    )
+                                )
+                                SnackbarManager.showError(
+                                    getString(R.string.snackbar_loop_protection_own_sim)
                                 )
                                 return@launch
                             }
@@ -438,12 +477,30 @@ class SmsForegroundService : Service() {
                 }
 
                 // Email Weiterleitung
-                if (prefsManager.isForwardSmsToEmail()) {
+                val emailForwardingEnabled = prefsManager.isForwardSmsToEmail()
+                LoggingManager.logDebug(
+                    component = "SmsForegroundService",
+                    action = "CHECK_EMAIL_FORWARDING",
+                    message = "Email-Weiterleitungsstatus geprüft",
+                    details = mapOf(
+                        "enabled" to emailForwardingEnabled,
+                        "sender" to sender,
+                        "message_length" to fullMessage.length
+                    )
+                )
+
+                if (emailForwardingEnabled) {
                     launch {
                         withContext(Dispatchers.IO) {
                             handleEmailForwarding(sender, fullMessage)
                         }
                     }
+                } else {
+                    LoggingManager.logDebug(
+                        component = "SmsForegroundService",
+                        action = "EMAIL_FORWARDING_DISABLED",
+                        message = "Email-Weiterleitung ist deaktiviert, überspringe"
+                    )
                 }
             }
 
@@ -774,79 +831,98 @@ class SmsForegroundService : Service() {
     private suspend fun handleEmailForwarding(sender: String, messageBody: String) {
         // Nutze structured concurrency - kein neuer serviceScope.launch!
         // Exceptions werden automatisch an Caller (processMessageGroup) propagiert
-        withWakeLock(30 * 1000L) { // 30 Sekunden für Email-Versand
-            try {
-                val emailAddresses = prefsManager.getEmailAddresses()
-                if (emailAddresses.isEmpty()) {
-                    LoggingManager.logWarning(
-                        component = "SmsForegroundService",
-                        action = "EMAIL_FORWARD",
-                        message = "Keine Email-Adressen konfiguriert"
-                    )
-                    return@withWakeLock
-                }
+        // WICHTIG: Kein withWakeLock hier! Läuft bereits im WakeLock von processSmsData()
+        LoggingManager.logDebug(
+            component = "SmsForegroundService",
+            action = "EMAIL_FORWARD_START",
+            message = "Email-Weiterleitung gestartet",
+            details = mapOf(
+                "sender" to sender,
+                "message_length" to messageBody.length
+            )
+        )
 
-                val host = prefsManager.getSmtpHost()
-                val port = prefsManager.getSmtpPort()
-                val username = prefsManager.getSmtpUsername()
-                val password = prefsManager.getSmtpPassword()
+        try {
+            val emailAddresses = prefsManager.getEmailAddresses()
+            LoggingManager.logDebug(
+                component = "SmsForegroundService",
+                action = "EMAIL_FORWARD_ADDRESSES",
+                message = "Email-Adressen geladen",
+                details = mapOf(
+                    "count" to emailAddresses.size,
+                    "addresses" to emailAddresses.joinToString(", ")
+                )
+            )
 
-                if (host.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                    LoggingManager.logWarning(
-                        component = "SmsForegroundService",
-                        action = "EMAIL_FORWARD",
-                        message = "Unvollständige SMTP-Konfiguration",
-                        details = mapOf(
-                            "has_host" to host.isNotEmpty(),
-                            "has_username" to username.isNotEmpty(),
-                            "has_credentials" to password.isNotEmpty()
-                        )
-                    )
-                    return@withWakeLock
-                }
-
-                val emailSender = EmailSender(host, port, username, password)
-                val subject = "Neue SMS von $sender"
-                val body = buildEmailBody(sender, messageBody)
-
-                when (val result = emailSender.sendEmail(emailAddresses, subject, body)) {
-                    is EmailResult.Success -> {
-                        LoggingManager.logInfo(
-                            component = "SmsForegroundService",
-                            action = "EMAIL_FORWARD",
-                            message = "SMS erfolgreich per Email weitergeleitet",
-                            details = mapOf(
-                                "sender" to sender,
-                                "recipients" to emailAddresses.size,
-                                "smtp_host" to host
-                            )
-                        )
-                        SnackbarManager.showSuccess(getString(R.string.snackbar_email_forward_success))
-                        updateServiceStatus()
-                    }
-
-                    is EmailResult.Error -> handleEmailError(
-                        result.message,
-                        sender,
-                        emailAddresses,
-                        host
-                    )
-                }
-            } catch (e: Exception) {
-                LoggingManager.logError(
+            if (emailAddresses.isEmpty()) {
+                LoggingManager.logWarning(
                     component = "SmsForegroundService",
-                    action = "EMAIL_FORWARD_ERROR",
-                    message = "Unerwarteter Fehler bei Email-Weiterleitung",
-                    error = e,
+                    action = "EMAIL_FORWARD",
+                    message = "Keine Email-Adressen konfiguriert"
+                )
+                return
+            }
+
+            val host = prefsManager.getSmtpHost()
+            val port = prefsManager.getSmtpPort()
+            val username = prefsManager.getSmtpUsername()
+            val password = prefsManager.getSmtpPassword()
+
+            if (host.isEmpty() || username.isEmpty() || password.isEmpty()) {
+                LoggingManager.logWarning(
+                    component = "SmsForegroundService",
+                    action = "EMAIL_FORWARD",
+                    message = "Unvollständige SMTP-Konfiguration",
                     details = mapOf(
-                        "sender" to sender,
-                        "message_length" to messageBody.length
+                        "has_host" to host.isNotEmpty(),
+                        "has_username" to username.isNotEmpty(),
+                        "has_credentials" to password.isNotEmpty()
                     )
                 )
-                SnackbarManager.showError(getString(R.string.snackbar_email_forward_error))
-                // Re-throw um in processMessageGroup error handling zu triggern
-                throw e
+                return
             }
+
+            val emailSender = EmailSender(host, port, username, password)
+            val subject = "Neue SMS von $sender"
+            val body = buildEmailBody(sender, messageBody)
+
+            when (val result = emailSender.sendEmail(emailAddresses, subject, body)) {
+                is EmailResult.Success -> {
+                    LoggingManager.logInfo(
+                        component = "SmsForegroundService",
+                        action = "EMAIL_FORWARD",
+                        message = "SMS erfolgreich per Email weitergeleitet",
+                        details = mapOf(
+                            "sender" to sender,
+                            "recipients" to emailAddresses.size,
+                            "smtp_host" to host
+                        )
+                    )
+                    SnackbarManager.showSuccess(getString(R.string.snackbar_email_forward_success))
+                    updateServiceStatus()
+                }
+
+                is EmailResult.Error -> handleEmailError(
+                    result.message,
+                    sender,
+                    emailAddresses,
+                    host
+                )
+            }
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "SmsForegroundService",
+                action = "EMAIL_FORWARD_ERROR",
+                message = "Unerwarteter Fehler bei Email-Weiterleitung",
+                error = e,
+                details = mapOf(
+                    "sender" to sender,
+                    "message_length" to messageBody.length
+                )
+            )
+            SnackbarManager.showError(getString(R.string.snackbar_email_forward_error))
+            // Re-throw um in processMessageGroup error handling zu triggern
+            throw e
         }
     }
 
