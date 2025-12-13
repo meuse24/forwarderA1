@@ -62,6 +62,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.Critica
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ExitDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoadingScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.MmiConfirmationDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoopProtectionDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.MmiWarningDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.SimNumbersDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.UssdProgressDialog
@@ -465,6 +466,7 @@ class MainActivity : ComponentActivity() {
         // Launch coroutine to wait if call is active
         lifecycleScope.launch {
             val currentCallState = callState.value
+            val mmiWarningEnabled = viewModel.mmiWarningEnabled.value
 
             // Wait if call is active (not IDLE)
             if (currentCallState != TelephonyManager.CALL_STATE_IDLE) {
@@ -498,12 +500,16 @@ class MainActivity : ComponentActivity() {
                     message = "Kein MMI-Warn-Dialog für USSD-Code",
                     details = mapOf("code" to normalizedCode)
                 )
-            } else if (prefsManager.isMmiWarningEnabled()) {
+            } else if (mmiWarningEnabled) {
                 LoggingManager.logInfo(
                     component = "MainActivity",
                     action = "DIAL_MMI_PREPARING",
                     message = "Zeige Benutzer-Warnung vor Wählvorgang",
-                    details = mapOf("code" to normalizedCode, "delay_ms" to 4000)
+                    details = mapOf(
+                        "code" to normalizedCode,
+                        "delay_ms" to 4000,
+                        "mmi_warning_enabled" to true
+                    )
                 )
 
                 // Show in-app dialog for 4 seconds
@@ -515,7 +521,10 @@ class MainActivity : ComponentActivity() {
                     component = "MainActivity",
                     action = "DIAL_MMI_NO_WARNING",
                     message = "MMI-Warnung deaktiviert in Einstellungen",
-                    details = mapOf("code" to normalizedCode)
+                    details = mapOf(
+                        "code" to normalizedCode,
+                        "mmi_warning_enabled" to false
+                    )
                 )
             }
 
@@ -1171,6 +1180,18 @@ class MainActivity : ComponentActivity() {
                 MmiWarningDialog(
                     onDismiss = {
                         _showMmiWarningDialog.value = false
+                    }
+                )
+            }
+
+            // Loop Protection Dialog - Critical warning when selecting own SIM as target
+            val loopProtectionDialogData by viewModel.showLoopProtectionDialog.collectAsState()
+            loopProtectionDialogData?.let { data ->
+                LoopProtectionDialog(
+                    targetNumber = data.targetNumber,
+                    ownNumber = data.ownNumber,
+                    onDismiss = {
+                        viewModel.dismissLoopProtectionDialog()
                     }
                 )
             }

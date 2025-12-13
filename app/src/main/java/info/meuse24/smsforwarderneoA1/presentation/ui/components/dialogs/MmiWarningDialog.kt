@@ -1,7 +1,6 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,8 +13,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -133,8 +132,8 @@ fun MmiWarningDialog(
                         )
 
                         // Officer logo
-                        Image(
-                            painter = painterResource(id = R.drawable.officer),
+                        AsyncImage(
+                            model = R.drawable.officer,
                             contentDescription = "Officer",
                             modifier = Modifier
                                 .size(120.dp)

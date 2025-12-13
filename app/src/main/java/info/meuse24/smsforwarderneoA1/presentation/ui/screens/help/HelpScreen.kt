@@ -7,6 +7,7 @@ import android.util.Base64
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import coil.compose.AsyncImage
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,11 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -64,8 +69,8 @@ fun HelpScreen(
         modifier = modifier.fillMaxSize()
     ) {
         // Wallpaper background
-        Image(
-            painter = painterResource(id = R.drawable.wallpaper),
+        AsyncImage(
+            model = R.drawable.wallpaper,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -85,6 +90,26 @@ fun HelpScreen(
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
+                // WebView with proper lifecycle management
+                var webView: WebView? by remember { mutableStateOf(null) }
+
+                DisposableEffect(Unit) {
+                    onDispose {
+                        webView?.apply {
+                            // Stop all WebView activities
+                            stopLoading()
+                            // Clear WebView data
+                            clearHistory()
+                            clearCache(true)
+                            // Remove all views to prevent memory leaks
+                            removeAllViews()
+                            // Destroy WebView
+                            destroy()
+                        }
+                        webView = null
+                    }
+                }
+
                 AndroidView(
                     factory = { ctx ->
                         WebView(ctx).apply {
@@ -103,10 +128,13 @@ fun HelpScreen(
                                 "UTF-8",
                                 null
                             )
+                            // Store reference for cleanup
+                            webView = this
                         }
                     },
-                    update = { webView ->
-                        webView.loadDataWithBaseURL(
+                    update = { view ->
+                        // Only reload if content might have changed (e.g., theme change)
+                        view.loadDataWithBaseURL(
                             null,
                             getHelpHtmlContent(isDarkTheme, cachedImages, context),
                             "text/html",

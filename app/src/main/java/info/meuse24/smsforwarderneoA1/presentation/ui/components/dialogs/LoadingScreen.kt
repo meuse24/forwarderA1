@@ -2,6 +2,7 @@ package info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs
 
 import android.os.Build
 import androidx.compose.foundation.Image
+import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -70,8 +71,8 @@ fun LoadingScreen(
                     .clip(RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logofwd2),
+                AsyncImage(
+                    model = R.drawable.logofwd2,
                     contentDescription = "App Logo",
                     modifier = Modifier
                         .fillMaxSize()

@@ -40,7 +40,8 @@ import info.meuse24.smsforwarderneoA1.AppContainer
 @Composable
 fun EmailSettingsSection(
     emailViewModel: EmailViewModel,
-    sectionTitleStyle: TextStyle
+    sectionTitleStyle: TextStyle,
+    onMailTabVisibilityChanged: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val smtpHost by emailViewModel.smtpHost.collectAsState()
@@ -49,6 +50,7 @@ fun EmailSettingsSection(
     val smtpPassword by emailViewModel.smtpPassword.collectAsState()
     var isPasswordVisible by remember { mutableStateOf(false) }
     var mailScreenVisible by remember { mutableStateOf(AppContainer.requirePrefsManager().isMailScreenVisible()) }
+    val smtpSettingsComplete = smtpHost.isNotBlank() && smtpUsername.isNotBlank() && smtpPassword.isNotBlank()
 
     Column(
         modifier = Modifier
@@ -59,15 +61,25 @@ fun EmailSettingsSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = stringResource(R.string.label_mail_tab_visible),
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.label_mail_tab_visible),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = stringResource(R.string.desc_show_mail_tab),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Switch(
                 checked = mailScreenVisible,
                 onCheckedChange = { newValue ->
-                    AppContainer.requirePrefsManager().setMailScreenVisible(newValue)
+                    onMailTabVisibilityChanged(newValue)
                     mailScreenVisible = newValue
+                    if (newValue && !smtpSettingsComplete) {
+                        SnackbarManager.showWarning(context.getString(R.string.warning_incomplete_smtp_settings))
+                    }
                 }
             )
         }

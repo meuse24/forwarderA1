@@ -13,12 +13,14 @@ securityCrypto = "1.1.0-alpha06"
 navigationCompose = "2.8.5"
 navigationRuntimeKtx = "2.8.5"
 javamail = "1.6.7"
-compose-icons = "1.7.5"
+composeIcons = "1.7.5"
+coil = "2.7.0"
 
 [libraries]
 
-compose-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "compose-icons" }
-compose-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "compose-icons" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+compose-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "composeIcons" }
+compose-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "composeIcons" }
 android-mail = { group = "com.sun.mail", name = "android-mail", version.ref = "javamail" }
 android-activation = { group = "com.sun.mail", name = "android-activation", version.ref = "javamail" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

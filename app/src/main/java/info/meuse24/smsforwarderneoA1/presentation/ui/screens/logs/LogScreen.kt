@@ -1,6 +1,5 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.screens.logs
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 
@@ -53,8 +52,8 @@ fun LogScreen(logViewModel: LogViewModel) {
         modifier = Modifier.fillMaxSize()
     ) {
         // Wallpaper background
-        Image(
-            painter = painterResource(id = R.drawable.wallpaper),
+        AsyncImage(
+            model = R.drawable.wallpaper,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop

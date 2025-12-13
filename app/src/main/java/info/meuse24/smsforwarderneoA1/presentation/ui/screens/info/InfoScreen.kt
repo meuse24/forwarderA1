@@ -6,6 +6,7 @@ import android.os.Build
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.Image
+import coil.compose.AsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,8 +77,8 @@ fun InfoScreen() {
         modifier = Modifier.fillMaxSize()
     ) {
         // Wallpaper background
-        Image(
-            painter = painterResource(id = R.drawable.wallpaper),
+        AsyncImage(
+            model = R.drawable.wallpaper,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -116,8 +118,8 @@ fun InfoScreen() {
                                 .background(MaterialTheme.colorScheme.primaryContainer),
                             contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.logofwd2),
+                            AsyncImage(
+                                model = R.drawable.logofwd2,
                                 contentDescription = stringResource(R.string.desc_app_icon),
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -132,8 +134,8 @@ fun InfoScreen() {
                                 .clip(RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.barracuda),
+                            AsyncImage(
+                                model = R.drawable.barracuda,
                                 contentDescription = stringResource(R.string.desc_version_badge),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
@@ -257,6 +259,26 @@ fun InfoScreen() {
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
+                // WebView with proper lifecycle management
+                var webView: WebView? by remember { mutableStateOf(null) }
+
+                DisposableEffect(Unit) {
+                    onDispose {
+                        webView?.apply {
+                            // Stop all WebView activities
+                            stopLoading()
+                            // Clear WebView data
+                            clearHistory()
+                            clearCache(true)
+                            // Remove all views to prevent memory leaks
+                            removeAllViews()
+                            // Destroy WebView
+                            destroy()
+                        }
+                        webView = null
+                    }
+                }
+
                 AndroidView(
                     factory = { ctx ->
                         WebView(ctx).apply {
@@ -274,10 +296,14 @@ fun InfoScreen() {
                                 "UTF-8",
                                 null
                             )
+                            // Store reference for cleanup
+                            webView = this
                         }
                     },
-                    update = { webView ->
-                        webView.loadDataWithBaseURL(
+                    update = { view ->
+                        // Only reload if content might have changed (e.g., theme change)
+                        // Skip reload if already showing correct content to avoid unnecessary work
+                        view.loadDataWithBaseURL(
                             null,
                             getHtmlContent(isDarkTheme, context),
                             "text/html",
@@ -528,56 +554,6 @@ private fun getHtmlContent(isDarkTheme: Boolean, context: Context): String {
         <h2>${context.getString(R.string.html_heading_system_info)}</h2>
 
         <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_language)}</div>
-            <div class="info-value">${context.getString(R.string.html_value_kotlin)} ${BuildConfig.KOTLIN_VERSION}</div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_ui_framework)}</div>
-            <div class="info-value">${context.getString(R.string.html_value_jetpack_compose)}</div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_build_system)}</div>
-            <div class="info-value">${context.getString(R.string.html_value_gradle)} ${BuildConfig.GRADLE_VERSION} mit AGP ${BuildConfig.AGP_VERSION}</div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_build_tools)}</div>
-            <div class="info-value">${BuildConfig.BUILD_TOOLS_VERSION}</div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_build_time)}</div>
-            <div class="info-value">${BuildConfig.BUILD_TIME}</div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_build_type)}</div>
-            <div class="info-value"><span class="badge">${BuildConfig.BUILD_TYPE}</span></div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_architecture)}</div>
-            <div class="info-value">${context.getString(R.string.html_value_architecture)}</div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_concurrency)}</div>
-            <div class="info-value">${context.getString(R.string.html_value_concurrency)}</div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_data_storage)}</div>
-            <div class="info-value">${context.getString(R.string.html_value_encrypted_prefs)}</div>
-        </div>
-
-        <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_background_service)}</div>
-            <div class="info-value">${context.getString(R.string.html_value_foreground_service)}</div>
-        </div>
-
-        <div class="info-item">
             <div class="info-label">${context.getString(R.string.html_label_android_version)}</div>
             <div class="info-value">Android $currentAndroidVersion (API Level $currentSDKVersion)</div>
         </div>
@@ -593,8 +569,18 @@ private fun getHtmlContent(isDarkTheme: Boolean, context: Context): String {
         </div>
 
         <div class="info-item">
-            <div class="info-label">${context.getString(R.string.html_label_jdk)}</div>
-            <div class="info-value">${BuildConfig.JDK_VERSION}</div>
+            <div class="info-label">${context.getString(R.string.html_label_architecture)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_architecture)}</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">${context.getString(R.string.html_label_ui_framework)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_jetpack_compose)}</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">${context.getString(R.string.html_label_language)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_kotlin)}</div>
         </div>
     </div>
 

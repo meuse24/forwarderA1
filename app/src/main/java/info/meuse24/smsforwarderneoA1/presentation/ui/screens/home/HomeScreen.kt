@@ -2,6 +2,7 @@ package info.meuse24.smsforwarderneoA1.presentation.ui.screens.home
 
 import android.telephony.TelephonyManager
 import androidx.compose.animation.core.LinearEasing
+import coil.compose.AsyncImage
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -94,8 +95,8 @@ fun AnimatedAppLogo(modifier: Modifier = Modifier) {
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.logofwd2),
+        AsyncImage(
+            model = R.drawable.logofwd2,
             contentDescription = stringResource(R.string.desc_app_logo),
             modifier = Modifier
                 .size(56.dp)
@@ -135,8 +136,8 @@ fun HomeScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         // Wallpaper background
-        Image(
-            painter = painterResource(id = R.drawable.wallpaper),
+        AsyncImage(
+            model = R.drawable.wallpaper,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -451,8 +452,8 @@ fun ContactSelectionSection(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.officer),
+                AsyncImage(
+                    model = R.drawable.officer,
                     contentDescription = stringResource(R.string.btn_select_contact),
                     modifier = Modifier
                         .padding(bottom = 8.dp)

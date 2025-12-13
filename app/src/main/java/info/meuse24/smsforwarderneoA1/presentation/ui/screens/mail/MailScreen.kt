@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
+import coil.compose.AsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -89,8 +90,8 @@ fun MailScreen(emailViewModel: EmailViewModel) {
         modifier = Modifier.fillMaxSize()
     ) {
         // Wallpaper background
-        Image(
-            painter = painterResource(id = R.drawable.wallpaper),
+        AsyncImage(
+            model = R.drawable.wallpaper,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop

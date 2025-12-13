@@ -28,32 +28,26 @@ class LogViewModel(
 ) : ViewModel() {
 
     // Relevant Actions: Only these log entries are shown when filtering is active
+    // Filter zeigt nur: Aktivierung, Deaktivierung, Statusabfrage, Reset, Weiterleitungen
     // Note: All ERROR level logs are also shown (automatic error inclusion via LogLevel)
     companion object {
         private val RELEVANT_ACTIONS = setOf(
-            // SMS-Empfang & Weiterleitung
-            "PROCESS_SMS",
-            "FORWARD_TO_SERVICE",
-            "PROCESS_MESSAGE_GROUP",
-            "FORWARD_SMS",
-            "SEND_SMS",
-
-            // Test-SMS
-            "SEND_TEST_SMS",
-            "TEST_SMS_SENT",
-            "TEST_SMS_FAILED",
-
-            // Email-Weiterleitung (alle)
-            "EMAIL_FORWARD",
-            "ENABLE_EMAIL_FORWARDING",
-            "DISABLE_EMAIL_FORWARDING",
-
             // Rufumleitung aktivieren/deaktivieren
             "ACTIVATE_FORWARDING",
             "DEACTIVATE_FORWARDING",
 
-            // Status & Reset
-            "TOGGLE_SUCCESS"
+            // Statusabfrage
+            "QUERY_FORWARDING_STATUS",
+
+            // Reset
+            "RESET_ALL_FORWARDING",
+
+            // SMS-Weiterleitung (nur die tatsächliche Weiterleitung)
+            "FORWARD_SMS",
+            "SEND_SMS",
+
+            // Email-Weiterleitung (nur die tatsächliche Weiterleitung)
+            "EMAIL_FORWARD"
             // Note: ERROR level logs are automatically included via LogLevel check
         )
     }
@@ -73,7 +67,12 @@ class LogViewModel(
      *
      * Applies current filter settings (_showAllLogs) to determine which entries to display.
      * - If showAllLogs = true: displays all log entries
-     * - If showAllLogs = false: shows ONLY RELEVANT_ACTIONS (SMS/Email forwarding related)
+     * - If showAllLogs = false: shows only:
+     *   - Aktivierung/Deaktivierung der Rufumleitung
+     *   - Statusabfragen
+     *   - Reset-Vorgänge
+     *   - Durchführung der Weiterleitungen (Call, SMS, Email)
+     *   - Alle ERROR-Level Logs
      *
      * Updates both HTML and list representations of logs.
      */

@@ -16,10 +16,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
 
 /**
  * ViewModel für Test- und Utility-Funktionen.
@@ -74,6 +71,10 @@ class TestUtilsViewModel(
 
     /**
      * Sendet eine Test-SMS an die eigene Nummer (aus SIM-Verwaltung).
+     *
+     * Hinweis: Wenn SMS-Weiterleitung aktiviert ist, wird die Test-SMS durch den
+     * regulären Weiterleitungsmechanismus (SmsForegroundService) verarbeitet,
+     * was bereits die Email-Weiterleitung beinhaltet.
      */
     fun sendTestSms(selectedContact: Contact?) {
         if (selectedContact == null) {
@@ -108,13 +109,11 @@ class TestUtilsViewModel(
             return
         }
 
-        if (PhoneSmsUtils.sendTestSms(
-                application,
-                receiver,
-                prefsManager.getTestSmsText()
-            )
-        ) {
-            val sanitizedText = sanitizeSmsTextForLogging(prefsManager.getTestSmsText())
+        val testSmsText = prefsManager.getTestSmsText()
+        val smsSent = PhoneSmsUtils.sendTestSms(application, receiver, testSmsText)
+
+        if (smsSent) {
+            val sanitizedText = sanitizeSmsTextForLogging(testSmsText)
             LoggingManager.log(
                 LogLevel.INFO,
                 LogMetadata(
@@ -122,13 +121,14 @@ class TestUtilsViewModel(
                     action = "TEST_SMS_SENT",
                     details = mapOf(
                         "receiver" to receiver,
-                        "text" to sanitizedText
+                        "text" to sanitizedText,
+                        "note" to "Email-Weiterleitung erfolgt durch regulären SMS-Empfang"
                     )
                 ),
                 "Test-SMS wurde versendet"
             )
         } else {
-            val sanitizedText = sanitizeSmsTextForLogging(prefsManager.getTestSmsText())
+            val sanitizedText = sanitizeSmsTextForLogging(testSmsText)
             LoggingManager.log(
                 LogLevel.ERROR,
                 LogMetadata(

@@ -36,7 +36,8 @@ import info.meuse24.smsforwarderneoA1.ContactsViewModel
 fun MmiCodeSettingsSection(
     viewModel: ContactsViewModel,
     onFocusChanged: (Boolean) -> Unit,
-    sectionTitleStyle: TextStyle
+    sectionTitleStyle: TextStyle,
+    showMmiWarningToggle: Boolean = false
 ) {
     val mmiActivatePrefix by viewModel.mmiActivatePrefix.collectAsState()
     val mmiActivateSuffix by viewModel.mmiActivateSuffix.collectAsState()
@@ -58,6 +59,14 @@ fun MmiCodeSettingsSection(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
+        Text(
+            text = stringResource(R.string.section_mmi_ussd_codes),
+            style = sectionTitleStyle,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = mmiActivatePrefix,
             onValueChange = { viewModel.updateMmiActivatePrefix(it) },
@@ -131,27 +140,29 @@ fun MmiCodeSettingsSection(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // MMI Warning Toggle
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.toggle_mmi_warning),
-                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = stringResource(R.string.desc_mmi_warning),
-                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+        if (showMmiWarningToggle) {
+            // MMI Warning Toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.toggle_mmi_warning),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = stringResource(R.string.desc_mmi_warning),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = mmiWarningEnabled,
+                    onCheckedChange = { viewModel.updateMmiWarningEnabled(it) }
                 )
             }
-            Switch(
-                checked = mmiWarningEnabled,
-                onCheckedChange = { viewModel.updateMmiWarningEnabled(it) }
-            )
         }
     }
 }

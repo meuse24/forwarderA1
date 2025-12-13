@@ -88,6 +88,10 @@ class ContactsViewModel(
 
     private val _keepForwardingOnExit = MutableStateFlow(false)
 
+    // Loop Protection Dialog State
+    private val _showLoopProtectionDialog = MutableStateFlow<LoopProtectionDialogData?>(null)
+    val showLoopProtectionDialog: StateFlow<LoopProtectionDialogData?> = _showLoopProtectionDialog.asStateFlow()
+
     // SIM Selection StateFlows
     private val _simSelectionMode = MutableStateFlow(SimSelectionMode.SAME_AS_INCOMING)
     val simSelectionMode: StateFlow<SimSelectionMode> = _simSelectionMode.asStateFlow()
@@ -143,6 +147,11 @@ class ContactsViewModel(
         val contact: Contact?,
         val code: String,
         val isUssd: Boolean
+    )
+
+    data class LoopProtectionDialogData(
+        val targetNumber: String,
+        val ownNumber: String
     )
 
     init {
@@ -602,16 +611,23 @@ class ContactsViewModel(
 
         for (ownNumber in ownNumbers) {
             if (validator.areSameNumber(contact.phoneNumber, ownNumber)) {
-                LoggingManager.logWarning(
+                LoggingManager.logError(
                     component = "ContactsViewModel",
-                    action = "ACTIVATE_FORWARDING_BLOCKED",
-                    message = "Aktivierung blockiert: Ziel entspricht eigener Nummer",
+                    action = "LOOP_PROTECTION_TRIGGERED",
+                    message = "Kontaktauswahl blockiert: Zielnummer ist eigene SIM-Karte",
                     details = mapOf(
                         "target" to contact.phoneNumber,
                         "own_number" to ownNumber
                     )
                 )
-                return ForwardingResult.Error("Fehler: Zielnummer darf nicht die eigene Nummer sein (Loop-Gefahr).")
+
+                // Trigger Loop Protection Dialog
+                _showLoopProtectionDialog.value = LoopProtectionDialogData(
+                    targetNumber = contact.phoneNumber,
+                    ownNumber = ownNumber
+                )
+
+                return ForwardingResult.Error("Loop Protection: Weiterleitung an eigene SIM-Karte blockiert.")
             }
         }
 
@@ -697,6 +713,10 @@ class ContactsViewModel(
             intent.putExtra("contentText", message)
             AppContainer.getApplication().startService(intent)
         }
+    }
+
+    fun dismissLoopProtectionDialog() {
+        _showLoopProtectionDialog.value = null
     }
 
     fun updateKeepForwardingOnExit(keep: Boolean) {

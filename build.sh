@@ -51,8 +51,8 @@ echo ""
 echo -e "${GREEN}Running: ./gradlew $GRADLE_TASK${NC}"
 echo ""
 
-# Run Gradle with all arguments
-./gradlew "$@" || {
+# Run Gradle with all arguments + dynamic build time property
+./gradlew -PdynamicBuildTime=true "$@" || {
     echo ""
     echo -e "${RED}✗ Build failed!${NC}"
     exit 1

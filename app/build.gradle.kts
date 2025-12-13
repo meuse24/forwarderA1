@@ -79,6 +79,18 @@ android {
         // Compose Version aus dem Version Catalog
         buildConfigField("String", "COMPOSE_VERSION", "\"${libs.versions.composeBom.get()}\"")
 
+        // SDK Versions
+        buildConfigField("int", "COMPILE_SDK", "${android.compileSdk}")
+
+        // Library Versions aus dem Version Catalog
+        buildConfigField("String", "LIBPHONENUMBER_VERSION", "\"${libs.versions.libphonenumber.get()}\"")
+        buildConfigField("String", "NAVIGATION_VERSION", "\"${libs.versions.navigationCompose.get()}\"")
+        buildConfigField("String", "SECURITY_CRYPTO_VERSION", "\"${libs.versions.securityCrypto.get()}\"")
+        buildConfigField("String", "JAVAMAIL_VERSION", "\"${libs.versions.javamail.get()}\"")
+        buildConfigField("String", "LIFECYCLE_VERSION", "\"${libs.versions.lifecycleRuntimeKtx.get()}\"")
+        buildConfigField("String", "COMPOSE_ICONS_VERSION", "\"${libs.versions.composeIcons.get()}\"")
+        buildConfigField("String", "CORE_KTX_VERSION", "\"${libs.versions.coreKtx.get()}\"")
+
         buildConfigField("String", "JDK_VERSION", "\"${System.getProperty("java.version")}\"")
         buildConfigField("String", "BUILD_TOOLS_VERSION", "\"${android.buildToolsVersion}\"")
         buildConfigField("String", "CMAKE_VERSION", "\"${project.findProperty("cmake.version") ?: "not used"}\"")
@@ -92,8 +104,17 @@ android {
 
     buildTypes {
         debug {
-            // Static build time for debug builds to enable build cache
-            buildConfigField("String", "BUILD_TIME", "\"dev-build\"")
+            // Build time: Use dynamic timestamp when built from command line (./build.sh)
+            // Use static value for Android Studio incremental builds (better caching)
+            val useDynamicBuildTime = project.hasProperty("dynamicBuildTime") &&
+                                      project.property("dynamicBuildTime") == "true"
+            val buildTime = if (useDynamicBuildTime) {
+                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                sdf.format(Date())
+            } else {
+                "dev-build (use ./build.sh for timestamp)"
+            }
+            buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
             buildConfigField("String", "BUILD_TYPE", "\"debug\"")
 
@@ -136,9 +157,11 @@ android {
     }
 }
 
-// Removed: Task override that disabled BuildConfig caching
-// Debug builds now use static BUILD_TIME for better caching
-// Release builds still generate BUILD_TIME dynamically
+// BUILD_TIME behavior:
+// - Debug builds: Static "dev-build" in Android Studio for better caching
+//                 Dynamic timestamp when built via ./build.sh (sets -PdynamicBuildTime=true)
+// - Release builds: Always dynamic timestamp
+// This balances Android Studio performance with accurate build information
 
 dependencies {
     // Core Android & Kotlin
@@ -152,6 +175,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.coil.compose)
     implementation(libs.compose.icons.core)
     implementation(libs.compose.icons.extended)
 

@@ -18,7 +18,7 @@ git push https://meuse24:$GITHUB_TOKEN@github.com/meuse24/forwarderA1.git main
 
 **SMS Forwarder Neo** - Android app that forwards received SMS messages via SMS and email. Runs as foreground service for reliable background processing.
 
-- **Target SDK:** 34, **Min SDK:** 29 (Android 10+)
+- **Target SDK:** 35, **Min SDK:** 29 (Android 10+)
 - **Stack:** Kotlin 1.9.0, Jetpack Compose, JDK 17
 - **Architecture:** Clean Architecture (data/domain/presentation layers)
 
@@ -143,6 +143,19 @@ SmsForegroundService.stopService(context)
 - ✅ MainActivity decomposed: 3,870 → 835 lines (-78%)
 - ✅ ViewModels extracted: ContactsViewModel 2,341 → 850 lines (-64%)
 - ✅ All critical errors resolved (permissions, null safety, lifecycle, coroutines)
+
+**Loop Protection (2025-12-11):**
+- ✅ **Critical Security Feature:** Prevents SMS loops by blocking forwarding to own SIM cards
+- ✅ **Dual Check:**
+  - `sender == target` (Basic reflection check)
+  - `target == own SIM` (Advanced check against all local SIMs)
+- ✅ **Robust Detection:** Uses both auto-detected SIM numbers (`getAllSimInfo`) and manually configured numbers (`getSimPhoneNumbers`)
+- ✅ **User Feedback:** Error logging (`LOOP_PROTECTION_CRITICAL`), Snackbar warning, and dedicated Dialog
+- **Components:**
+  - `SmsForegroundService.kt`: Implementation of checks in `processMessageGroup`
+  - `PhoneNumberValidator.kt`: `areSameNumber` logic with normalization
+  - `PhoneSmsUtils.kt`: `getAllSimInfo`
+  - `SharedPreferencesManager.kt`: `getSimPhoneNumbers`
 
 **Contact Selection Simplification (2025-01-20):**
 - ✅ Replaced contact list + search with Android Contact Picker
