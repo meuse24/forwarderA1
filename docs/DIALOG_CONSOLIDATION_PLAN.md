@@ -665,8 +665,8 @@ fun rememberCountdown(
 
 **Success Criteria**:
 - [x] Beide Dialoge nutzen AppAlertDialog
-- [ ] Feature-Flag-Check: `if (USE_NEW_DIALOGS) { new } else { old }`
-- [ ] Visual Test: Identisches Aussehen
+- [x] Feature-Flag-Check: nicht erforderlich (kein Legacy-Pfad mehr vorgesehen)
+- [x] Visual Test: Identisches Aussehen
 
 #### 5.2 Input-Dialoge (2-3h)
 
@@ -694,9 +694,9 @@ fun rememberCountdown(
    - **Einsparung**: ~25 Zeilen
 
 **Success Criteria**:
-- [ ] Input-Validierung funktioniert identisch
-- [ ] Keyboard IME-Actions korrekt
-- [ ] Focus-Order für Accessibility
+- [x] Input-Validierung funktioniert identisch (PIN/Change-PIN)
+- [x] Keyboard IME-Actions korrekt
+- [x] Focus-Order für Accessibility (Standard Compose order)
 
 #### 5.3 Komplexe Dialoge (2-3h)
 
