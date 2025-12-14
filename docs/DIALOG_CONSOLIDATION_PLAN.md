@@ -725,8 +725,8 @@ fun rememberCountdown(
 
 **Success Criteria**:
 - [ ] Exit-Flow funktioniert (keepForwarding-Checkbox)
-- [ ] Error-Handling zeigt korrekte Meldungen
-- [ ] Button-Spacing konsistent
+- [x] Error-Handling zeigt korrekte Meldungen
+- [x] Button-Spacing konsistent
 
 #### 5.4 Kritische Dialoge (1-2h) ⚠️ VORSICHTIG
 
@@ -745,10 +745,10 @@ fun rememberCountdown(
    - **TEST INTENSIV**: Permission-Request-Flow auf echtem Gerät!
 
 **Success Criteria**:
-- [ ] Permission-Request funktioniert
-- [ ] Exit-Button schließt App
-- [ ] Liste aller Permissions sichtbar
-- [ ] **Manual Test**: Permissions verweigern → Dialog erscheint → Grant → Permissions erhalten
+- [x] Permission-Request funktioniert
+- [x] Exit-Button schließt App
+- [x] Liste aller Permissions sichtbar
+- [x] **Manual Test**: Permissions verweigern → Dialog erscheint → Grant → Permissions erhalten
 
 #### 5.5 Fullscreen-Dialoge (1-2h)
 
@@ -771,10 +771,10 @@ fun rememberCountdown(
    - **Einsparung**: Bereits in Phase 1 (-51 Zeilen)
 
 **Success Criteria**:
-- [ ] Countdown funktioniert (4 Sekunden)
-- [ ] Skip-Button funktioniert
-- [ ] Animationen laufen smooth
-- [ ] Gradient-Farben korrekt
+- [x] Countdown funktioniert (4 Sekunden)
+- [x] Skip-Button funktioniert
+- [x] Animationen laufen smooth
+- [x] Gradient-Farben korrekt
 
 **Gesamt-Einsparung Phase 5**: ~230 Zeilen
 
@@ -906,8 +906,8 @@ if (showExitDialog) {
    - Konsistente onDismiss → `viewModel.dismissXyzDialog()`
 
 **Success Criteria**:
-- [ ] Alle Dialog-States in ViewModels
-- [ ] Keine lokalen Dialog-States in MainActivity
+- [ ] Alle Dialog-States in ViewModels (kritische Berechtigungen bereits migriert)
+- [ ] Keine lokalen Dialog-States in MainActivity (Rest offen: MMI Warning/Confirmation, USSD, Privacy Policy)
 - [ ] Konsistente dismiss-Funktionen
 - [ ] Lifecycle-Safe (keine Memory Leaks)
 
@@ -979,7 +979,7 @@ fun countdown_autoFinishesAfter4Seconds() = runTest {
 ```
 
 **Test-Coverage**:
-- [ ] Exit-Dialog: Confirm, Dismiss, Settings-Button
+- [x] Exit-Dialog: Confirm, Dismiss, Settings-Button
 - [ ] Permission-Dialog: Grant, Exit
 - [ ] PIN-Dialog: Correct PIN, Wrong PIN, Cancel
 - [ ] Countdown: Auto-dismiss, Manual skip
