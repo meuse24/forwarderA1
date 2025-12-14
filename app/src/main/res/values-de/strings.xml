@@ -653,6 +653,13 @@
     <string name="mmi_confirmation_failure_reason">Vom Benutzer als fehlgeschlagen markiert</string>
     <string name="snackbar_wait_for_call_end">Bitte warten Sie, bis der aktuelle Anruf beendet ist</string>
 
+    <!-- ==================== CONTENT DESCRIPTIONS ==================== -->
+    <string name="cd_warning_icon">Warnsymbol</string>
+    <string name="cd_error_icon">Fehlersymbol</string>
+    <string name="cd_info_icon">Infosymbol</string>
+    <string name="cd_exit_icon">Beenden-Symbol</string>
+    <string name="cd_officer_logo">Officer-Logo</string>
+
     <!-- ==================== TEXT/OTHERS ==================== -->
     <string name="text_author_name">Günther Meusburger</string>
     <string name="text_copyright">© 2025</string>
