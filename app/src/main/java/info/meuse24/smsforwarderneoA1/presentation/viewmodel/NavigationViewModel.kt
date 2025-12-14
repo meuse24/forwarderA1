@@ -32,6 +32,12 @@ class NavigationViewModel(
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog: StateFlow<Boolean> = _showExitDialog.asStateFlow()
 
+    private val _showCriticalPermissionsDialog = MutableStateFlow(false)
+    val showCriticalPermissionsDialog: StateFlow<Boolean> = _showCriticalPermissionsDialog.asStateFlow()
+
+    private val _missingPermissions = MutableStateFlow<List<String>>(emptyList())
+    val missingPermissions: StateFlow<List<String>> = _missingPermissions.asStateFlow()
+
     private val _navigationTarget = MutableStateFlow<String?>(null)
     val navigationTarget: StateFlow<String?> = _navigationTarget.asStateFlow()
 
@@ -50,6 +56,16 @@ class NavigationViewModel(
      */
     fun hideExitDialog() {
         _showExitDialog.value = false
+    }
+
+    fun showCriticalPermissions(missing: List<String>) {
+        _missingPermissions.value = missing
+        _showCriticalPermissionsDialog.value = true
+    }
+
+    fun hideCriticalPermissions() {
+        _showCriticalPermissionsDialog.value = false
+        _missingPermissions.value = emptyList()
     }
 
     /**

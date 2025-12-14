@@ -117,8 +117,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var permissionHandler: PermissionHandler
 
     // State für kritischen Berechtigungs-Dialog
-    private val _showCriticalPermissionsDialog = MutableStateFlow(false)
-    private val _missingPermissions = MutableStateFlow<List<String>>(emptyList())
 
     private data class MmiConfirmationState(
         val contactName: String?,
@@ -210,7 +208,8 @@ class MainActivity : ComponentActivity() {
                 val isLoading by _isLoading.collectAsState()
                 val error by _loadingError.collectAsState()
                 val isFullyInitialized by AppContainer.isInitialized.collectAsState()
-                val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
+                val showCriticalPermissionsDialog by navigationViewModel.showCriticalPermissionsDialog.collectAsState()
+        val criticalMissingPermissions by navigationViewModel.missingPermissions.collectAsState()
                 val showPrivacyPolicy by _showPrivacyPolicy.collectAsState()
 
                 when {
@@ -905,8 +904,7 @@ class MainActivity : ComponentActivity() {
             )
 
             // Zeige kritischen Dialog
-            _missingPermissions.value = missing
-            _showCriticalPermissionsDialog.value = true
+            navigationViewModel.showCriticalPermissions(missing)
         }
 
         processPendingMmiConfirmationIfNeeded()
@@ -958,8 +956,8 @@ class MainActivity : ComponentActivity() {
         val snackbarHostState = remember { SnackbarHostState() }
 
         // Critical Permissions Dialog State
-        val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
-        val missingPermissions by _missingPermissions.collectAsState()
+        val showCriticalPermissionsDialog by navigationViewModel.showCriticalPermissionsDialog.collectAsState()
+        val missingPermissions by navigationViewModel.missingPermissions.collectAsState()
 
         // MMI Warning Dialog State
         val showMmiWarningDialog by _showMmiWarningDialog.collectAsState()
@@ -1130,9 +1128,9 @@ class MainActivity : ComponentActivity() {
             // Critical Permissions Dialog
             if (showCriticalPermissionsDialog) {
                 CriticalPermissionsDialog(
-                    missingPermissions = missingPermissions,
+                    missingPermissions = navigationViewModel.missingPermissions.value,
                     onRequestPermissions = {
-                        _showCriticalPermissionsDialog.value = false
+                        navigationViewModel.hideCriticalPermissions()
                         permissionHandler.recheckAndRequest(
                             onAllGranted = {
                                 LoggingManager.logInfo(
@@ -1226,8 +1224,7 @@ class MainActivity : ComponentActivity() {
                     onDenied = {
                         val missing = permissionHandler.getMissingPermissions()
                         _isLoading.value = false
-                        _missingPermissions.value = missing
-                        _showCriticalPermissionsDialog.value = true
+                        navigationViewModel.showCriticalPermissions(missing)
                     }
                 )
             } catch (e: Exception) {
