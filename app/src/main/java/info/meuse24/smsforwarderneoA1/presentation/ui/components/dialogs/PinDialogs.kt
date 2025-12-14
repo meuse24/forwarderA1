@@ -19,6 +19,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDefaults.StandardSpacing
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.AppAlertDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogConfirmButton
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDismissButton
 
 /**
  * PIN entry dialog for accessing protected features (e.g., logs).
@@ -38,7 +41,7 @@ fun PinDialog(
     var pin by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
 
-    AppAppAlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.dialog_title_enter_pin),
         text = {
@@ -110,7 +113,7 @@ fun ChangePinDialog(
     var confirmPin by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.dialog_title_change_pin),
         text = {
