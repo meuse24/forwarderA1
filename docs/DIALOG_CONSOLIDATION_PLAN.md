@@ -664,7 +664,7 @@ fun rememberCountdown(
    - **Einsparung**: ~5 Zeilen
 
 **Success Criteria**:
-- [ ] Beide Dialoge nutzen AppAlertDialog
+- [x] Beide Dialoge nutzen AppAlertDialog
 - [ ] Feature-Flag-Check: `if (USE_NEW_DIALOGS) { new } else { old }`
 - [ ] Visual Test: Identisches Aussehen
 
