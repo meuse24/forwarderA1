@@ -60,7 +60,7 @@ fun ExitDialog(
         icon = {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.cd_exit_icon),
                 tint = MaterialTheme.colorScheme.primary
             )
         },

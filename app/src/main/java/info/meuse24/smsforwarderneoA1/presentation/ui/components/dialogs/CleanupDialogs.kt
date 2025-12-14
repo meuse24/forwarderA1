@@ -104,7 +104,7 @@ fun CleanupErrorDialog(
         icon = {
             Icon(
                 imageVector = Icons.Default.Info,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.cd_info_icon),
                 tint = MaterialTheme.colorScheme.error
             )
         },

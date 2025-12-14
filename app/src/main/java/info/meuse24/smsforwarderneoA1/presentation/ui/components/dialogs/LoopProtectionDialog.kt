@@ -129,7 +129,7 @@ fun LoopProtectionDialog(
                         // Warning icon
                         Icon(
                             imageVector = Icons.Default.Warning,
-                            contentDescription = "Loop Protection Warning",
+                            contentDescription = stringResource(R.string.cd_warning_icon),
                             modifier = Modifier
                                 .size(100.dp)
                                 .scale(scale),
