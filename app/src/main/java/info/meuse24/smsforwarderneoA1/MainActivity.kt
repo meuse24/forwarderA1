@@ -118,20 +118,9 @@ class MainActivity : ComponentActivity() {
 
     // State für kritischen Berechtigungs-Dialog
 
-    private data class MmiConfirmationState(
-        val contactName: String?,
-        val contactNumber: String?
-    )
-
-    // State für MMI Warning Dialog
-    private val _showMmiWarningDialog = MutableStateFlow(false)
-    private val _mmiConfirmationState = MutableStateFlow<MmiConfirmationState?>(null)
+    // MMI Confirmation Job (still needed for lifecycle management)
     private var mmiConfirmationJob: Job? = null
     private var awaitingMmiConfirmation = false
-    private val _showUssdInProgress = MutableStateFlow(false)
-
-    // State für Privacy Policy
-    private val _showPrivacyPolicy = MutableStateFlow(false)
 
     // Contact Picker Launcher
     private val contactPickerLauncher = registerForActivityResult(
@@ -210,7 +199,7 @@ class MainActivity : ComponentActivity() {
                 val isFullyInitialized by AppContainer.isInitialized.collectAsState()
                 val showCriticalPermissionsDialog by navigationViewModel.showCriticalPermissionsDialog.collectAsState()
         val criticalMissingPermissions by navigationViewModel.missingPermissions.collectAsState()
-                val showPrivacyPolicy by _showPrivacyPolicy.collectAsState()
+                val showPrivacyPolicy by navigationViewModel.showPrivacyPolicy.collectAsState()
 
                 when {
                     // Zeige Privacy Policy Screen als allererstes (wenn noch nicht akzeptiert)
@@ -218,7 +207,7 @@ class MainActivity : ComponentActivity() {
                         PrivacyPolicyScreen(
                             onAccept = {
                                 AppContainer.requirePrefsManager().setPrivacyPolicyAccepted(true)
-                                _showPrivacyPolicy.value = false
+                                navigationViewModel.hidePrivacyPolicy()
 
                                 LoggingManager.logInfo(
                                     component = "MainActivity",
@@ -304,7 +293,7 @@ class MainActivity : ComponentActivity() {
                 if (!privacyAccepted) {
                     // Zeige Privacy Policy Screen
                     _isLoading.value = false
-                    _showPrivacyPolicy.value = true
+                    navigationViewModel.showPrivacyPolicy()
 
                     LoggingManager.logInfo(
                         component = "MainActivity",
@@ -510,9 +499,9 @@ class MainActivity : ComponentActivity() {
                 )
 
                 // Show in-app dialog for 4 seconds
-                _showMmiWarningDialog.value = true
+                viewModel.showMmiWarningDialog()
                 delay(4000)
-                _showMmiWarningDialog.value = false
+                viewModel.dismissMmiWarningDialog()
             } else {
                 LoggingManager.logInfo(
                     component = "MainActivity",
@@ -555,7 +544,7 @@ class MainActivity : ComponentActivity() {
                     )
                 )
 
-                _showUssdInProgress.value = true
+                viewModel.showUssdProgressDialog()
 
                 val success = PhoneSmsUtils.sendUssdCode(
                     this,
@@ -578,7 +567,7 @@ class MainActivity : ComponentActivity() {
                     )
                 )
                 if (!success) {
-                    _showUssdInProgress.value = false
+                    viewModel.dismissUssdProgressDialog()
                     viewModel.resolvePendingForwardingResult(
                         success = false,
                         source = "USSD_SEND_FAILED",
@@ -793,7 +782,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleUssdResult(result: UssdRequestResult) {
-        _showUssdInProgress.value = false
+        viewModel.dismissUssdProgressDialog()
 
         if (result.type == UssdRequestType.OTHER) {
             return
@@ -821,7 +810,7 @@ class MainActivity : ComponentActivity() {
             )
         )
 
-        _mmiConfirmationState.value = MmiConfirmationState(
+        viewModel.showMmiConfirmationDialog(
             contactName = pending.contact?.name,
             contactNumber = pending.contact?.phoneNumber
         )
@@ -829,7 +818,7 @@ class MainActivity : ComponentActivity() {
         mmiConfirmationJob?.cancel()
         mmiConfirmationJob = lifecycleScope.launch {
             delay(4000)
-            if (_mmiConfirmationState.value != null) {
+            if (viewModel.mmiConfirmationState.value != null) {
                 handleMmiConfirmationResult(success = true, source = "MMI_TIMEOUT_SUCCESS")
             }
         }
@@ -844,7 +833,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleMmiConfirmationResult(success: Boolean, source: String) {
         mmiConfirmationJob?.cancel()
-        _mmiConfirmationState.value = null
+        viewModel.dismissMmiConfirmationDialog()
         awaitingMmiConfirmation = false
 
         viewModel.resolvePendingForwardingResult(
@@ -885,7 +874,7 @@ class MainActivity : ComponentActivity() {
         if (!AppContainer.isInitialized.value ||
             !::permissionHandler.isInitialized ||
             _isLoading.value ||
-            _showPrivacyPolicy.value) {
+            navigationViewModel.showPrivacyPolicy.value) {
             return
         }
 
@@ -960,9 +949,9 @@ class MainActivity : ComponentActivity() {
         val missingPermissions by navigationViewModel.missingPermissions.collectAsState()
 
         // MMI Warning Dialog State
-        val showMmiWarningDialog by _showMmiWarningDialog.collectAsState()
-        val mmiConfirmationState by _mmiConfirmationState.collectAsState()
-        val showUssdInProgress by _showUssdInProgress.collectAsState()
+        val showMmiWarningDialog by viewModel.showMmiWarningDialog.collectAsState()
+        val mmiConfirmationState by viewModel.mmiConfirmationState.collectAsState()
+        val showUssdInProgress by viewModel.showUssdInProgress.collectAsState()
 
         // Cleanup Effect
         LaunchedEffect(Unit) {
@@ -1175,7 +1164,7 @@ class MainActivity : ComponentActivity() {
             if (showMmiWarningDialog) {
                 MmiWarningDialog(
                     onDismiss = {
-                        _showMmiWarningDialog.value = false
+                        viewModel.dismissMmiWarningDialog()
                     }
                 )
             }

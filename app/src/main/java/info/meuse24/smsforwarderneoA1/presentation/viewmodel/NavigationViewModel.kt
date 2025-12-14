@@ -44,6 +44,9 @@ class NavigationViewModel(
     private val _errorState = MutableStateFlow<ErrorDialogState?>(null)
     val errorState: StateFlow<ErrorDialogState?> = _errorState.asStateFlow()
 
+    private val _showPrivacyPolicy = MutableStateFlow(false)
+    val showPrivacyPolicy: StateFlow<Boolean> = _showPrivacyPolicy.asStateFlow()
+
     /**
      * Zeigt den Exit-Dialog an.
      */
@@ -66,6 +69,20 @@ class NavigationViewModel(
     fun hideCriticalPermissions() {
         _showCriticalPermissionsDialog.value = false
         _missingPermissions.value = emptyList()
+    }
+
+    /**
+     * Zeigt die Privacy Policy an.
+     */
+    fun showPrivacyPolicy() {
+        _showPrivacyPolicy.value = true
+    }
+
+    /**
+     * Versteckt die Privacy Policy.
+     */
+    fun hidePrivacyPolicy() {
+        _showPrivacyPolicy.value = false
     }
 
     /**

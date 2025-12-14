@@ -919,10 +919,42 @@ if (showExitDialog) {
    - Konsistente onDismiss → `viewModel.dismissXyzDialog()`
 
 **Success Criteria**:
-- [ ] Alle Dialog-States in ViewModels (kritische Berechtigungen bereits migriert)
-- [ ] Keine lokalen Dialog-States in MainActivity (Rest offen: MMI Warning/Confirmation, USSD, Privacy Policy)
-- [ ] Konsistente dismiss-Funktionen
-- [ ] Lifecycle-Safe (keine Memory Leaks)
+- [x] Alle Dialog-States in ViewModels (kritische Berechtigungen bereits migriert)
+- [x] Keine lokalen Dialog-States in MainActivity (Rest offen: MMI Warning/Confirmation, USSD, Privacy Policy)
+- [x] Konsistente dismiss-Funktionen
+- [x] Lifecycle-Safe (keine Memory Leaks)
+
+**Status**: ✅ ABGESCHLOSSEN (2025-12-14)
+
+**Ergebnisse**:
+- **ContactsViewModel** erweitert um 3 Dialog-States:
+  - `showMmiWarningDialog: StateFlow<Boolean>` + show/dismiss Funktionen
+  - `mmiConfirmationState: StateFlow<MmiConfirmationState?>` + show/dismiss Funktionen
+  - `showUssdInProgress: StateFlow<Boolean>` + show/dismiss Funktionen
+  - Data class `MmiConfirmationState(contactName, contactNumber)` hinzugefügt
+
+- **NavigationViewModel** erweitert um 1 Dialog-State:
+  - `showPrivacyPolicy: StateFlow<Boolean>` + show/hide Funktionen
+
+- **MainActivity** refactored:
+  - 4 lokale StateFlows entfernt (14 Zeilen)
+  - Data class `MmiConfirmationState` entfernt (aus MainActivity)
+  - 11 Stellen auf ViewModel-Funktionen umgestellt:
+    - `_showPrivacyPolicy.value = true/false` → `navigationViewModel.show/hidePrivacyPolicy()`
+    - `_showMmiWarningDialog.value = true/false` → `viewModel.show/dismissMmiWarningDialog()`
+    - `_mmiConfirmationState.value = ...` → `viewModel.show/dismissMmiConfirmationDialog(...)`
+    - `_showUssdInProgress.value = true/false` → `viewModel.show/dismissUssdProgressDialog()`
+  - 3 collectAsState() Zeilen aktualisiert (nutzen jetzt ViewModels)
+
+**Code-Änderungen**:
+- `ContactsViewModel.kt`: +29 Zeilen (States + Funktionen + data class)
+- `NavigationViewModel.kt`: +14 Zeilen (State + Funktionen)
+- `MainActivity.kt`: -14 Zeilen netto (lokale States entfernt, ViewModel-Aufrufe genutzt)
+
+**Lifecycle-Sicherheit**:
+- `mmiConfirmationJob` bleibt in MainActivity (für Job-Cancellation)
+- Alle StateFlows lifecycle-aware via collectAsState()
+- Keine Memory Leaks durch ViewModelScope
 
 **Risiko**: MITTEL (State-Refactoring kann Edge-Cases haben)
 
