@@ -634,9 +634,9 @@ fun rememberCountdown(
    ```
 
 **Success Criteria**:
-- [ ] Deprecated-Warnings kompilieren
-- [ ] Migration-Guide enthält alle 10 Dialoge
-- [ ] Checkliste vollständig
+- [x] Deprecated-Warnings kompilieren
+- [x] Migration-Guide enthält alle 10 Dialoge
+- [x] Checkliste vollständig
 
 **Risiko**: MINIMAL (nur Dokumentation)
 
