@@ -3,8 +3,10 @@ package info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -16,11 +18,13 @@ import androidx.compose.ui.unit.dp
 fun DialogConfirmButton(
     text: String,
     onClick: () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,
-        enabled = enabled
+        enabled = enabled,
+        modifier = modifier
     ) {
         Text(text = text)
     }
@@ -29,9 +33,10 @@ fun DialogConfirmButton(
 @Composable
 fun DialogDismissButton(
     text: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    TextButton(onClick = onClick) {
+    TextButton(onClick = onClick, modifier = modifier) {
         Text(text = text)
     }
 }
@@ -40,12 +45,14 @@ fun DialogDismissButton(
 fun DialogDestructiveButton(
     text: String,
     onClick: () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+        modifier = modifier,
+        colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.error,
             contentColor = MaterialTheme.colorScheme.onError
         )
@@ -70,4 +77,9 @@ fun DialogButtonRow(
 @Composable
 fun DialogButtonSpacer() {
     Spacer(modifier = Modifier.width(DialogDefaults.CompactSpacing))
+}
+
+@Composable
+fun DialogButtonSpacerVertical() {
+    Spacer(modifier = Modifier.height(DialogDefaults.CompactSpacing))
 }

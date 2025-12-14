@@ -4,18 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +25,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.AppAlertDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogConfirmButton
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDefaults
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDismissButton
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogButtonSpacerVertical
 
 /**
  * Exit confirmation dialog.
@@ -52,7 +55,7 @@ fun ExitDialog(
 ) {
     var keepForwarding by remember { mutableStateOf(initialKeepForwarding) }
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         icon = {
             Icon(
@@ -61,15 +64,13 @@ fun ExitDialog(
                 tint = MaterialTheme.colorScheme.primary
             )
         },
-        title = {
-            Text(stringResource(R.string.dialog_title_exit_app))
-        },
+        title = stringResource(R.string.dialog_title_exit_app),
         text = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(vertical = DialogDefaults.StandardPadding),
+                verticalArrangement = Arrangement.spacedBy(DialogDefaults.StandardSpacing)
             ) {
                 contact?.let {
                     Text(
@@ -91,7 +92,7 @@ fun ExitDialog(
                                 updateKeepForwardingOnExit(it)
                             }
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(DialogDefaults.CompactSpacing))
                         Text(
                             text = stringResource(R.string.toggle_keep_forwarding_on_exit),
                             style = MaterialTheme.typography.bodyMedium
@@ -101,22 +102,28 @@ fun ExitDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = { onConfirm(keepForwarding) }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(DialogDefaults.CompactSpacing),
+                horizontalAlignment = Alignment.End
             ) {
-                Text(stringResource(R.string.btn_exit))
+                DialogDismissButton(
+                    text = stringResource(R.string.btn_settings),
+                    onClick = onSettings,
+                    modifier = Modifier.defaultMinSize(minWidth = 140.dp)
+                )
+                DialogDismissButton(
+                    text = stringResource(R.string.btn_cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.defaultMinSize(minWidth = 140.dp)
+                )
+                DialogConfirmButton(
+                    text = stringResource(R.string.btn_exit),
+                    onClick = { onConfirm(keepForwarding) },
+                    modifier = Modifier.defaultMinSize(minWidth = 140.dp)
+                )
             }
         },
-        dismissButton = {
-            Row {
-                TextButton(onClick = onSettings) {
-                    Text(stringResource(R.string.btn_settings))
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        }
+        dismissButton = {}
     )
 }

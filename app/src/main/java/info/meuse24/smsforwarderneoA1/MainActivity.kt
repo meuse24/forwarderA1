@@ -56,8 +56,6 @@ import info.meuse24.smsforwarderneoA1.AppContainer.prefsManager
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
-import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupErrorDialog
-import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupProgressDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CriticalPermissionsDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ExitDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoadingScreen
@@ -66,6 +64,8 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoopPro
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.MmiWarningDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.SimNumbersDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.UssdProgressDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupErrorDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupProgressDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.CustomTopAppBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.help.HelpScreen
@@ -96,12 +96,11 @@ import kotlinx.coroutines.withTimeout
 class MainActivity : ComponentActivity() {
     private val viewModel: ContactsViewModel by viewModels { ContactsViewModel.Factory() }
     private val logViewModel: LogViewModel by viewModels {
-        LogViewModel.Factory(AppContainer.requireLogger())
+        LogViewModel.Factory()
     }
     private val emailViewModel: EmailViewModel by viewModels {
         EmailViewModel.Factory(
-            AppContainer.requirePrefsManager(),
-            AppContainer.requireLogger()
+            AppContainer.requirePrefsManager()
         )
     }
     private val simManagementViewModel: SimManagementViewModel by viewModels {
@@ -267,10 +266,9 @@ class MainActivity : ComponentActivity() {
                     else -> {
                         // Zusätzliche Sicherheitsprüfung vor UI-Erstellung
                         val prefsAvailable = AppContainer.getPrefsManagerSafe() != null
-                        val loggerAvailable = AppContainer.getLoggerSafe() != null
                         val permissionAvailable = AppContainer.getPermissionHandlerSafe() != null
 
-                        if (prefsAvailable && loggerAvailable && permissionAvailable) {
+                        if (prefsAvailable && permissionAvailable) {
                             UI(viewModel, emailViewModel)
                         } else {
                             // Zeige Fehler-LoadingScreen nur wenn nicht CriticalPermissionsDialog aktiv

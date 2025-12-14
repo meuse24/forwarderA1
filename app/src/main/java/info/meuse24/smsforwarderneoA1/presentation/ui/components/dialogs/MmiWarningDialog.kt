@@ -1,12 +1,33 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,10 +40,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import info.meuse24.smsforwarderneoA1.R
-import kotlinx.coroutines.delay
+import info.meuse24.smsforwarderneoA1.util.rememberCountdown
+import info.meuse24.smsforwarderneoA1.util.rememberGlowAnimation
+import info.meuse24.smsforwarderneoA1.util.rememberPulseAnimation
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.AppFullscreenDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDefaults
 
 /**
  * MMI Warning Dialog - Modern, compact overlay shown before dialing MMI codes.
@@ -40,51 +63,16 @@ import kotlinx.coroutines.delay
 fun MmiWarningDialog(
     onDismiss: () -> Unit
 ) {
-    var countdown by remember { mutableStateOf(4) }
-    var isDismissed by remember { mutableStateOf(false) }
+    // Use shared countdown utility (eliminates code duplication)
+    val (countdown, manualDismiss) = rememberCountdown(seconds = 4, onFinish = onDismiss)
 
-    // Countdown timer
-    LaunchedEffect(Unit) {
-        repeat(4) { i ->
-            if (isDismissed) return@LaunchedEffect
-            countdown = 4 - i
-            delay(1000)
-        }
-        if (!isDismissed) {
-            onDismiss()
-        }
-    }
+    // Use shared animation utilities (eliminates code duplication)
+    val scale by rememberPulseAnimation(minScale = 1f, maxScale = 1.15f, duration = 800)
+    val alpha by rememberGlowAnimation(minAlpha = 0.3f, maxAlpha = 0.7f, duration = 1200)
 
-    // Pulsating animation for officer icon
-    val infiniteTransition = rememberInfiniteTransition(label = "officer_pulse")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale_animation"
-    )
-
-    // Glow animation
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glow_animation"
-    )
-
-    Dialog(
+    AppFullscreenDialog(
         onDismissRequest = { /* Prevent dismissal */ },
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        )
+        properties = DialogDefaults.FullscreenDialogProperties
     ) {
         Box(
             modifier = Modifier
@@ -134,7 +122,7 @@ fun MmiWarningDialog(
                         // Officer logo
                         AsyncImage(
                             model = R.drawable.officer,
-                            contentDescription = "Officer",
+                            contentDescription = stringResource(R.string.cd_officer_logo),
                             modifier = Modifier
                                 .size(120.dp)
                                 .scale(scale)
@@ -155,10 +143,7 @@ fun MmiWarningDialog(
 
                     // Countdown button - clickable to skip countdown
                     Button(
-                        onClick = {
-                            isDismissed = true
-                            onDismiss()
-                        },
+                        onClick = manualDismiss,
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
                             .height(64.dp),
@@ -186,7 +171,7 @@ fun MmiWarningDialog(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = countdown.toString(),
+                                        text = countdown.value.toString(),
                                         style = MaterialTheme.typography.headlineMedium,
                                         fontWeight = FontWeight.Black,
                                         color = MaterialTheme.colorScheme.primary
