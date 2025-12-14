@@ -172,7 +172,7 @@ fun LoopProtectionDialog(
                             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(DialogDefaults.StandardPadding),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Row(
