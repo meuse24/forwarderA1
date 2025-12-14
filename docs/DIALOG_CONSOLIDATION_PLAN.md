@@ -580,10 +580,10 @@ fun rememberCountdown(
    - Für DialogButtons: Alle 3 Typen + Kombinationen
 
 **Success Criteria**:
-- [ ] 3 neue Komponenten kompilieren
-- [ ] Previews rendieren korrekt
+- [x] 3 neue Komponenten kompilieren
+- [x] Previews rendieren korrekt
 - [ ] Accessibility-Check: TalkBack liest Dialoge vor
-- [ ] Keine Duplikation in Komponenten
+- [x] Keine Duplikation in Komponenten
 
 **Risiko**: NIEDRIG (neue Dateien, keine Breaking Changes)
 
