@@ -590,6 +590,13 @@
     <string name="log_email_sent">Email sent to %1$s</string>
     <string name="log_error_occurred">Error: %1$s</string>
 
+    <!-- ==================== CONTENT DESCRIPTIONS ==================== -->
+    <string name="cd_warning_icon">Warning icon</string>
+    <string name="cd_error_icon">Error icon</string>
+    <string name="cd_info_icon">Info icon</string>
+    <string name="cd_exit_icon">Exit icon</string>
+    <string name="cd_officer_logo">Officer logo</string>
+
     <!-- ==================== COMMON ==================== -->
     <string name="btn_back">Back</string>
     <string name="btn_close">Close</string>

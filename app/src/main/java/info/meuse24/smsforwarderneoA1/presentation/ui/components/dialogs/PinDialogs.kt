@@ -4,11 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,7 +18,10 @@ import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDefaults.StandardSpacing
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.AppAlertDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogConfirmButton
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDismissButton
 
 /**
  * PIN entry dialog for accessing protected features (e.g., logs).
@@ -40,11 +41,13 @@ fun PinDialog(
     var pin by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.dialog_title_enter_pin)) },
+        title = stringResource(R.string.dialog_title_enter_pin),
         text = {
-            Column {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(StandardSpacing)
+            ) {
                 OutlinedTextField(
                     value = pin,
                     onValueChange = {
@@ -68,20 +71,22 @@ fun PinDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                if (pin == storedPin) {
-                    onPinCorrect()
-                } else {
-                    error = true
+            DialogConfirmButton(
+                text = stringResource(R.string.btn_ok),
+                onClick = {
+                    if (pin == storedPin) {
+                        onPinCorrect()
+                    } else {
+                        error = true
+                    }
                 }
-            }) {
-                Text(stringResource(R.string.btn_ok))
-            }
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.btn_cancel))
-            }
+            DialogDismissButton(
+                text = stringResource(R.string.btn_cancel),
+                onClick = onDismiss
+            )
         }
     )
 }
@@ -108,12 +113,12 @@ fun ChangePinDialog(
     var confirmPin by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.dialog_title_change_pin)) },
+        title = stringResource(R.string.dialog_title_change_pin),
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(StandardSpacing)
             ) {
                 OutlinedTextField(
                     value = currentPin,
@@ -167,30 +172,32 @@ fun ChangePinDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                when {
-                    currentPin != storedPin -> {
-                        error = context.getString(R.string.error_current_pin_wrong)
-                    }
-                    newPin.length != 4 -> {
-                        error = context.getString(R.string.error_pin_length_invalid)
-                    }
-                    newPin != confirmPin -> {
-                        error = context.getString(R.string.error_pin_mismatch)
-                    }
-                    else -> {
-                        onPinChanged(newPin)
-                        onDismiss()
+            DialogConfirmButton(
+                text = stringResource(R.string.btn_save),
+                onClick = {
+                    when {
+                        currentPin != storedPin -> {
+                            error = context.getString(R.string.error_current_pin_wrong)
+                        }
+                        newPin.length != 4 -> {
+                            error = context.getString(R.string.error_pin_length_invalid)
+                        }
+                        newPin != confirmPin -> {
+                            error = context.getString(R.string.error_pin_mismatch)
+                        }
+                        else -> {
+                            onPinChanged(newPin)
+                            onDismiss()
+                        }
                     }
                 }
-            }) {
-                Text(stringResource(R.string.btn_save))
-            }
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.btn_cancel))
-            }
+            DialogDismissButton(
+                text = stringResource(R.string.btn_cancel),
+                onClick = onDismiss
+            )
         }
     )
 }

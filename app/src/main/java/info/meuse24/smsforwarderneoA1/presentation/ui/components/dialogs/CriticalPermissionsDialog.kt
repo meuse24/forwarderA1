@@ -5,18 +5,11 @@ import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,9 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.R
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.AppAlertDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogConfirmButton
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDefaults
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDestructiveButton
 
 /**
  * Dialog der angezeigt wird wenn kritische Berechtigungen fehlen.
@@ -48,37 +44,30 @@ fun CriticalPermissionsDialog(
 ) {
     val context = LocalContext.current
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = { /* Verhindere Schließen durch Tippen außerhalb */ },
+        properties = DialogDefaults.CriticalDialogProperties,
         icon = {
             Icon(
                 imageVector = Icons.Default.Warning,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.cd_warning_icon),
                 tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(DialogDefaults.StandardIconSize)
             )
         },
-        title = {
-            Text(
-                text = stringResource(R.string.dialog_title_permissions_required),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        },
+        title = stringResource(R.string.dialog_title_permissions_required),
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(DialogDefaults.StandardSpacing)
             ) {
                 Text(
                     text = stringResource(R.string.msg_permissions_required),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-
                 // Liste der fehlenden Berechtigungen
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(DialogDefaults.CompactSpacing)
                 ) {
                     missingPermissions.forEach { permission ->
                         Row(
@@ -101,8 +90,6 @@ fun CriticalPermissionsDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
                 Text(
                     text = stringResource(R.string.msg_permissions_required_explanation),
                     style = MaterialTheme.typography.bodySmall,
@@ -111,35 +98,16 @@ fun CriticalPermissionsDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = onRequestPermissions,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(stringResource(R.string.btn_grant_permissions))
-            }
+            DialogConfirmButton(
+                text = stringResource(R.string.btn_grant_permissions),
+                onClick = onRequestPermissions
+            )
         },
         dismissButton = {
-            Button(
-                onClick = onExitApp,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.btn_exit_app))
-                }
-            }
+            DialogDestructiveButton(
+                text = stringResource(R.string.btn_exit_app),
+                onClick = onExitApp
+            )
         }
     )
 }

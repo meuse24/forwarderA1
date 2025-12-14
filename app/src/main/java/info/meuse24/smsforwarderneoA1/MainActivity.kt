@@ -56,8 +56,6 @@ import info.meuse24.smsforwarderneoA1.AppContainer.prefsManager
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
-import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupErrorDialog
-import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupProgressDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CriticalPermissionsDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ExitDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoadingScreen
@@ -66,6 +64,8 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoopPro
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.MmiWarningDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.SimNumbersDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.UssdProgressDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupErrorDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupProgressDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.CustomTopAppBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.help.HelpScreen
@@ -96,12 +96,11 @@ import kotlinx.coroutines.withTimeout
 class MainActivity : ComponentActivity() {
     private val viewModel: ContactsViewModel by viewModels { ContactsViewModel.Factory() }
     private val logViewModel: LogViewModel by viewModels {
-        LogViewModel.Factory(AppContainer.requireLogger())
+        LogViewModel.Factory()
     }
     private val emailViewModel: EmailViewModel by viewModels {
         EmailViewModel.Factory(
-            AppContainer.requirePrefsManager(),
-            AppContainer.requireLogger()
+            AppContainer.requirePrefsManager()
         )
     }
     private val simManagementViewModel: SimManagementViewModel by viewModels {
@@ -118,23 +117,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var permissionHandler: PermissionHandler
 
     // State für kritischen Berechtigungs-Dialog
-    private val _showCriticalPermissionsDialog = MutableStateFlow(false)
-    private val _missingPermissions = MutableStateFlow<List<String>>(emptyList())
 
-    private data class MmiConfirmationState(
-        val contactName: String?,
-        val contactNumber: String?
-    )
-
-    // State für MMI Warning Dialog
-    private val _showMmiWarningDialog = MutableStateFlow(false)
-    private val _mmiConfirmationState = MutableStateFlow<MmiConfirmationState?>(null)
+    // MMI Confirmation Job (still needed for lifecycle management)
     private var mmiConfirmationJob: Job? = null
     private var awaitingMmiConfirmation = false
-    private val _showUssdInProgress = MutableStateFlow(false)
-
-    // State für Privacy Policy
-    private val _showPrivacyPolicy = MutableStateFlow(false)
 
     // Contact Picker Launcher
     private val contactPickerLauncher = registerForActivityResult(
@@ -211,8 +197,9 @@ class MainActivity : ComponentActivity() {
                 val isLoading by _isLoading.collectAsState()
                 val error by _loadingError.collectAsState()
                 val isFullyInitialized by AppContainer.isInitialized.collectAsState()
-                val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
-                val showPrivacyPolicy by _showPrivacyPolicy.collectAsState()
+                val showCriticalPermissionsDialog by navigationViewModel.showCriticalPermissionsDialog.collectAsState()
+        val criticalMissingPermissions by navigationViewModel.missingPermissions.collectAsState()
+                val showPrivacyPolicy by navigationViewModel.showPrivacyPolicy.collectAsState()
 
                 when {
                     // Zeige Privacy Policy Screen als allererstes (wenn noch nicht akzeptiert)
@@ -220,7 +207,7 @@ class MainActivity : ComponentActivity() {
                         PrivacyPolicyScreen(
                             onAccept = {
                                 AppContainer.requirePrefsManager().setPrivacyPolicyAccepted(true)
-                                _showPrivacyPolicy.value = false
+                                navigationViewModel.hidePrivacyPolicy()
 
                                 LoggingManager.logInfo(
                                     component = "MainActivity",
@@ -267,10 +254,9 @@ class MainActivity : ComponentActivity() {
                     else -> {
                         // Zusätzliche Sicherheitsprüfung vor UI-Erstellung
                         val prefsAvailable = AppContainer.getPrefsManagerSafe() != null
-                        val loggerAvailable = AppContainer.getLoggerSafe() != null
                         val permissionAvailable = AppContainer.getPermissionHandlerSafe() != null
 
-                        if (prefsAvailable && loggerAvailable && permissionAvailable) {
+                        if (prefsAvailable && permissionAvailable) {
                             UI(viewModel, emailViewModel)
                         } else {
                             // Zeige Fehler-LoadingScreen nur wenn nicht CriticalPermissionsDialog aktiv
@@ -307,7 +293,7 @@ class MainActivity : ComponentActivity() {
                 if (!privacyAccepted) {
                     // Zeige Privacy Policy Screen
                     _isLoading.value = false
-                    _showPrivacyPolicy.value = true
+                    navigationViewModel.showPrivacyPolicy()
 
                     LoggingManager.logInfo(
                         component = "MainActivity",
@@ -513,9 +499,9 @@ class MainActivity : ComponentActivity() {
                 )
 
                 // Show in-app dialog for 4 seconds
-                _showMmiWarningDialog.value = true
+                viewModel.showMmiWarningDialog()
                 delay(4000)
-                _showMmiWarningDialog.value = false
+                viewModel.dismissMmiWarningDialog()
             } else {
                 LoggingManager.logInfo(
                     component = "MainActivity",
@@ -558,7 +544,7 @@ class MainActivity : ComponentActivity() {
                     )
                 )
 
-                _showUssdInProgress.value = true
+                viewModel.showUssdProgressDialog()
 
                 val success = PhoneSmsUtils.sendUssdCode(
                     this,
@@ -581,7 +567,7 @@ class MainActivity : ComponentActivity() {
                     )
                 )
                 if (!success) {
-                    _showUssdInProgress.value = false
+                    viewModel.dismissUssdProgressDialog()
                     viewModel.resolvePendingForwardingResult(
                         success = false,
                         source = "USSD_SEND_FAILED",
@@ -796,7 +782,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleUssdResult(result: UssdRequestResult) {
-        _showUssdInProgress.value = false
+        viewModel.dismissUssdProgressDialog()
 
         if (result.type == UssdRequestType.OTHER) {
             return
@@ -824,7 +810,7 @@ class MainActivity : ComponentActivity() {
             )
         )
 
-        _mmiConfirmationState.value = MmiConfirmationState(
+        viewModel.showMmiConfirmationDialog(
             contactName = pending.contact?.name,
             contactNumber = pending.contact?.phoneNumber
         )
@@ -832,7 +818,7 @@ class MainActivity : ComponentActivity() {
         mmiConfirmationJob?.cancel()
         mmiConfirmationJob = lifecycleScope.launch {
             delay(4000)
-            if (_mmiConfirmationState.value != null) {
+            if (viewModel.mmiConfirmationState.value != null) {
                 handleMmiConfirmationResult(success = true, source = "MMI_TIMEOUT_SUCCESS")
             }
         }
@@ -847,7 +833,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleMmiConfirmationResult(success: Boolean, source: String) {
         mmiConfirmationJob?.cancel()
-        _mmiConfirmationState.value = null
+        viewModel.dismissMmiConfirmationDialog()
         awaitingMmiConfirmation = false
 
         viewModel.resolvePendingForwardingResult(
@@ -888,7 +874,7 @@ class MainActivity : ComponentActivity() {
         if (!AppContainer.isInitialized.value ||
             !::permissionHandler.isInitialized ||
             _isLoading.value ||
-            _showPrivacyPolicy.value) {
+            navigationViewModel.showPrivacyPolicy.value) {
             return
         }
 
@@ -907,8 +893,7 @@ class MainActivity : ComponentActivity() {
             )
 
             // Zeige kritischen Dialog
-            _missingPermissions.value = missing
-            _showCriticalPermissionsDialog.value = true
+            navigationViewModel.showCriticalPermissions(missing)
         }
 
         processPendingMmiConfirmationIfNeeded()
@@ -960,13 +945,13 @@ class MainActivity : ComponentActivity() {
         val snackbarHostState = remember { SnackbarHostState() }
 
         // Critical Permissions Dialog State
-        val showCriticalPermissionsDialog by _showCriticalPermissionsDialog.collectAsState()
-        val missingPermissions by _missingPermissions.collectAsState()
+        val showCriticalPermissionsDialog by navigationViewModel.showCriticalPermissionsDialog.collectAsState()
+        val missingPermissions by navigationViewModel.missingPermissions.collectAsState()
 
         // MMI Warning Dialog State
-        val showMmiWarningDialog by _showMmiWarningDialog.collectAsState()
-        val mmiConfirmationState by _mmiConfirmationState.collectAsState()
-        val showUssdInProgress by _showUssdInProgress.collectAsState()
+        val showMmiWarningDialog by viewModel.showMmiWarningDialog.collectAsState()
+        val mmiConfirmationState by viewModel.mmiConfirmationState.collectAsState()
+        val showUssdInProgress by viewModel.showUssdInProgress.collectAsState()
 
         // Cleanup Effect
         LaunchedEffect(Unit) {
@@ -1132,9 +1117,9 @@ class MainActivity : ComponentActivity() {
             // Critical Permissions Dialog
             if (showCriticalPermissionsDialog) {
                 CriticalPermissionsDialog(
-                    missingPermissions = missingPermissions,
+                    missingPermissions = navigationViewModel.missingPermissions.value,
                     onRequestPermissions = {
-                        _showCriticalPermissionsDialog.value = false
+                        navigationViewModel.hideCriticalPermissions()
                         permissionHandler.recheckAndRequest(
                             onAllGranted = {
                                 LoggingManager.logInfo(
@@ -1179,7 +1164,7 @@ class MainActivity : ComponentActivity() {
             if (showMmiWarningDialog) {
                 MmiWarningDialog(
                     onDismiss = {
-                        _showMmiWarningDialog.value = false
+                        viewModel.dismissMmiWarningDialog()
                     }
                 )
             }
@@ -1228,8 +1213,7 @@ class MainActivity : ComponentActivity() {
                     onDenied = {
                         val missing = permissionHandler.getMissingPermissions()
                         _isLoading.value = false
-                        _missingPermissions.value = missing
-                        _showCriticalPermissionsDialog.value = true
+                        navigationViewModel.showCriticalPermissions(missing)
                     }
                 )
             } catch (e: Exception) {

@@ -3,10 +3,7 @@ package info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -21,14 +18,9 @@ fun MmiConfirmationDialog(
     onConfirm: () -> Unit,
     onDecline: () -> Unit
 ) {
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = { /* keep dialog for 4s window */ },
-        title = {
-            Text(
-                text = stringResource(R.string.mmi_confirmation_title),
-                fontWeight = FontWeight.Bold
-            )
-        },
+        title = stringResource(R.string.mmi_confirmation_title),
         text = {
             Column {
                 Text(text = stringResource(R.string.mmi_confirmation_body))
@@ -46,14 +38,16 @@ fun MmiConfirmationDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onConfirm) {
-                Text(text = stringResource(R.string.mmi_confirmation_positive))
-            }
+            DialogConfirmButton(
+                text = stringResource(R.string.mmi_confirmation_positive),
+                onClick = onConfirm
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDecline) {
-                Text(text = stringResource(R.string.mmi_confirmation_negative))
-            }
+            DialogDismissButton(
+                text = stringResource(R.string.mmi_confirmation_negative),
+                onClick = onDecline
+            )
         }
     )
 }

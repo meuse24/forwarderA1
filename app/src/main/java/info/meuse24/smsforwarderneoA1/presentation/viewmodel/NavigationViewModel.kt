@@ -32,11 +32,20 @@ class NavigationViewModel(
     private val _showExitDialog = MutableStateFlow(false)
     val showExitDialog: StateFlow<Boolean> = _showExitDialog.asStateFlow()
 
+    private val _showCriticalPermissionsDialog = MutableStateFlow(false)
+    val showCriticalPermissionsDialog: StateFlow<Boolean> = _showCriticalPermissionsDialog.asStateFlow()
+
+    private val _missingPermissions = MutableStateFlow<List<String>>(emptyList())
+    val missingPermissions: StateFlow<List<String>> = _missingPermissions.asStateFlow()
+
     private val _navigationTarget = MutableStateFlow<String?>(null)
     val navigationTarget: StateFlow<String?> = _navigationTarget.asStateFlow()
 
     private val _errorState = MutableStateFlow<ErrorDialogState?>(null)
     val errorState: StateFlow<ErrorDialogState?> = _errorState.asStateFlow()
+
+    private val _showPrivacyPolicy = MutableStateFlow(false)
+    val showPrivacyPolicy: StateFlow<Boolean> = _showPrivacyPolicy.asStateFlow()
 
     /**
      * Zeigt den Exit-Dialog an.
@@ -50,6 +59,30 @@ class NavigationViewModel(
      */
     fun hideExitDialog() {
         _showExitDialog.value = false
+    }
+
+    fun showCriticalPermissions(missing: List<String>) {
+        _missingPermissions.value = missing
+        _showCriticalPermissionsDialog.value = true
+    }
+
+    fun hideCriticalPermissions() {
+        _showCriticalPermissionsDialog.value = false
+        _missingPermissions.value = emptyList()
+    }
+
+    /**
+     * Zeigt die Privacy Policy an.
+     */
+    fun showPrivacyPolicy() {
+        _showPrivacyPolicy.value = true
+    }
+
+    /**
+     * Versteckt die Privacy Policy.
+     */
+    fun hidePrivacyPolicy() {
+        _showPrivacyPolicy.value = false
     }
 
     /**

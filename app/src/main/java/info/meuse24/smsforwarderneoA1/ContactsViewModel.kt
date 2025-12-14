@@ -92,6 +92,18 @@ class ContactsViewModel(
     private val _showLoopProtectionDialog = MutableStateFlow<LoopProtectionDialogData?>(null)
     val showLoopProtectionDialog: StateFlow<LoopProtectionDialogData?> = _showLoopProtectionDialog.asStateFlow()
 
+    // MMI Warning Dialog State
+    private val _showMmiWarningDialog = MutableStateFlow(false)
+    val showMmiWarningDialog: StateFlow<Boolean> = _showMmiWarningDialog.asStateFlow()
+
+    // MMI Confirmation Dialog State
+    private val _mmiConfirmationState = MutableStateFlow<MmiConfirmationState?>(null)
+    val mmiConfirmationState: StateFlow<MmiConfirmationState?> = _mmiConfirmationState.asStateFlow()
+
+    // USSD Progress Dialog State
+    private val _showUssdInProgress = MutableStateFlow(false)
+    val showUssdInProgress: StateFlow<Boolean> = _showUssdInProgress.asStateFlow()
+
     // SIM Selection StateFlows
     private val _simSelectionMode = MutableStateFlow(SimSelectionMode.SAME_AS_INCOMING)
     val simSelectionMode: StateFlow<SimSelectionMode> = _simSelectionMode.asStateFlow()
@@ -152,6 +164,11 @@ class ContactsViewModel(
     data class LoopProtectionDialogData(
         val targetNumber: String,
         val ownNumber: String
+    )
+
+    data class MmiConfirmationState(
+        val contactName: String?,
+        val contactNumber: String?
     )
 
     init {
@@ -220,17 +237,14 @@ class ContactsViewModel(
                 if (simCode.isNotEmpty()) {
                     updateCountryCode(simCode)
                     _countryCodeSource.value = "SIM-Karte"
-                    LoggingManager.log(
-                        LogLevel.INFO,
-                        LogMetadata(
-                            component = "ContactsViewModel",
-                            action = "COUNTRY_CODE_INIT",
-                            details = mapOf(
-                                "source" to "sim",
-                                "code" to simCode
-                            )
-                        ),
-                        "Ländercode von SIM-Karte ermittelt"
+                    LoggingManager.logInfo(
+                        component = "ContactsViewModel",
+                        action = "COUNTRY_CODE_INIT",
+                        message = "Ländercode von SIM-Karte ermittelt",
+                        details = mapOf(
+                            "source" to "sim",
+                            "code" to simCode
+                        )
                     )
                     return@launch
                 }
@@ -238,32 +252,26 @@ class ContactsViewModel(
                 // 2. Fallback to Austria
                 updateCountryCode("+43")
                 _countryCodeSource.value = "Standard (Österreich)"
-                LoggingManager.log(
-                    LogLevel.INFO,
-                    LogMetadata(
-                        component = "ContactsViewModel",
-                        action = "COUNTRY_CODE_INIT",
-                        details = mapOf(
-                            "source" to "default",
-                            "code" to "+43"
-                        )
-                    ),
-                    "Verwende Default-Ländercode: Österreich"
+                LoggingManager.logInfo(
+                    component = "ContactsViewModel",
+                    action = "COUNTRY_CODE_INIT",
+                    message = "Verwende Default-Ländercode: Österreich",
+                    details = mapOf(
+                        "source" to "default",
+                        "code" to "+43"
+                    )
                 )
 
             } catch (e: Exception) {
-                LoggingManager.log(
-                    LogLevel.ERROR,
-                    LogMetadata(
-                        component = "ContactsViewModel",
-                        action = "COUNTRY_CODE_INIT_ERROR",
-                        details = mapOf(
-                            "error" to e.message,
-                            "error_type" to e.javaClass.simpleName
-                        )
-                    ),
-                    "Fehler bei der Ländercode-Initialisierung",
-                    e
+                LoggingManager.logError(
+                    component = "ContactsViewModel",
+                    action = "COUNTRY_CODE_INIT_ERROR",
+                    message = "Fehler bei der Ländercode-Initialisierung",
+                    error = e,
+                    details = mapOf(
+                        "error" to e.message,
+                        "error_type" to e.javaClass.simpleName
+                    )
                 )
                 updateCountryCode("+43")
                 _countryCodeSource.value = "Standard (Österreich) nach Fehler"
@@ -717,6 +725,33 @@ class ContactsViewModel(
 
     fun dismissLoopProtectionDialog() {
         _showLoopProtectionDialog.value = null
+    }
+
+    // MMI Warning Dialog Management
+    fun showMmiWarningDialog() {
+        _showMmiWarningDialog.value = true
+    }
+
+    fun dismissMmiWarningDialog() {
+        _showMmiWarningDialog.value = false
+    }
+
+    // MMI Confirmation Dialog Management
+    fun showMmiConfirmationDialog(contactName: String?, contactNumber: String?) {
+        _mmiConfirmationState.value = MmiConfirmationState(contactName, contactNumber)
+    }
+
+    fun dismissMmiConfirmationDialog() {
+        _mmiConfirmationState.value = null
+    }
+
+    // USSD Progress Dialog Management
+    fun showUssdProgressDialog() {
+        _showUssdInProgress.value = true
+    }
+
+    fun dismissUssdProgressDialog() {
+        _showUssdInProgress.value = false
     }
 
     fun updateKeepForwardingOnExit(keep: Boolean) {
@@ -1223,14 +1258,11 @@ class ContactsViewModel(
         viewModelScope.launch {
             try {
                 saveCurrentState()
-                LoggingManager.log(
-                    LogLevel.INFO,
-                    LogMetadata(
-                        component = "ContactsViewModel",
-                        action = "VIEWMODEL_CLEARED",
-                        details = mapOf("state" to "saved")
-                    ),
-                    "ViewModel wurde bereinigt"
+                LoggingManager.logInfo(
+                    component = "ContactsViewModel",
+                    action = "VIEWMODEL_CLEARED",
+                    message = "ViewModel wurde bereinigt",
+                    details = mapOf("state" to "saved")
                 )
             } catch (e: Exception) {
                 LoggingManager.logError(

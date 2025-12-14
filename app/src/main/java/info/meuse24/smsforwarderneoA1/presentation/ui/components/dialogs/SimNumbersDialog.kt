@@ -2,21 +2,16 @@ package info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -25,9 +20,14 @@ import androidx.compose.ui.res.stringResource
 import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDefaults
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDefaults.StandardPadding
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDefaults.StandardSpacing
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogButtonRow
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogButtonSpacer
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogConfirmButton
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.DialogDismissButton
 
 /**
  * Dialog for manual SIM card phone number input.
@@ -56,39 +56,31 @@ fun SimNumbersDialog(
         }
     }
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = { /* Dialog kann nicht ohne Eingabe geschlossen werden */ },
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false
-        ),
-        title = {
-            Text(
-                text = stringResource(R.string.dialog_title_sim_numbers_required),
-                style = MaterialTheme.typography.headlineSmall
-            )
-        },
+        properties = DialogDefaults.CriticalDialogProperties,
+        title = stringResource(R.string.dialog_title_sim_numbers_required),
         text = {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(DialogDefaults.StandardSpacing)
             ) {
                 item {
                     Text(
                         text = stringResource(R.string.msg_sim_numbers_explanation),
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = DialogDefaults.StandardSpacing)
                     )
                 }
 
                 items(missingSims) { sim ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = DialogDefaults.StandardElevation)
                     ) {
                         Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier.padding(DialogDefaults.StandardPadding),
+                            verticalArrangement = Arrangement.spacedBy(DialogDefaults.StandardSpacing)
                         ) {
                             Text(
                                 text = stringResource(R.string.label_sim_slot, sim.slotIndex + 1),
@@ -137,21 +129,17 @@ fun SimNumbersDialog(
                 !input.isNullOrBlank() && input.trim().length >= 5
             }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            DialogButtonRow(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                TextButton(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(stringResource(R.string.btn_skip))
-                }
-
-                Button(
+                DialogDismissButton(
+                    text = stringResource(R.string.btn_skip),
+                    onClick = onDismiss
+                )
+                DialogButtonSpacer()
+                DialogConfirmButton(
+                    text = stringResource(R.string.btn_save),
                     onClick = {
-                        // Speichere alle eingegebenen Nummern
                         missingSims.forEach { sim ->
                             val number = numberInputs[sim.subscriptionId]?.trim()
                             if (!number.isNullOrBlank()) {
@@ -161,9 +149,7 @@ fun SimNumbersDialog(
                         onDismiss()
                     },
                     enabled = allFilled
-                ) {
-                    Text(stringResource(R.string.btn_save))
-                }
+                )
             }
         }
     )

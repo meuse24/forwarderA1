@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,9 +15,9 @@ import info.meuse24.smsforwarderneoA1.R
 
 @Composable
 fun UssdProgressDialog() {
-    AlertDialog(
-        onDismissRequest = { /* modal while USSD läuft */ },
-        title = { Text(text = stringResource(R.string.ussd_progress_title)) },
+    AppAlertDialog(
+        onDismissRequest = { /* modal while USSD runs */ },
+        title = stringResource(R.string.ussd_progress_title),
         text = {
             Column(
                 modifier = Modifier
