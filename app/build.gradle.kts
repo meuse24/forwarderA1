@@ -145,15 +145,16 @@ android {
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
             buildConfigField("String", "BUILD_TYPE", "\"release\"")
 
-            // Dialog consolidation feature flag (disabled in release for safety)
-            buildConfigField("boolean", "USE_NEW_DIALOGS", "false")
+            // Dialog consolidation feature flag (enabled - migration complete)
+            buildConfigField("boolean", "USE_NEW_DIALOGS", "true")
         }
     }
 
-    // Lint options
+    // Lint options - check release builds but don't abort on warnings
     lint {
-        checkReleaseBuilds = false
+        checkReleaseBuilds = true
         abortOnError = false
+        warningsAsErrors = false
     }
 
     packaging {
