@@ -3,10 +3,7 @@ package info.meuse24.smsforwarderneoA1.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import info.meuse24.smsforwarderneoA1.LogLevel
-import info.meuse24.smsforwarderneoA1.data.local.Logger
 import info.meuse24.smsforwarderneoA1.LoggingManager
-import info.meuse24.smsforwarderneoA1.LogMetadata
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.SnackbarManager
@@ -33,11 +30,9 @@ import java.util.Locale
  * Extracted from ContactsViewModel as part of Phase 5 refactoring.
  *
  * @param prefsManager SharedPreferencesManager for persisting settings
- * @param logger Logger instance for structured logging
  */
 class EmailViewModel(
-    private val prefsManager: SharedPreferencesManager,
-    private val logger: Logger
+    private val prefsManager: SharedPreferencesManager
 ) : ViewModel() {
     private val appContext = AppContainer.getApplication()
 
@@ -150,31 +145,25 @@ class EmailViewModel(
                     _forwardSmsToEmail.value = false
                     prefsManager.setForwardSmsToEmail(false)
                     onForwardingStateChanged?.invoke()
-                    LoggingManager.log(
-                        LogLevel.INFO,
-                        LogMetadata(
-                            component = "EmailViewModel",
-                            action = "SMS_EMAIL_FORWARD_AUTO_DISABLE",
-                            details = mapOf(
-                                "reason" to "no_email_addresses"
-                            )
-                        ),
-                        "SMS-E-Mail-Weiterleitung automatisch deaktiviert (keine E-Mail-Adressen vorhanden)"
+                    LoggingManager.logInfo(
+                        component = "EmailViewModel",
+                        action = "SMS_EMAIL_FORWARD_AUTO_DISABLE",
+                        message = "SMS-E-Mail-Weiterleitung automatisch deaktiviert (keine E-Mail-Adressen vorhanden)",
+                        details = mapOf(
+                            "reason" to "no_email_addresses"
+                        )
                     )
                     SnackbarManager.showInfo(appContext.getString(R.string.snackbar_email_forwarding_disabled_no_addresses))
                 }
 
-                LoggingManager.log(
-                    LogLevel.INFO,
-                    LogMetadata(
-                        component = "EmailViewModel",
-                        action = "REMOVE_EMAIL",
-                        details = mapOf(
-                            "remaining_emails" to currentList.size,
-                            "forwarding_status" to _forwardSmsToEmail.value
-                        )
-                    ),
-                    "E-Mail-Adresse entfernt"
+                LoggingManager.logInfo(
+                    component = "EmailViewModel",
+                    action = "REMOVE_EMAIL",
+                    message = "E-Mail-Adresse entfernt",
+                    details = mapOf(
+                        "remaining_emails" to currentList.size,
+                        "forwarding_status" to _forwardSmsToEmail.value
+                    )
                 )
                 SnackbarManager.showSuccess(appContext.getString(R.string.snackbar_email_removed))
             } catch (e: Exception) {
@@ -200,18 +189,15 @@ class EmailViewModel(
         _testEmailText.value = newText
         prefsManager.saveTestEmailText(newText)
 
-        LoggingManager.log(
-            LogLevel.DEBUG,
-            LogMetadata(
-                component = "EmailViewModel",
-                action = "UPDATE_TEST_EMAIL",
-                details = mapOf(
-                    "old_length" to _testEmailText.value.length,
-                    "new_length" to newText.length,
-                    "is_empty" to newText.isEmpty()
-                )
-            ),
-            "Test-Email Text aktualisiert"
+        LoggingManager.logDebug(
+            component = "EmailViewModel",
+            action = "UPDATE_TEST_EMAIL",
+            message = "Test-Email Text aktualisiert",
+            details = mapOf(
+                "old_length" to _testEmailText.value.length,
+                "new_length" to newText.length,
+                "is_empty" to newText.isEmpty()
+            )
         )
     }
 
@@ -248,18 +234,15 @@ class EmailViewModel(
 
                 // Check if all required SMTP settings are present
                 if (host.isEmpty() || username.isEmpty() || password.isEmpty()) {
-                    LoggingManager.log(
-                        LogLevel.WARNING,
-                        LogMetadata(
-                            component = "EmailViewModel",
-                            action = "TEST_EMAIL",
-                            details = mapOf(
-                                "error" to "incomplete_smtp_settings",
-                                "has_host" to host.isNotEmpty(),
-                                "has_username" to username.isNotEmpty()
-                            )
-                        ),
-                        "Unvollständige SMTP-Einstellungen"
+                    LoggingManager.logWarning(
+                        component = "EmailViewModel",
+                        action = "TEST_EMAIL",
+                        message = "Unvollständige SMTP-Einstellungen",
+                        details = mapOf(
+                            "error" to "incomplete_smtp_settings",
+                            "has_host" to host.isNotEmpty(),
+                            "has_username" to username.isNotEmpty()
+                        )
                     )
                     SnackbarManager.showError(appContext.getString(R.string.snackbar_smtp_incomplete))
                     return@launch
@@ -282,51 +265,43 @@ class EmailViewModel(
                     body = emailBody
                 )) {
                     is EmailResult.Success -> {
-                        LoggingManager.log(
-                            LogLevel.INFO,
-                            LogMetadata(
-                                component = "EmailViewModel",
-                                action = "TEST_EMAIL_SENT",
-                                details = mapOf(
-                                    "recipient" to mailrecipient,
-                                    "smtp_host" to host,
-                                    "text_length" to testEmailText.length
-                                )
-                            ),
-                            "Test-E-Mail wurde versendet"
+                        LoggingManager.logInfo(
+                            component = "EmailViewModel",
+                            action = "TEST_EMAIL_SENT",
+                            message = "Test-E-Mail wurde versendet",
+                            details = mapOf(
+                                "recipient" to mailrecipient,
+                                "smtp_host" to host,
+                                "text_length" to testEmailText.length
+                            )
                         )
                         SnackbarManager.showSuccess(appContext.getString(R.string.snackbar_test_email_sent, mailrecipient))
                     }
 
                     is EmailResult.Error -> {
-                        LoggingManager.log(
-                            LogLevel.ERROR,
-                            LogMetadata(
-                                component = "EmailViewModel",
-                                action = "TEST_EMAIL_FAILED",
-                                details = mapOf(
-                                    "error" to result.message,
-                                    "smtp_host" to host,
-                                    "recipient" to mailrecipient
-                                )
-                            ),
-                            "Fehler beim Versenden der Test-E-Mail"
+                        LoggingManager.logError(
+                            component = "EmailViewModel",
+                            action = "TEST_EMAIL_FAILED",
+                            message = "Fehler beim Versenden der Test-E-Mail",
+                            details = mapOf(
+                                "error" to result.message,
+                                "smtp_host" to host,
+                                "recipient" to mailrecipient
+                            )
                         )
                         SnackbarManager.showError(appContext.getString(R.string.snackbar_test_email_failed, result.message ?: ""))
                     }
                 }
             } catch (e: Exception) {
-                LoggingManager.log(
-                    LogLevel.ERROR,
-                    LogMetadata(
-                        component = "EmailViewModel",
-                        action = "TEST_EMAIL_ERROR",
-                        details = mapOf(
-                            "error" to e.message,
-                            "recipient" to mailrecipient
-                        )
-                    ),
-                    "Unerwarteter Fehler beim E-Mail-Versand"
+                LoggingManager.logError(
+                    component = "EmailViewModel",
+                    action = "TEST_EMAIL_ERROR",
+                    message = "Unerwarteter Fehler beim E-Mail-Versand",
+                    error = e,
+                    details = mapOf(
+                        "error" to e.message,
+                        "recipient" to mailrecipient
+                    )
                 )
                 SnackbarManager.showError(appContext.getString(R.string.snackbar_test_email_failed, e.message ?: ""))
             }
@@ -365,13 +340,12 @@ class EmailViewModel(
      * Factory for creating EmailViewModel instances.
      */
     class Factory(
-        private val prefsManager: SharedPreferencesManager,
-        private val logger: Logger
+        private val prefsManager: SharedPreferencesManager
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(EmailViewModel::class.java)) {
-                return EmailViewModel(prefsManager, logger) as T
+                return EmailViewModel(prefsManager) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

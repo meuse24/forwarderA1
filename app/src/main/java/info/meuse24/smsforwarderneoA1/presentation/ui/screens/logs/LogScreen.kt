@@ -41,7 +41,6 @@ import info.meuse24.smsforwarderneoA1.presentation.viewmodel.LogViewModel
 @Composable
 fun LogScreen(logViewModel: LogViewModel) {
     val context = LocalContext.current
-    val logEntriesHtml by logViewModel.logEntriesHtml.collectAsState()
     val showAllLogs by logViewModel.showAllLogs.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -99,7 +98,7 @@ fun LogScreen(logViewModel: LogViewModel) {
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             FilterLogButton(logViewModel, showAllLogs)
-                            ShareLogIconButton(context, logEntriesHtml)
+                            ShareLogIconButton(context)
                             RefreshLogButton(logViewModel)
                         }
                     }
@@ -141,7 +140,7 @@ fun LogScreen(logViewModel: LogViewModel) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             FilterLogButton(logViewModel, showAllLogs)
-                            ShareLogIconButton(context, logEntriesHtml)
+                            ShareLogIconButton(context)
                             RefreshLogButton(logViewModel)
                         }
                     }

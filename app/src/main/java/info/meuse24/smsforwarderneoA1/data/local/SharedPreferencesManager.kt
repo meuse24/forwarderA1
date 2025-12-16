@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import info.meuse24.smsforwarderneoA1.LogLevel
-import info.meuse24.smsforwarderneoA1.LogMetadata
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
@@ -317,17 +315,15 @@ class SharedPreferencesManager(private val context: Context) {
     // REMOVED: createUnencryptedPreferences() - no longer needed, no plaintext fallback for security
 
     private fun handlePreferencesError(error: Exception) {
-        LoggingManager.log(
-            LogLevel.ERROR,
-            LogMetadata(
-                component = "SharedPreferencesManager",
-                action = "INIT_ERROR",
-                details = mapOf(
-                    "error_type" to error.javaClass.simpleName,
-                    "error_message" to (error.message ?: "Unknown error")
-                )
-            ),
-            "SharedPreferences Initialisierungsfehler"
+        LoggingManager.logError(
+            component = "SharedPreferencesManager",
+            action = "INIT_ERROR",
+            message = "SharedPreferences Initialisierungsfehler",
+            error = error,
+            details = mapOf(
+                "error_type" to error.javaClass.simpleName,
+                "error_message" to (error.message ?: "Unknown error")
+            )
         )
 
         try {
@@ -335,25 +331,19 @@ class SharedPreferencesManager(private val context: Context) {
                 File(context.applicationInfo.dataDir + "/shared_prefs/" + PREFS_NAME + ".xml")
             if (prefsFile.exists()) {
                 prefsFile.delete()
-                LoggingManager.log(
-                    LogLevel.INFO,
-                    LogMetadata(
-                        component = "SharedPreferencesManager",
-                        action = "DELETE_CORRUPTED",
-                        details = emptyMap()
-                    ),
-                    "Beschädigte Preferences gelöscht"
+                LoggingManager.logInfo(
+                    component = "SharedPreferencesManager",
+                    action = "DELETE_CORRUPTED",
+                    message = "Beschädigte Preferences gelöscht"
                 )
             }
         } catch (e: Exception) {
-            LoggingManager.log(
-                LogLevel.ERROR,
-                LogMetadata(
-                    component = "SharedPreferencesManager",
-                    action = "DELETE_ERROR",
-                    details = mapOf("error" to e.message)
-                ),
-                "Fehler beim Löschen der beschädigten Preferences"
+            LoggingManager.logError(
+                component = "SharedPreferencesManager",
+                action = "DELETE_ERROR",
+                message = "Fehler beim Löschen der beschädigten Preferences",
+                error = e,
+                details = mapOf("error" to e.message)
             )
         }
     }
