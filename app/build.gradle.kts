@@ -118,6 +118,9 @@ android {
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
             buildConfigField("String", "BUILD_TYPE", "\"debug\"")
 
+            // Dialog consolidation feature flag
+            buildConfigField("boolean", "USE_NEW_DIALOGS", "true")
+
             // Debug optimizations
             isMinifyEnabled = false
             isShrinkResources = false
@@ -141,6 +144,9 @@ android {
             buildConfigField("String", "BUILD_TIME", "\"${sdf.format(Date())}\"")
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
             buildConfigField("String", "BUILD_TYPE", "\"release\"")
+
+            // Dialog consolidation feature flag (disabled in release for safety)
+            buildConfigField("boolean", "USE_NEW_DIALOGS", "false")
         }
     }
 
@@ -190,6 +196,9 @@ dependencies {
     // Email
     implementation(libs.android.mail)
     implementation(libs.android.activation)
+
+    // Logging
+    implementation(libs.timber)
 
     // Testing
     testImplementation(libs.junit)

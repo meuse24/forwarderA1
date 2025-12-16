@@ -269,7 +269,7 @@ fun SettingsScreen(
             PinDialog(
                 storedPin = AppContainer.requirePrefsManager().getLogPIN(),
                 onPinCorrect = {
-                    AppContainer.requireLogger().clearLog()
+                    LoggingManager.getFileTree().clearLog()
                     LoggingManager.logInfo(
                         component = "SettingsScreen",
                         action = "CLEAR_LOGS",

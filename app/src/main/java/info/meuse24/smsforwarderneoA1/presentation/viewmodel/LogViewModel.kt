@@ -3,138 +3,146 @@ package info.meuse24.smsforwarderneoA1.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import info.meuse24.smsforwarderneoA1.data.local.Logger
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.domain.model.LogEntry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import timber.log.Timber
 
 /**
  * ViewModel for managing log entries and log filtering.
  *
- * Handles:
- * - Loading log entries in HTML and list format
- * - Filtering logs (show all vs. important only)
- * - Reloading logs from storage
- *
- * Extracted from ContactsViewModel as part of Phase 5 refactoring.
- *
- * @param logger Logger instance for accessing log entries
+ * Reads logs from FileLoggingTree (JSON Lines format) and provides filtering.
  */
-class LogViewModel(
-    private val logger: Logger
-) : ViewModel() {
+class LogViewModel : ViewModel() {
 
-    // Relevant Actions: Only these log entries are shown when filtering is active
-    // Filter zeigt nur: Aktivierung, Deaktivierung, Statusabfrage, Reset, Weiterleitungen
-    // Note: All ERROR level logs are also shown (automatic error inclusion via LogLevel)
     companion object {
+        // Actions to show when filtering is enabled (important logs only)
         private val RELEVANT_ACTIONS = setOf(
-            // Rufumleitung aktivieren/deaktivieren
             "ACTIVATE_FORWARDING",
             "DEACTIVATE_FORWARDING",
-
-            // Statusabfrage
             "QUERY_FORWARDING_STATUS",
-
-            // Reset
             "RESET_ALL_FORWARDING",
-
-            // SMS-Weiterleitung (nur die tatsächliche Weiterleitung)
             "FORWARD_SMS",
             "SEND_SMS",
-
-            // Email-Weiterleitung (nur die tatsächliche Weiterleitung)
             "EMAIL_FORWARD"
-            // Note: ERROR level logs are automatically included via LogLevel check
+        )
+
+        // Highlight patterns for important events
+        private val HIGHLIGHT_PATTERNS = listOf(
+            "CRITICAL",
+            "FAILURE",
+            "FAILED",
+            "EXCEPTION",
+            "PERMISSION_DENIED",
+            "WAKE_LOCK_ERROR",
+            "CONNECTION_FAILED",
+            "INVALID_NUMBER",
+            "SECURITY_ERROR",
+            "AUTHENTICATION_FAILED",
+            "LOOP_PROTECTION"
         )
     }
 
     // StateFlows
-    private val _logEntriesHtml = MutableStateFlow("")
-    val logEntriesHtml: StateFlow<String> = _logEntriesHtml
-
     private val _logEntries = MutableStateFlow<List<LogEntry>>(emptyList())
     val logEntries: StateFlow<List<LogEntry>> = _logEntries
 
-    private val _showAllLogs = MutableStateFlow(true)  // Default: show all logs
+    private val _showAllLogs = MutableStateFlow(true)
     val showAllLogs: StateFlow<Boolean> = _showAllLogs.asStateFlow()
 
     /**
-     * Reload log entries from storage.
+     * Reload log entries from FileLoggingTree.
      *
      * Applies current filter settings (_showAllLogs) to determine which entries to display.
-     * - If showAllLogs = true: displays all log entries
-     * - If showAllLogs = false: shows only:
-     *   - Aktivierung/Deaktivierung der Rufumleitung
-     *   - Statusabfragen
-     *   - Reset-Vorgänge
-     *   - Durchführung der Weiterleitungen (Call, SMS, Email)
-     *   - Alle ERROR-Level Logs
-     *
-     * Updates both HTML and list representations of logs.
+     * Performs I/O operations on Dispatchers.IO to prevent UI blocking.
      */
     fun reloadLogs() {
         viewModelScope.launch {
             try {
-                val showAll = _showAllLogs.value
+                // Perform file reading and parsing on IO dispatcher
+                val filteredEntries = withContext(Dispatchers.IO) {
+                    val fileTree = LoggingManager.getFileTree()
+                    val jsonLogs = fileTree.readLogEntries()
 
-                // Load all entries first
-                val allEntries = logger.getLogEntriesAsList()
+                    // Convert JSON to LogEntry domain models
+                    val allEntries = jsonLogs.mapNotNull { json ->
+                        parseJsonToLogEntry(json)
+                    }.reversed() // Show newest first
 
-                // Apply filter if needed
-                _logEntries.value = if (showAll) {
-                    // Show all entries
-                    allEntries
-                } else {
-                    // Show ONLY relevant actions + ERROR level logs
-                    allEntries.filter { entry ->
-                        val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
-                        val action = actionMatch?.groupValues?.get(1)
-
-                        // Bedingung 1: ACTION in RELEVANT_ACTIONS
-                        // Bedingung 2: LogLevel == ERROR (nur schwere Fehler)
-                        action != null && (
-                            action in RELEVANT_ACTIONS ||
-                            entry.logLevel == Logger.LogLevel.ERROR
-                        )
+                    // Apply filter on IO thread as well
+                    if (_showAllLogs.value) {
+                        allEntries
+                    } else {
+                        allEntries.filter { entry ->
+                            entry.action in RELEVANT_ACTIONS || entry.level == "ERROR"
+                        }
                     }
                 }
 
-                // Update HTML representation
-                _logEntriesHtml.value = logger.getLogEntriesHtml(
-                    filterNoise = !showAll,
-                    noiseActions = if (!showAll) {
-                        // Invert: Remove everything NOT in RELEVANT_ACTIONS and not ERROR level
-                        allEntries
-                            .filter { entry ->
-                                val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
-                                val action = actionMatch?.groupValues?.get(1)
-                                // Invertiert: Alles was NICHT angezeigt werden soll
-                                !(action != null && (
-                                    action in RELEVANT_ACTIONS ||
-                                    entry.logLevel == Logger.LogLevel.ERROR
-                                ))
-                            }
-                            .mapNotNull { entry ->
-                                val actionMatch = Regex("""\]\s+(\w+)(\s+\||$)""").find(entry.text)
-                                actionMatch?.groupValues?.get(1)
-                            }
-                            .toSet()
-                    } else {
-                        emptySet()
-                    }
-                )
+                // Update StateFlow on Main thread (automatic via viewModelScope)
+                _logEntries.value = filteredEntries
+
             } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "LogViewModel",
-                    action = "RELOAD_LOGS_ERROR",
-                    message = "Fehler beim Neuladen der Log-Einträge",
-                    error = e
-                )
+                Timber.tag("LogViewModel").e(e, "Failed to reload logs")
+                _logEntries.value = emptyList()
             }
+        }
+    }
+
+    /**
+     * Parse JSON object to LogEntry.
+     */
+    private fun parseJsonToLogEntry(json: JSONObject): LogEntry? {
+        return try {
+            val timestamp = json.optString("timestamp", "")
+            val level = json.optString("level", "INFO")
+            val tag = json.optString("tag", "")
+            val message = json.optString("message", "")
+            val component = json.optString("component", tag)
+            val action = json.optString("action", "")
+
+            // Parse details if present
+            val details = mutableMapOf<String, Any?>()
+            if (json.has("details")) {
+                val detailsJson = json.getJSONObject("details")
+                detailsJson.keys().forEach { key ->
+                    details[key] = detailsJson.get(key)
+                }
+            }
+
+            // Parse exception if present
+            val exception = if (json.has("exception")) {
+                val exJson = json.getJSONObject("exception")
+                exJson.optString("stacktrace", null)
+            } else null
+
+            // Determine if should highlight
+            val shouldHighlight = level == "ERROR" ||
+                    HIGHLIGHT_PATTERNS.any { pattern ->
+                        message.contains(pattern, ignoreCase = true) ||
+                        action.contains(pattern, ignoreCase = true)
+                    }
+
+            LogEntry(
+                timestamp = timestamp,
+                level = level,
+                tag = tag,
+                message = message,
+                component = component,
+                action = action,
+                details = details,
+                exception = exception,
+                shouldHighlight = shouldHighlight
+            )
+        } catch (e: Exception) {
+            Timber.tag("LogViewModel").w(e, "Failed to parse log entry")
+            null
         }
     }
 
@@ -145,21 +153,18 @@ class LogViewModel(
      */
     fun toggleLogFilter() {
         _showAllLogs.value = !_showAllLogs.value
-        reloadLogs()  // Reload logs with new filter
+        reloadLogs()
     }
 
     /**
      * Factory for creating LogViewModel instances.
-     *
-     * Provides logger dependency from AppContainer.
+     * No longer requires Logger dependency.
      */
-    class Factory(
-        private val logger: Logger
-    ) : ViewModelProvider.Factory {
+    class Factory : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(LogViewModel::class.java)) {
-                return LogViewModel(logger) as T
+                return LogViewModel() as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

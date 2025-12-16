@@ -81,24 +81,13 @@ fun FilterLogButton(logViewModel: LogViewModel, showAllLogs: Boolean) {
  * Button to share log entries as a CSV file.
  *
  * Creates a temporary CSV file and opens the system share sheet.
- * Shows warning if no logs are available.
  *
  * @param context Android context for file operations and intents
- * @param logEntries HTML string of log entries (for empty check)
  */
 @Composable
-fun ShareLogIconButton(context: Context, logEntries: String) {
+fun ShareLogIconButton(context: Context) {
     FloatingActionButton(
-        onClick = {
-            if (logEntries.isNotEmpty()) {
-                shareLogsAsFile(context)
-            } else {
-                SnackbarManager.showWarning(
-                    context.getString(R.string.msg_warning_no_logs_to_share),
-                    duration = SnackbarManager.Duration.LONG
-                )
-            }
-        },
+        onClick = { shareLogsAsCsv(context) },
         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
         elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
@@ -114,53 +103,93 @@ fun ShareLogIconButton(context: Context, logEntries: String) {
 /**
  * Creates a temporary CSV file with log entries and opens the system share sheet.
  *
- * File is created in the app's cache directory with a timestamped filename.
- * Uses FileProvider for secure file sharing.
+ * Reads JSON logs from FileLoggingTree, converts to CSV, and shares via FileProvider.
  *
  * @param context Android context for file operations and intents
  */
-private fun shareLogsAsFile(context: Context) {
+private fun shareLogsAsCsv(context: Context) {
     try {
-        // Erstelle temporäre Datei
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "sms_forwarder_log_$timeStamp.csv"
         val file = File(context.cacheDir, fileName)
 
-        // Hole CSV-Daten vom Logger und schreibe sie in die Datei
-        val csvContent = AppContainer.requireLogger().getLogEntriesAsCsv()
+        // Get logs from FileLoggingTree
+        val fileTree = LoggingManager.getFileTree()
+        val jsonLogs = fileTree.readLogEntries()
+
+        if (jsonLogs.isEmpty()) {
+            SnackbarManager.showWarning(
+                context.getString(R.string.msg_warning_no_logs_to_share),
+                duration = SnackbarManager.Duration.LONG
+            )
+            return
+        }
+
+        // Convert to CSV
+        val csvContent = buildString {
+            // Header (with German column names)
+            appendLine("Zeitstempel;Level;Komponente;Aktion;Nachricht;Details")
+
+            // Rows
+            jsonLogs.reversed().forEach { json ->  // Newest first
+                val timestamp = json.optString("timestamp", "")
+                val level = json.optString("level", "INFO")
+                val component = json.optString("component", "Unbekannt")
+                val action = json.optString("action", "UNBEKANNT")
+                val message = json.optString("message", "")
+                    .replace(";", ",")  // Escape semicolons
+                    .replace("\n", " ")  // Remove newlines
+
+                // Flatten details
+                val details = if (json.has("details")) {
+                    val detailsJson = json.getJSONObject("details")
+                    detailsJson.keys().asSequence()
+                        .joinToString(" ") { key ->
+                            "$key=${detailsJson.get(key)}"
+                        }
+                        .replace(";", ",")
+                } else ""
+
+                appendLine("$timestamp;$level;$component;$action;$message;$details")
+            }
+        }
+
         file.writeText(csvContent)
 
-        // Erstelle FileProvider URI
+        // Share via FileProvider
         val fileUri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.provider",
             file
         )
 
-        // Erstelle und starte Share Intent
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/csv"
             putExtra(Intent.EXTRA_STREAM, fileUri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        context.startActivity(Intent.createChooser(intent, context.getString(R.string.title_share_log_file)))
+        context.startActivity(Intent.createChooser(
+            intent,
+            context.getString(R.string.title_share_log_file)
+        ))
 
         LoggingManager.logInfo(
-            component = "MainActivity",
+            component = "LogButtons",
             action = "SHARE_LOGS",
-            message = context.getString(R.string.log_message_logs_shared),
+            message = "Logs als CSV geteilt",
             details = mapOf(
                 "filename" to fileName,
-                "size" to file.length()
+                "size_bytes" to file.length(),
+                "entry_count" to jsonLogs.size
             )
         )
 
     } catch (e: Exception) {
         LoggingManager.logError(
-            component = "MainActivity",
+            component = "LogButtons",
             action = "SHARE_LOGS_ERROR",
-            message = context.getString(R.string.log_error_sharing_logs),
+            message = "Fehler beim Teilen der Logs",
             error = e
         )
         SnackbarManager.showError(context.getString(R.string.error_sharing_logs))

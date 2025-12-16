@@ -8,8 +8,6 @@ import androidx.lifecycle.viewModelScope
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.SnackbarManager
-import info.meuse24.smsforwarderneoA1.data.local.Logger.LogLevel
-import info.meuse24.smsforwarderneoA1.data.local.Logger.LogMetadata
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import kotlinx.coroutines.delay
@@ -53,18 +51,15 @@ class TestUtilsViewModel(
         prefsManager.saveTestSmsText(newText)
 
         if (oldText != newText) {
-            LoggingManager.log(
-                LogLevel.DEBUG,
-                LogMetadata(
-                    component = "TestUtilsViewModel",
-                    action = "UPDATE_TEST_SMS",
-                    details = mapOf(
-                        "old_length" to oldText.length,
-                        "new_length" to newText.length,
-                        "is_empty" to newText.isEmpty()
-                    )
-                ),
-                "Test-SMS Text aktualisiert"
+            LoggingManager.logDebug(
+                component = "TestUtilsViewModel",
+                action = "UPDATE_TEST_SMS",
+                message = "Test-SMS Text aktualisiert",
+                details = mapOf(
+                    "old_length" to oldText.length,
+                    "new_length" to newText.length,
+                    "is_empty" to newText.isEmpty()
+                )
             )
         }
     }
@@ -78,14 +73,11 @@ class TestUtilsViewModel(
      */
     fun sendTestSms(selectedContact: Contact?) {
         if (selectedContact == null) {
-            LoggingManager.log(
-                LogLevel.WARNING,
-                LogMetadata(
-                    component = "TestUtilsViewModel",
-                    action = "TEST_SMS_FAILED",
-                    details = mapOf("reason" to "no_contact_selected")
-                ),
-                "Test-SMS konnte nicht gesendet werden - kein Kontakt ausgewählt"
+            LoggingManager.logWarning(
+                component = "TestUtilsViewModel",
+                action = "TEST_SMS_FAILED",
+                message = "Test-SMS konnte nicht gesendet werden - kein Kontakt ausgewählt",
+                details = mapOf("reason" to "no_contact_selected")
             )
             SnackbarManager.showError("Kein Kontakt ausgewählt")
             return
@@ -96,14 +88,11 @@ class TestUtilsViewModel(
         val receiver = simNumbers.values.firstOrNull()
 
         if (receiver.isNullOrEmpty()) {
-            LoggingManager.log(
-                LogLevel.WARNING,
-                LogMetadata(
-                    component = "TestUtilsViewModel",
-                    action = "TEST_SMS_FAILED",
-                    details = mapOf("reason" to "no_sim_number_available")
-                ),
-                "Test-SMS konnte nicht gesendet werden - keine SIM-Nummer verfügbar"
+            LoggingManager.logWarning(
+                component = "TestUtilsViewModel",
+                action = "TEST_SMS_FAILED",
+                message = "Test-SMS konnte nicht gesendet werden - keine SIM-Nummer verfügbar",
+                details = mapOf("reason" to "no_sim_number_available")
             )
             SnackbarManager.showError("Keine SIM-Telefonnummer verfügbar")
             return
@@ -114,32 +103,26 @@ class TestUtilsViewModel(
 
         if (smsSent) {
             val sanitizedText = sanitizeSmsTextForLogging(testSmsText)
-            LoggingManager.log(
-                LogLevel.INFO,
-                LogMetadata(
-                    component = "TestUtilsViewModel",
-                    action = "TEST_SMS_SENT",
-                    details = mapOf(
-                        "receiver" to receiver,
-                        "text" to sanitizedText,
-                        "note" to "Email-Weiterleitung erfolgt durch regulären SMS-Empfang"
-                    )
-                ),
-                "Test-SMS wurde versendet"
+            LoggingManager.logInfo(
+                component = "TestUtilsViewModel",
+                action = "TEST_SMS_SENT",
+                message = "Test-SMS wurde versendet",
+                details = mapOf(
+                    "receiver" to receiver,
+                    "text" to sanitizedText,
+                    "note" to "Email-Weiterleitung erfolgt durch regulären SMS-Empfang"
+                )
             )
         } else {
             val sanitizedText = sanitizeSmsTextForLogging(testSmsText)
-            LoggingManager.log(
-                LogLevel.ERROR,
-                LogMetadata(
-                    component = "TestUtilsViewModel",
-                    action = "TEST_SMS_FAILED",
-                    details = mapOf(
-                        "receiver" to receiver,
-                        "text" to sanitizedText
-                    )
-                ),
-                "Fehler beim Versenden der Test-SMS"
+            LoggingManager.logError(
+                component = "TestUtilsViewModel",
+                action = "TEST_SMS_FAILED",
+                message = "Fehler beim Versenden der Test-SMS",
+                details = mapOf(
+                    "receiver" to receiver,
+                    "text" to sanitizedText
+                )
             )
         }
     }
@@ -168,16 +151,13 @@ class TestUtilsViewModel(
             // Warten bis die Änderungen übernommen wurden
             delay(500)
 
-            LoggingManager.log(
-                LogLevel.DEBUG,
-                LogMetadata(
-                    component = "TestUtilsViewModel",
-                    action = "SET_TEST_CONTACTS",
-                    details = mapOf(
-                        "contacts_count" to contacts.size
-                    )
-                ),
-                "Test-Kontakte wurden gesetzt"
+            LoggingManager.logDebug(
+                component = "TestUtilsViewModel",
+                action = "SET_TEST_CONTACTS",
+                message = "Test-Kontakte wurden gesetzt",
+                details = mapOf(
+                    "contacts_count" to contacts.size
+                )
             )
         } catch (e: Exception) {
             LoggingManager.logError(

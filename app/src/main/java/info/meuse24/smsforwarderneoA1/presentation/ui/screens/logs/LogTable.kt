@@ -254,7 +254,7 @@ fun LogEntryRow(logEntry: LogEntry) {
 
         // Eintrags-Spalte
         Text(
-            text = logEntry.getMessage(),
+            text = logEntry.getFullMessage(),
             style = MaterialTheme.typography.bodySmall,
             color = if (logEntry.isHighlighted())
                 MaterialTheme.colorScheme.error

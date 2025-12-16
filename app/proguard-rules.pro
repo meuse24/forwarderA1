@@ -44,3 +44,23 @@
     public static *** v(...);
     public static *** i(...);
 }
+
+# Timber logging library
+-dontwarn org.jetbrains.annotations.**
+-keep class timber.log.Timber { *; }
+-keep class timber.log.Timber$Tree { *; }
+-keep class timber.log.Timber$DebugTree { *; }
+
+# Keep custom Timber trees
+-keep class info.meuse24.smsforwarderneoA1.data.local.FileLoggingTree { *; }
+
+# Strip debug logs in release builds
+-assumenosideeffects class timber.log.Timber$Tree {
+    public void v(...);
+    public void d(...);
+}
+
+-assumenosideeffects class timber.log.Timber {
+    public static *** v(...);
+    public static *** d(...);
+}

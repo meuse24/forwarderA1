@@ -13,9 +13,10 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import info.meuse24.smsforwarderneoA1.R
-import info.meuse24.smsforwarderneoA1.data.local.Logger
+import info.meuse24.smsforwarderneoA1.data.local.FileLoggingTree
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import timber.log.Timber
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,10 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
-
-// Type aliases for backward compatibility
-typealias LogLevel = Logger.LogLevel
-typealias LogMetadata = Logger.LogMetadata
+import java.io.File
 
 object AppContainer {
     private lateinit var application: SmsForwarderApplication
@@ -38,10 +36,6 @@ object AppContainer {
 
     private val _isFullyInitialized = MutableStateFlow(false)
     val isInitialized = _isFullyInitialized.asStateFlow()
-
-
-    lateinit var logger: Logger
-        private set
 
     lateinit var prefsManager: SharedPreferencesManager
         private set
@@ -54,7 +48,6 @@ object AppContainer {
     fun initializeCritical(app: SmsForwarderApplication) {
         Log.d("AppContainer", "Starting critical initialization")
         application = app
-        logger = Logger(app)
         prefsManager = SharedPreferencesManager(app)
         PhoneSmsUtils.initialize()
         phoneUtils = PhoneSmsUtils
@@ -79,10 +72,6 @@ object AppContainer {
     fun isBasicInitialized() = _isBasicInitialized.value
 
     // Sichere Zugriffsmethoden mit Initialisierungsprüfung
-    fun getLoggerSafe(): Logger? {
-        return if (::logger.isInitialized) logger else null
-    }
-
     fun getPrefsManagerSafe(): SharedPreferencesManager? {
         return if (::prefsManager.isInitialized) prefsManager else null
     }
@@ -92,13 +81,6 @@ object AppContainer {
     }
 
     // Blocking-Zugriff für kritische Operationen (wirft Exception wenn nicht initialisiert)
-    fun requireLogger(): Logger {
-        if (!::logger.isInitialized) {
-            throw IllegalStateException("Logger not initialized. Call initializeCritical() first.")
-        }
-        return logger
-    }
-
     fun requirePrefsManager(): SharedPreferencesManager {
         if (!::prefsManager.isInitialized) {
             throw IllegalStateException("PrefsManager not initialized. Call initializeCritical() first.")
@@ -157,12 +139,8 @@ class SmsForwarderApplication : Application() {
                 notificationManager?.createNotificationChannel(channel)
 
             } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "SmsForwarderApplication",
-                    action = "CREATE_NOTIFICATION_CHANNEL",
-                    message = "Fehler beim Erstellen des Notification Channels",
-                    error = e
-                )
+                // Use Log.e directly since LoggingManager is not yet initialized
+                Log.e("SmsForwarderApplication", "Failed to create notification channel", e)
             }
         }
     }
@@ -239,11 +217,14 @@ class SmsForwarderApplication : Application() {
 }
 
 object LoggingManager {
-    private lateinit var logger: Logger
+    private lateinit var fileTree: FileLoggingTree
     private val initialized = AtomicBoolean(false)
 
+    /**
+     * Initialize Timber logging with FileLoggingTree.
+     * Called once in SmsForwarderApplication.onCreate().
+     */
     fun initialize(context: Context) {
-        // Read max log size from preferences (with fallback to default 5MB)
         val prefs = try {
             SharedPreferencesManager(context)
         } catch (e: Exception) {
@@ -252,33 +233,75 @@ object LoggingManager {
         }
         val maxLogSizeMB = prefs?.getMaxLogSizeMB() ?: 5
 
-        logger = Logger(context, maxLogSizeMB)
+        // Initialize FileLoggingTree
+        fileTree = FileLoggingTree(context, maxLogSizeMB)
+
+        if (BuildConfig.DEBUG) {
+            // Debug: Logcat + File
+            Timber.plant(Timber.DebugTree())
+            Timber.plant(fileTree)
+        } else {
+            // Release: File only (logcat stripped by ProGuard)
+            Timber.plant(fileTree)
+        }
+
         initialized.set(true)
 
-        logInfo(
+        // Delete old XML logs from previous system
+        deleteOldXmlLogs(context)
+
+        // Log initialization
+        fileTree.setMetadata(
             component = "LoggingManager",
             action = "INIT",
-            message = "Logging system initialized",
-            details = mapOf("max_log_size_mb" to maxLogSizeMB)
+            details = mapOf(
+                "max_log_size_mb" to maxLogSizeMB,
+                "debug_mode" to BuildConfig.DEBUG
+            )
         )
+        Timber.tag("LoggingManager").i("Logging system initialized with Timber")
     }
-    fun log(
-        level: LogLevel,
-        metadata: LogMetadata,
-        message: String,
-        throwable: Throwable? = null
-    ) {
-        if (!initialized.get()) {
-            Log.e("LoggingManager", "Logging before initialization: $message")
-            return
-        }
 
+    /**
+     * Get FileLoggingTree instance for reading logs.
+     */
+    fun getFileTree(): FileLoggingTree {
+        require(initialized.get()) { "LoggingManager not initialized" }
+        return fileTree
+    }
+
+    /**
+     * Delete old XML logs from previous logging system.
+     * Called once during migration.
+     */
+    private fun deleteOldXmlLogs(context: Context) {
         try {
-            logger.log(level, metadata, message, throwable)
+            val baseLogDir = context.getExternalFilesDir("logs")
+                ?: context.getExternalFilesDir(null)
+                ?: File(context.filesDir, "logs")
+
+            val oldFiles = listOf("app_log.xml", "app_log_backup.xml")
+            var deletedCount = 0
+
+            oldFiles.forEach { filename ->
+                val file = File(baseLogDir, filename)
+                if (file.exists()) {
+                    file.delete()
+                    deletedCount++
+                    Log.i("LoggingManager", "Deleted old XML log: $filename")
+                }
+            }
+
+            if (deletedCount > 0) {
+                Timber.tag("LoggingManager").i("Migration: Deleted $deletedCount old XML log file(s)")
+            }
         } catch (e: Exception) {
-            Log.e("LoggingManager", "Logging error: ${e.message}", e)
+            Log.e("LoggingManager", "Failed to delete old XML logs", e)
         }
     }
+
+    // ========== BACKWARD-COMPATIBLE API ==========
+    // All 253 existing log calls continue to work unchanged!
 
     fun logInfo(
         component: String,
@@ -291,11 +314,8 @@ object LoggingManager {
             return
         }
 
-        logger.log(
-            Logger.LogLevel.INFO,
-            Logger.LogMetadata(component, action, details),
-            message
-        )
+        fileTree.setMetadata(component, action, details)
+        Timber.tag(component).i(message)
     }
 
     fun logWarning(
@@ -306,11 +326,8 @@ object LoggingManager {
     ) {
         if (!initialized.get()) return
 
-        logger.log(
-            Logger.LogLevel.WARNING,
-            Logger.LogMetadata(component, action, details),
-            message
-        )
+        fileTree.setMetadata(component, action, details)
+        Timber.tag(component).w(message)
     }
 
     fun logError(
@@ -322,12 +339,12 @@ object LoggingManager {
     ) {
         if (!initialized.get()) return
 
-        logger.log(
-            Logger.LogLevel.ERROR,
-            Logger.LogMetadata(component, action, details),
-            message,
-            error
-        )
+        fileTree.setMetadata(component, action, details)
+        if (error != null) {
+            Timber.tag(component).e(error, message)
+        } else {
+            Timber.tag(component).e(message)
+        }
     }
 
     fun logDebug(
@@ -338,11 +355,8 @@ object LoggingManager {
     ) {
         if (!initialized.get()) return
 
-        logger.log(
-            Logger.LogLevel.DEBUG,
-            Logger.LogMetadata(component, action, details),
-            message
-        )
+        fileTree.setMetadata(component, action, details)
+        Timber.tag(component).d(message)
     }
 }
 

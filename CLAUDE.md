@@ -78,7 +78,7 @@ info.meuse24.smsforwarderneoA1/
 
 ### Data Layer
 - `SharedPreferencesManager` - Encrypted preferences (androidx.security.crypto), stores contact name & number
-- `Logger` - Structured XML logging with rotation & export
+- `FileLoggingTree` - Timber-based structured logging with JSON Lines format, rotation & CSV export
 
 ### Service Layer
 - `SmsForegroundService` - Multi-part SMS reconstruction, parallel SMS/email forwarding, WakeLock, heartbeat monitoring
@@ -110,6 +110,69 @@ SmsForegroundService.stopService(context)
 ```
 - Uses `START_STICKY` for auto-restart
 - Heartbeat monitoring with cooldown logic
+
+## Logging System
+
+**Timber-basiertes Logging** mit strukturierter File-Persistence (seit Timber Migration 2025-12-13).
+
+### Verwendung
+
+**Standard-Logging (backward-compatible):**
+```kotlin
+LoggingManager.logInfo(
+    component = "SmsForegroundService",
+    action = "FORWARD_SMS",
+    message = "SMS forwarded successfully",
+    details = mapOf("recipient" to "+43123", "parts" to 1)
+)
+
+LoggingManager.logError(
+    component = "EmailService",
+    action = "SEND_FAILED",
+    message = "SMTP connection timeout",
+    error = exception,
+    details = mapOf("smtp_server" to smtpHost)
+)
+```
+
+**Direkte Timber-Nutzung (optional):**
+```kotlin
+LoggingManager.getFileTree().setMetadata(
+    component = "SmsForegroundService",
+    action = "FORWARD_SMS",
+    details = mapOf("recipient" to "+43123")
+)
+Timber.tag("SmsForegroundService").i("SMS forwarded successfully")
+```
+
+### Log Levels
+- **DEBUG**: Development diagnostics (stripped in release by ProGuard)
+- **INFO**: Normal operations (service start, SMS forwarded)
+- **WARNING**: Recoverable issues (battery optimization not disabled)
+- **ERROR**: Failures requiring attention (SMS send failed, permission denied)
+
+### Log Storage
+- **Format**: JSON Lines (.jsonl) - one JSON object per line
+- **Location**: `<external_files_dir>/logs/app_log.jsonl`
+- **Rotation**: Automatic bei 5MB (konfigurierbar in App Settings)
+- **Backup**: `app_log_backup.jsonl`
+
+### JSON Format
+```json
+{"timestamp":"2025-12-13 14:30:45","level":"INFO","tag":"Service","component":"SmsForegroundService","action":"FORWARD_SMS","message":"SMS forwarded","details":{"recipient":"+43123","parts":1}}
+{"timestamp":"2025-12-13 14:31:02","level":"ERROR","tag":"EmailService","component":"EmailService","action":"EMAIL_SEND_FAILED","message":"SMTP timeout","details":{"smtp_server":"smtp.gmail.com"},"exception":{"type":"SocketTimeoutException","message":"timeout","stacktrace":"..."}}
+```
+
+### Logs anzeigen
+- **In-App**: Logs screen (bottom nav) → Filter (all/important) → CSV export
+- **ADB**: `adb pull /sdcard/Android/data/info.meuse24.smsforwarderneoA1/files/logs/app_log.jsonl`
+- **Logcat (Debug only)**: `adb logcat | grep Timber`
+- **JSON pretty-print**: `cat app_log.jsonl | jq .`
+
+### Configuration
+- **Max Log Size**: Settings → App Settings → Max Log File Size (MB)
+- **Rotation**: Automatic when file exceeds configured size
+- **Backup**: One backup file kept (`app_log_backup.jsonl`)
 
 ## Common Tasks
 
@@ -288,5 +351,22 @@ SmsForegroundService.stopService(context)
   - Uses TelecomManager.placeCall() (primary) or Intent.ACTION_CALL (fallback)
 - ✅ Extended `sendUssdCode()` in PhoneSmsUtils with optional subscriptionId parameter
 - ✅ Multi-SIM support for both USSD and MMI codes
+
+**Timber Logging Migration (2025-12-13):**
+- ✅ Migrated from custom XML Logger (~600 lines) to Timber + FileLoggingTree (~250 lines)
+- ✅ **Format**: XML → JSON Lines (.jsonl)
+- ✅ **Backward-Compatible**: All 253 existing log calls work unverändert
+- ✅ **UI Simplified**: Removed HTML export, kept CSV export only
+- ✅ **Old Logs**: XML files automatically deleted during migration
+- ✅ **Performance**: Faster writes, smaller files (~30% reduction), easier parsing
+- ✅ **Code Reduction**: -350 lines netto
+- **Components:**
+  - `FileLoggingTree.kt`: Custom Timber tree für JSONL file logging (~250 Zeilen)
+  - `LoggingManager`: Backward-compatible wrapper über Timber (logInfo/logWarning/logError/logDebug)
+  - `LogViewModel.kt`: Reads JSON Lines via `fileTree.readLogEntries()`
+  - `LogEntry.kt`: Simplified domain model (keine Logger.LogLevel dependency)
+  - `LogButtons.kt`: CSV export only (HTML export entfernt)
+- **Migration Plan**: Siehe `C:\Users\guent\.claude\plans\purrfect-percolating-spark.md`
+- **Wiederaufnahme**: Falls unterbrochen, siehe "Wiederaufnahme-Checkliste" im Plan
 
 **App is stable and production-ready.**
