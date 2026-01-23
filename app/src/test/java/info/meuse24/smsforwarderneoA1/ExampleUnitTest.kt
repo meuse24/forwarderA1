@@ -1,4 +1,4 @@
-package info.meuse24.smsforwarderneo
+package info.meuse24.smsforwarderneoA1
 
 import org.junit.Test
 

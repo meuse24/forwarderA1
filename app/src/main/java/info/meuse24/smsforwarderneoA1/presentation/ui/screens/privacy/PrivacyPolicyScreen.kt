@@ -240,6 +240,11 @@ private fun PrivacyPolicyContentDE() {
         )
 
         PolicySection(
+            title = stringResource(R.string.privacy_section_loop_protection_title_de),
+            content = stringResource(R.string.privacy_section_loop_protection_body_de)
+        )
+
+        PolicySection(
             title = stringResource(R.string.privacy_section_consent_title_de),
             content = stringResource(R.string.privacy_section_consent_body_de)
         )
@@ -297,6 +302,11 @@ private fun PrivacyPolicyContentEN() {
         PolicySection(
             title = stringResource(R.string.privacy_section_opensource_title_en),
             content = stringResource(R.string.privacy_section_opensource_body_en)
+        )
+
+        PolicySection(
+            title = stringResource(R.string.privacy_section_loop_protection_title_en),
+            content = stringResource(R.string.privacy_section_loop_protection_body_en)
         )
 
         PolicySection(

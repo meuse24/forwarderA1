@@ -1,0 +1,2829 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.7.3" type="baseline" client="gradle" dependencies="false" name="AGP (8.7.3)" variant="all" version="8.7.3">
+
+    <issue
+        id="MissingPermission"
+        message="Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with `checkPermission`) or explicitly handle a potential `SecurityException`"
+        errorLine1="                        telecomManager.placeCall(uri, intent.extras)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="708"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="OldTargetApi"
+        message="Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the `android.os.Build.VERSION_CODES` javadoc for details."
+        errorLine1="        targetSdk = 35"
+        errorLine2="        ~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="71"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="AppBundleLocaleChanges"
+        message="Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the `bundle` configuration"
+        errorLine1="        config.setLocale(locale)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/util/LocaleHelper.kt"
+            line="22"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="BatteryLife"
+        message="Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the Play Store Content Policy regarding acceptable use cases, as described in https://developer.android.com/training/monitoring-device-state/doze-standby.html"
+        errorLine1="                            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {"
+        errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/screens/settings/AppSettingsSection.kt"
+            line="337"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="BatteryLife"
+        message="Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the Play Store Content Policy regarding acceptable use cases, as described in https://developer.android.com/training/monitoring-device-state/doze-standby.html"
+        errorLine1="            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="1352"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="FullBackupContent"
+        message="`logs` is not in an included path"
+        errorLine1="    &lt;exclude domain=&quot;file&quot; path=&quot;logs&quot;/>"
+        errorLine2="                                 ~~~~">
+        <location
+            file="src/main/res/xml/backup_rules.xml"
+            line="12"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="FullBackupContent"
+        message="`logs` is not in an included path"
+        errorLine1="        &lt;exclude domain=&quot;file&quot; path=&quot;logs&quot;/>"
+        errorLine2="                                     ~~~~">
+        <location
+            file="src/main/res/xml/data_extraction_rules.xml"
+            line="12"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="FullBackupContent"
+        message="`logs` is not in an included path"
+        errorLine1="        &lt;exclude domain=&quot;file&quot; path=&quot;logs&quot;/>"
+        errorLine2="                                     ~~~~">
+        <location
+            file="src/main/res/xml/data_extraction_rules.xml"
+            line="21"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of com.android.application than 8.7.3 is available: 9.0.0"
+        errorLine1="agp = &quot;8.7.3&quot;"
+        errorLine2="      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of com.android.application than 8.7.3 is available: 9.0.0"
+        errorLine1="agp = &quot;8.7.3&quot;"
+        errorLine2="      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="AndroidGradlePluginVersion"
+        message="A newer version of com.android.application than 8.7.3 is available: 9.0.0"
+        errorLine1="agp = &quot;8.7.3&quot;"
+        errorLine2="      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.core:core-ktx than 1.15.0 is available: 1.17.0"
+        errorLine1="coreKtx = &quot;1.15.0&quot;"
+        errorLine2="          ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="4"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.core:core-ktx than 1.15.0 is available: 1.17.0"
+        errorLine1="coreKtx = &quot;1.15.0&quot;"
+        errorLine2="          ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="4"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.core:core-ktx than 1.15.0 is available: 1.17.0"
+        errorLine1="coreKtx = &quot;1.15.0&quot;"
+        errorLine2="          ~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="4"
+            column="11"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.test.ext:junit than 1.2.1 is available: 1.3.0"
+        errorLine1="junitVersion = &quot;1.2.1&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.test.ext:junit than 1.2.1 is available: 1.3.0"
+        errorLine1="junitVersion = &quot;1.2.1&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.test.ext:junit than 1.2.1 is available: 1.3.0"
+        errorLine1="junitVersion = &quot;1.2.1&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="6"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.test.espresso:espresso-core than 3.6.1 is available: 3.7.0"
+        errorLine1="espressoCore = &quot;3.6.1&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="7"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.test.espresso:espresso-core than 3.6.1 is available: 3.7.0"
+        errorLine1="espressoCore = &quot;3.6.1&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="7"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.test.espresso:espresso-core than 3.6.1 is available: 3.7.0"
+        errorLine1="espressoCore = &quot;3.6.1&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="7"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.8.7 is available: 2.10.0"
+        errorLine1="lifecycleRuntimeKtx = &quot;2.8.7&quot;"
+        errorLine2="                      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="9"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.8.7 is available: 2.10.0"
+        errorLine1="lifecycleRuntimeKtx = &quot;2.8.7&quot;"
+        errorLine2="                      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="9"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.8.7 is available: 2.10.0"
+        errorLine1="lifecycleRuntimeKtx = &quot;2.8.7&quot;"
+        errorLine2="                      ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="9"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.9.3 is available: 1.12.2"
+        errorLine1="activityCompose = &quot;1.9.3&quot;"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.9.3 is available: 1.12.2"
+        errorLine1="activityCompose = &quot;1.9.3&quot;"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.activity:activity-compose than 1.9.3 is available: 1.12.2"
+        errorLine1="activityCompose = &quot;1.9.3&quot;"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="10"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2024.11.00 is available: 2026.01.00"
+        errorLine1="composeBom = &quot;2024.11.00&quot;"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="11"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2024.11.00 is available: 2026.01.00"
+        errorLine1="composeBom = &quot;2024.11.00&quot;"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="11"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose:compose-bom than 2024.11.00 is available: 2026.01.00"
+        errorLine1="composeBom = &quot;2024.11.00&quot;"
+        errorLine2="             ~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="11"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.security:security-crypto than 1.1.0-alpha06 is available: 1.1.0"
+        errorLine1="securityCrypto = &quot;1.1.0-alpha06&quot;"
+        errorLine2="                 ~~~~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="12"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.security:security-crypto than 1.1.0-alpha06 is available: 1.1.0"
+        errorLine1="securityCrypto = &quot;1.1.0-alpha06&quot;"
+        errorLine2="                 ~~~~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="12"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.security:security-crypto than 1.1.0-alpha06 is available: 1.1.0"
+        errorLine1="securityCrypto = &quot;1.1.0-alpha06&quot;"
+        errorLine2="                 ~~~~~~~~~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="12"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-compose than 2.8.5 is available: 2.9.6"
+        errorLine1="navigationCompose = &quot;2.8.5&quot;"
+        errorLine2="                    ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="13"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-compose than 2.8.5 is available: 2.9.6"
+        errorLine1="navigationCompose = &quot;2.8.5&quot;"
+        errorLine2="                    ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="13"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-compose than 2.8.5 is available: 2.9.6"
+        errorLine1="navigationCompose = &quot;2.8.5&quot;"
+        errorLine2="                    ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="13"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-runtime-ktx than 2.8.5 is available: 2.9.6"
+        errorLine1="navigationRuntimeKtx = &quot;2.8.5&quot;"
+        errorLine2="                       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="14"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-runtime-ktx than 2.8.5 is available: 2.9.6"
+        errorLine1="navigationRuntimeKtx = &quot;2.8.5&quot;"
+        errorLine2="                       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="14"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.navigation:navigation-runtime-ktx than 2.8.5 is available: 2.9.6"
+        errorLine1="navigationRuntimeKtx = &quot;2.8.5&quot;"
+        errorLine2="                       ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="14"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose.material:material-icons-core than 1.7.5 is available: 1.7.8"
+        errorLine1="composeIcons = &quot;1.7.5&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="16"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose.material:material-icons-core than 1.7.5 is available: 1.7.8"
+        errorLine1="composeIcons = &quot;1.7.5&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="16"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose.material:material-icons-core than 1.7.5 is available: 1.7.8"
+        errorLine1="composeIcons = &quot;1.7.5&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="16"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose.material:material-icons-extended than 1.7.5 is available: 1.7.8"
+        errorLine1="composeIcons = &quot;1.7.5&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="16"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose.material:material-icons-extended than 1.7.5 is available: 1.7.8"
+        errorLine1="composeIcons = &quot;1.7.5&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="16"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="GradleDependency"
+        message="A newer version of androidx.compose.material:material-icons-extended than 1.7.5 is available: 1.7.8"
+        errorLine1="composeIcons = &quot;1.7.5&quot;"
+        errorLine2="               ~~~~~~~">
+        <location
+            file="../gradle/libs.versions.toml"
+            line="16"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/components/AnimatedButton.kt"
+            line="89"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/components/dialogs/DialogButtons.kt"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/components/dialogs/DialogButtons.kt"
+            line="49"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Optional Modifier parameter should have a default value of `Modifier`"
+        errorLine1="    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/components/dialogs/DialogDeprecations.kt"
+            line="43"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/screens/privacy/PrivacyPolicyScreen.kt"
+            line="56"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="                    missingPermissions = navigationViewModel.missingPermissions.value,"
+        errorLine2="                                                                                ~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="1138"
+            column="81"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_email_add_error`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                    SnackbarManager.showError(appContext.getString(R.string.snackbar_email_add_error, e.message ?: &quot;&quot;))"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/viewmodel/EmailViewModel.kt"
+            line="122"
+            column="47"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="605"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_email_remove_error`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                SnackbarManager.showError(appContext.getString(R.string.snackbar_email_remove_error, e.message ?: &quot;&quot;))"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/viewmodel/EmailViewModel.kt"
+            line="180"
+            column="43"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="612"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_test_email_sent`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                        SnackbarManager.showSuccess(appContext.getString(R.string.snackbar_test_email_sent, mailrecipient))"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/viewmodel/EmailViewModel.kt"
+            line="278"
+            column="53"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="452"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_test_email_failed`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                        SnackbarManager.showError(appContext.getString(R.string.snackbar_test_email_failed, result.message ?: &quot;&quot;))"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/viewmodel/EmailViewModel.kt"
+            line="292"
+            column="51"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="641"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_test_email_failed`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                SnackbarManager.showError(appContext.getString(R.string.snackbar_test_email_failed, e.message ?: &quot;&quot;))"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/viewmodel/EmailViewModel.kt"
+            line="306"
+            column="43"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="641"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`error_security_storage`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                        getString(R.string.error_security_storage, e.message ?: &quot;&quot;)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="313"
+            column="25"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="492"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`error_initialization_generic`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                    else -> getString(R.string.error_initialization_generic, e.message ?: &quot;&quot;)"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="315"
+            column="29"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="490"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_ussd_general_error`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                        message = getString(R.string.snackbar_ussd_general_error, getString(R.string.snackbar_forwarding_unknown_reason))"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="575"
+            column="35"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="648"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_dial_error`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="            SnackbarManager.showError(getString(R.string.snackbar_dial_error, e.message ?: &quot;&quot;))"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="776"
+            column="39"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="598"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`error_initialization_generic`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                _loadingError.value = getString(R.string.error_initialization_generic, e.message ?: &quot;&quot;)"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="1238"
+            column="39"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="490"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_sms_send_failed`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                SnackbarManager.showError(context.getString(R.string.snackbar_sms_send_failed, phoneNumber, message))"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="335"
+            column="43"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="635"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_ussd_failure`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                            SnackbarManager.showError(context.getString(R.string.snackbar_ussd_failure, failureReason))"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="643"
+            column="55"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="647"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_ussd_request_sent`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                SnackbarManager.showInfo(context.getString(R.string.snackbar_ussd_request_sent, ussdCode))"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="668"
+            column="42"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="650"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_ussd_general_error`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                SnackbarManager.showError(context.getString(R.string.snackbar_ussd_general_error, e.message ?: &quot;&quot;))"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="704"
+            column="43"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="648"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_read_phone_error`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                SnackbarManager.showError(context.getString(R.string.snackbar_read_phone_error, e.message ?: &quot;&quot;))"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="1182"
+            column="43"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="600"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_sms_processing_error`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                SnackbarManager.showError(getString(R.string.snackbar_sms_processing_error, e.message ?: &quot;&quot;))"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsForegroundService.kt"
+            line="384"
+            column="43"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="633"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_sms_retry_failed`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="            SnackbarManager.showError(getString(R.string.snackbar_sms_retry_failed, sender, MAX_RETRIES))"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsForegroundService.kt"
+            line="586"
+            column="39"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="634"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_message_too_long`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                SnackbarManager.showWarning(getString(R.string.snackbar_message_too_long, maxSmsLength))"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsForegroundService.kt"
+            line="759"
+            column="45"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="616"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_email_forward_failed`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="        SnackbarManager.showError(getString(R.string.snackbar_email_forward_failed, errorMessage))"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsForegroundService.kt"
+            line="946"
+            column="35"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="608"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="StringFormatInvalid"
+        message="Format string &apos;`snackbar_sms_sent_success`&apos; is not a valid format string so it should not be passed to `String.format`"
+        errorLine1="                    SnackbarManager.showSuccess(context.getString(R.string.snackbar_sms_sent_success, recipient))"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsSentReceiver.kt"
+            line="39"
+            column="49"/>
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="636"
+            column="5"
+            message="This definition does not require arguments"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="Did you mean &quot;forwarderA!&quot; instead of &quot;forwarderA1&quot;?"
+        errorLine1="    &lt;string name=&quot;privacy_section_opensource_body_en&quot;>This app is open source. The complete source code is available at: https://github.com/meuse24/forwarderA1\n\nYou can review the code and verify that there are no hidden features or data collection.&lt;/string>"
+        errorLine2="                                                                                                                                                    ^">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="449"
+            column="149"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                        Log.w(&quot;BootReceiver&quot;, &quot;Skipping service start: POST_NOTIFICATIONS permission missing on Android 13+&quot;)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/BootReceiver.kt"
+            line="51"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(&quot;BootReceiver&quot;, &quot;Error starting service after boot&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/BootReceiver.kt"
+            line="72"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(&quot;FileLoggingTree&quot;, &quot;Failed to create log directory: $baseLogDir&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="77"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                        Log.e(&quot;FileLoggingTree&quot;, &quot;Failed to create log file: ${mainLogFile.absolutePath}&quot;, e)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="86"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.e(&quot;FileLoggingTree&quot;, &quot;Log file is not writable: ${mainLogFile.absolutePath}&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="97"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.i(&quot;FileLoggingTree&quot;, &quot;Logging initialized successfully: ${mainLogFile.absolutePath}&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="100"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(&quot;FileLoggingTree&quot;, &quot;Logging initialization failed - will operate in no-op mode&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="105"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.e(TAG, &quot;Logging disabled after $failures consecutive write failures (last error: ${e.message})&quot;, e)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="205"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.e(TAG, &quot;Failed to write log to file (failure $failures/$MAX_CONSECUTIVE_FAILURES)&quot;, e)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="207"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.i(TAG, &quot;Log files rotated (size exceeded ${maxFileSize / (1024 * 1024)}MB)&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="228"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(TAG, &quot;Logging disabled after $failures consecutive rotation failures (last error: ${e.message})&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="235"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(TAG, &quot;Failed to rotate log files (failure $failures/$MAX_CONSECUTIVE_FAILURES)&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="237"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                        Log.w(TAG, &quot;Skipping malformed log line: ${line.take(100)}...&quot;, e)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="267"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(TAG, &quot;Failed to read log entries&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="272"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.i(TAG, &quot;Logs cleared&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="286"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(TAG, &quot;Failed to clear log&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/FileLoggingTree.kt"
+            line="288"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(&quot;MainActivity&quot;, &quot;Error during retry initialization&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="317"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d(TAG, &quot;checkPermissions: All permissions already granted&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/PermissionHandler.kt"
+            line="37"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d(TAG, &quot;checkPermissions: Requesting permissions...&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/PermissionHandler.kt"
+            line="40"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.d(TAG, &quot;checkPermissions: Callback received - granted=$granted&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/PermissionHandler.kt"
+            line="42"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(TAG, &quot;Failed to request permissions&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/data/local/PermissionHandler.kt"
+            line="99"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d(&quot;AppContainer&quot;, &quot;Starting critical initialization&quot;)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="49"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d(&quot;AppContainer&quot;, &quot;Critical initialization complete&quot;)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="55"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d(&quot;AppContainer&quot;, &quot;Starting activity-dependent initialization&quot;)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="59"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.d(&quot;AppContainer&quot;, &quot;Full initialization complete&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="64"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(&quot;AppContainer&quot;, &quot;Error in activity initialization&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="66"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.e(&quot;SmsForwarderApplication&quot;, &quot;Failed to create notification channel&quot;, e)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="143"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(&quot;SmsForwarderApplication&quot;, &quot;Critical initialization failed&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="152"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(&quot;SmsForwarderApplication&quot;, &quot;Base initialization failed&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="169"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.w(&quot;LoggingManager&quot;, &quot;Could not read preferences, using default log size&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="231"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                    Log.i(&quot;LoggingManager&quot;, &quot;Deleted old XML log: $filename&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="291"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(&quot;LoggingManager&quot;, &quot;Failed to delete old XML logs&quot;, e)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="299"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.e(&quot;LoggingManager&quot;, &quot;Logging before initialization: $message&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/SmsForwarderApplication.kt"
+            line="313"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d(TAG, &quot;onReceive: ${intent.action}&quot;)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsReceiver.kt"
+            line="22"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            else -> Log.d(TAG, &quot;Unbekannte Aktion empfangen: ${intent.action}&quot;)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsReceiver.kt"
+            line="37"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="            Log.w(TAG, &quot;Received SMS intent with no messages&quot;)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsReceiver.kt"
+            line="44"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="                Log.w(TAG, &quot;Received SMS with empty sender or body&quot;)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsReceiver.kt"
+            line="53"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LogNotTimber"
+        message="Using &apos;Log&apos; instead of &apos;Timber&apos;"
+        errorLine1="        Log.d(TAG, &quot;SMS_SENT action received&quot;)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsReceiver.kt"
+            line="174"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;auto&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;msg_sim_auto_detected&quot;>• %1$d auto-detected&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="192"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;number&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;msg_sim_numbers_configured&quot;>• %1$d number(s) configured&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="193"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;attempts&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;snackbar_sms_retry_failed&quot;>Failed to process SMS from %1$s after %2$d attempts&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="546"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;chars&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;snackbar_message_too_long&quot;>Message too long for forwarding (max. %1$d chars)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="549"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;email&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;notification_status_email_count&quot;>to %1$d email(s)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="580"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_test_email_sent`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_test_email_sent&quot;>Test-Email gesendet&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="452"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="536"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `error_initialization_generic`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;error_initialization_generic&quot;>Initialisierungsfehler. Bitte starten Sie die App neu.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="490"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="589"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `error_security_storage`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;error_security_storage&quot;>Sicherheitsfehler: Zugriff auf verschlüsselten Speicher nicht möglich.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="492"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="590"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_dial_error`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_dial_error&quot;>Fehler beim Wählen der Nummer&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="598"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="503"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_read_phone_error`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_read_phone_error&quot;>Fehler beim Lesen der Telefonnummer&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="600"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="527"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_email_add_error`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_email_add_error&quot;>Fehler beim Hinzufügen der E-Mail-Adresse&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="605"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="530"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_email_forward_failed`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_email_forward_failed&quot;>E-Mail-Weiterleitung fehlgeschlagen&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="608"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="552"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_email_remove_error`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_email_remove_error&quot;>Fehler beim Entfernen der E-Mail-Adresse&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="612"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="534"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_message_too_long`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_message_too_long&quot;>Nachricht zu lang (max. 160 Zeichen)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="616"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="549"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_sms_processing_error`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_sms_processing_error&quot;>Fehler beim Verarbeiten der SMS&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="633"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="545"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_sms_retry_failed`; found both 0 here and 2 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_sms_retry_failed&quot;>SMS-Wiederholung fehlgeschlagen&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="634"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="546"
+            column="5"
+            message="Conflicting number of arguments (2) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_sms_send_failed`; found both 0 here and 2 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_sms_send_failed&quot;>SMS-Versand fehlgeschlagen&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="635"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="524"
+            column="5"
+            message="Conflicting number of arguments (2) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_sms_sent_success`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_sms_sent_success&quot;>SMS erfolgreich gesendet&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="636"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="553"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_test_email_failed`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_test_email_failed&quot;>Test-E-Mail fehlgeschlagen&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="641"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="537"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_ussd_failure`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_ussd_failure&quot;>USSD-Anfrage fehlgeschlagen&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="647"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="511"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_ussd_general_error`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_ussd_general_error&quot;>USSD allgemeiner Fehler&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="648"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="514"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Inconsistent number of arguments in formatting string `snackbar_ussd_request_sent`; found both 0 here and 1 in values/strings.xml"
+        errorLine1="    &lt;string name=&quot;snackbar_ussd_request_sent&quot;>USSD-Anfrage gesendet&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="650"
+            column="5"/>
+        <location
+            file="src/main/res/values/strings.xml"
+            line="512"
+            column="5"
+            message="Conflicting number of arguments (1) here"/>
+    </issue>
+
+    <issue
+        id="HardwareIds"
+        message="Using `getLine1Number` to get device identifiers is not recommended"
+        errorLine1="                    subTelephonyManager.line1Number?.takeIf { it.isNotEmpty() &amp;&amp; it != &quot;Unknown&quot; }?.let { number ->"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="1016"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="HardwareIds"
+        message="Using `getLine1Number` to get device identifiers is not recommended"
+        errorLine1="                telephonyManager.line1Number?.takeIf { it.isNotEmpty() &amp;&amp; it != &quot;Unknown&quot; }?.let { number ->"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="1061"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="HardwareIds"
+        message="Using `getLine1Number` to get device identifiers is not recommended"
+        errorLine1="                    telephonyManager.line1Number?.let { number ->"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="1148"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UnprotectedSMSBroadcastReceiver"
+        message="BroadcastReceivers that declare an intent-filter for `SMS_DELIVER` or `SMS_RECEIVED` must ensure that the caller has the `BROADCAST_SMS` permission, otherwise it is possible for malicious actors to spoof intents"
+        errorLine1="        &lt;receiver android:name=&quot;.service.SmsReceiver&quot; android:exported=&quot;true&quot;>"
+        errorLine2="         ~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="55"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="            if (phoneAccountHandle != null &amp;&amp; Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/MainActivity.kt"
+            line="703"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="            val smsManager = if (subscriptionId != -1 &amp;&amp; Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {"
+        errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="374"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="                val telephonyManager = if (subscriptionId != -1 &amp;&amp; Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {"
+        errorLine2="                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="576"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="814"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="1014"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="1101"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="1147"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/PhoneSmsUtils.kt"
+            line="1157"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="        val subscriptionId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsReceiver.kt"
+            line="104"
+            column="34"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 29"
+        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/service/SmsReceiver.kt"
+            line="140"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 29. Merge all the resources in this folder into `mipmap-anydpi`.">
+        <location
+            file="src/main/res/mipmap-anydpi-v26"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+        errorLine1="    var simManagementPosition by remember { mutableStateOf(0f) }"
+        errorLine2="                                            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/screens/settings/SettingsScreen.kt"
+            line="78"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+        errorLine1="    var simSelectionPosition by remember { mutableStateOf(0f) }"
+        errorLine2="                                           ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/screens/settings/SettingsScreen.kt"
+            line="79"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+        errorLine1="    var callForwardingPosition by remember { mutableStateOf(0f) }"
+        errorLine2="                                             ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/screens/settings/SettingsScreen.kt"
+            line="80"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+        errorLine1="    var emailSettingsPosition by remember { mutableStateOf(0f) }"
+        errorLine2="                                            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/screens/settings/SettingsScreen.kt"
+            line="81"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+        errorLine1="    var appSettingsPosition by remember { mutableStateOf(0f) }"
+        errorLine2="                                          ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/screens/settings/SettingsScreen.kt"
+            line="82"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+        errorLine1="    var logSettingsPosition by remember { mutableStateOf(0f) }"
+        errorLine2="                                          ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/info/meuse24/smsforwarderneoA1/presentation/ui/screens/settings/SettingsScreen.kt"
+            line="83"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.purple_200` appears to be unused"
+        errorLine1="    &lt;color name=&quot;purple_200&quot;>#FFBB86FC&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="3"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.purple_500` appears to be unused"
+        errorLine1="    &lt;color name=&quot;purple_500&quot;>#FF6200EE&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="4"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.purple_700` appears to be unused"
+        errorLine1="    &lt;color name=&quot;purple_700&quot;>#FF3700B3&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="5"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.teal_200` appears to be unused"
+        errorLine1="    &lt;color name=&quot;teal_200&quot;>#FF03DAC5&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="6"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.teal_700` appears to be unused"
+        errorLine1="    &lt;color name=&quot;teal_700&quot;>#FF018786&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="7"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.black` appears to be unused"
+        errorLine1="    &lt;color name=&quot;black&quot;>#FF000000&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="8"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.color.white` appears to be unused"
+        errorLine1="    &lt;color name=&quot;white&quot;>#FFFFFFFF&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/colors.xml"
+            line="9"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.mipmap.ic_launcher` appears to be unused">
+        <location
+            file="src/main/res/mipmap-hdpi/ic_launcher.webp"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_launcher_background` appears to be unused"
+        errorLine1="&lt;vector"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_launcher_background.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.mipmap.ic_launcher_foreground` appears to be unused">
+        <location
+            file="src/main/res/mipmap-hdpi/ic_launcher_foreground.webp"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_launcher_foreground` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_launcher_foreground.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.mipmap.ic_launcher_round` appears to be unused">
+        <location
+            file="src/main/res/mipmap-hdpi/ic_launcher_round.webp"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.heading_required_permissions` appears to be unused"
+        errorLine1="    &lt;string name=&quot;heading_required_permissions&quot;>Required permissions:&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="17"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.perm_battery_opt_desc` appears to be unused"
+        errorLine1="    &lt;string name=&quot;perm_battery_opt_desc&quot;>Battery optimization - For reliable background execution&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="27"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_reset_all_forwarding` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_reset_all_forwarding&quot;>Reset All Forwarding&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="36"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.msg_forwarding_maintained_on_exit` appears to be unused"
+        errorLine1="    &lt;string name=&quot;msg_forwarding_maintained_on_exit&quot;>Keep forwarding on exit&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="45"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_refresh_logs` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_refresh_logs&quot;>Refresh logs&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="60"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_filter_important` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_filter_important&quot;>Important logs only&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="62"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_show_all_logs` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_show_all_logs&quot;>Show all logs&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="63"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_share_log_entries` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_share_log_entries&quot;>Share log entries&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="67"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_message_logs_shared` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_message_logs_shared&quot;>CSV log file created for sharing&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="71"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_error_sharing_logs` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_error_sharing_logs&quot;>Error creating CSV file&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="72"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.section_phone_settings` appears to be unused"
+        errorLine1="    &lt;string name=&quot;section_phone_settings&quot;>Phone Settings&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="75"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.section_mmi_code_settings` appears to be unused"
+        errorLine1="    &lt;string name=&quot;section_mmi_code_settings&quot;>MMI Code Settings&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="89"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_collapse` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_collapse&quot;>Collapse&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="94"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_expand` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_expand&quot;>Expand&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="95"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.desc_mail_tab_requires_smtp` appears to be unused"
+        errorLine1="    &lt;string name=&quot;desc_mail_tab_requires_smtp&quot;>Mail tab is only available when SMTP settings are configured correctly.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="109"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.msg_logs_deleted` appears to be unused"
+        errorLine1="    &lt;string name=&quot;msg_logs_deleted&quot;>Log entries deleted&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="164"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_message_pin_changed` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_message_pin_changed&quot;>LOG-PIN changed&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="167"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.msg_cleanup_in_progress` appears to be unused"
+        errorLine1="    &lt;string name=&quot;msg_cleanup_in_progress&quot;>Cleanup in progress…&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="241"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.desc_open_link` appears to be unused"
+        errorLine1="    &lt;string name=&quot;desc_open_link&quot;>Open link&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="281"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_build_system` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_build_system&quot;>Build System&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="372"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_value_gradle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_value_gradle&quot;>Gradle&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="373"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_build_tools` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_build_tools&quot;>Build Tools&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="374"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_build_time` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_build_time&quot;>Build Time&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="375"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_build_type` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_build_type&quot;>Build Type&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="376"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_concurrency` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_concurrency&quot;>Concurrency&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="379"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_value_concurrency` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_value_concurrency&quot;>Coroutines and Flow&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="380"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_data_storage` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_data_storage&quot;>Data Storage&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="381"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_value_encrypted_prefs` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_value_encrypted_prefs&quot;>Encrypted SharedPreferences&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="382"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_background_service` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_background_service&quot;>Background Service&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="383"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_value_foreground_service` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_value_foreground_service&quot;>Foreground Service&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="384"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_compile_sdk` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_compile_sdk&quot;>Compile SDK&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="386"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_jdk` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_jdk&quot;>JDK&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="389"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_heading_dependencies` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_heading_dependencies&quot;>Key Dependencies&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="390"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_compose_bom` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_compose_bom&quot;>Compose BOM&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="391"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_core_ktx` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_core_ktx&quot;>Core KTX&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="392"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_lifecycle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_lifecycle&quot;>Lifecycle Runtime&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="393"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_navigation` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_navigation&quot;>Navigation Compose&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="394"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_security_crypto` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_security_crypto&quot;>Security Crypto&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="395"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_libphonenumber` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_libphonenumber&quot;>libphonenumber&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="396"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_javamail` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_javamail&quot;>JavaMail&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="397"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.html_label_compose_icons` appears to be unused"
+        errorLine1="    &lt;string name=&quot;html_label_compose_icons&quot;>Material Icons&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="398"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_error_loading_contact` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_error_loading_contact&quot;>Error loading contact: %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="490"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_contact_loaded` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_contact_loaded&quot;>Contact loaded&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="491"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_forwarding_activated` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_forwarding_activated&quot;>Forwarding activated&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="492"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_forwarding_deactivated` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_forwarding_deactivated&quot;>Forwarding deactivated&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="493"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.label_language_de` appears to be unused"
+        errorLine1="    &lt;string name=&quot;label_language_de&quot;>DE&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="570"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.label_language_en` appears to be unused"
+        errorLine1="    &lt;string name=&quot;label_language_en&quot;>EN&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="571"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.msg_requesting_permissions` appears to be unused"
+        errorLine1="    &lt;string name=&quot;msg_requesting_permissions&quot;>Requesting permissions...&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="587"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.error_initialization_incomplete` appears to be unused"
+        errorLine1="    &lt;string name=&quot;error_initialization_incomplete&quot;>Initialization incomplete - components unavailable&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="588"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_app_started` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_app_started&quot;>App started&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="592"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_app_stopped` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_app_stopped&quot;>App stopped&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="593"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_sms_received` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_sms_received&quot;>SMS received from %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="594"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_sms_forwarded` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_sms_forwarded&quot;>SMS forwarded to %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="595"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_email_sent` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_email_sent&quot;>Email sent to %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="596"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.log_error_occurred` appears to be unused"
+        errorLine1="    &lt;string name=&quot;log_error_occurred&quot;>Error: %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="597"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.cd_error_icon` appears to be unused"
+        errorLine1="    &lt;string name=&quot;cd_error_icon&quot;>Error icon&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="601"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_close` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_close&quot;>Close&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="608"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.btn_confirm` appears to be unused"
+        errorLine1="    &lt;string name=&quot;btn_confirm&quot;>Confirm&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="609"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.copyright_notice` appears to be unused"
+        errorLine1="    &lt;string name=&quot;copyright_notice&quot;>(C) 2025&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="610"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_mmi_code_sent` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_mmi_code_sent&quot;>MMI Code sent&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="613"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_test_sms_sent` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_test_sms_sent&quot;>Test SMS sent&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="614"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_error_sending` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_error_sending&quot;>Error sending: %1$s&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="615"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_invalid_email` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_invalid_email&quot;>Invalid email address&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="616"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.snackbar_settings_saved` appears to be unused"
+        errorLine1="    &lt;string name=&quot;snackbar_settings_saved&quot;>Settings saved&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="617"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="TypographyDashes"
+        message="Replace &quot;-&quot; with an &quot;en dash&quot; character (–, &amp;#8211;) ?"
+        errorLine1="    &lt;string name=&quot;helper_max_log_size&quot;>Sets how large the log file can grow (1-20 MB)&lt;/string>"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="158"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="TypographyDashes"
+        message="Replace &quot;-&quot; with an &quot;en dash&quot; character (–, &amp;#8211;) ?"
+        errorLine1="    &lt;string name=&quot;helper_max_log_size&quot;>Legt fest, wie groß die Log-Datei werden darf (1-20 MB)&lt;/string>"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="159"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;snackbar_wait_for_call_end&quot;>Waiting for call to end...&lt;/string>"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="502"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="TypographyEllipsis"
+        message="Replace &quot;...&quot; with ellipsis character (…, &amp;#8230;) ?"
+        errorLine1="    &lt;string name=&quot;msg_requesting_permissions&quot;>Requesting permissions...&lt;/string>"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="587"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="TypographyOther"
+        message="Replace (c) with copyright symbol © (&amp;#169;) ?"
+        errorLine1="    &lt;string name=&quot;copyright_notice&quot;>(C) 2025&lt;/string>"
+        errorLine2="                                    ~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="471"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="TypographyOther"
+        message="Replace (c) with copyright symbol © (&amp;#169;) ?"
+        errorLine1="    &lt;string name=&quot;copyright_notice&quot;>(C) 2025&lt;/string>"
+        errorLine2="                                    ~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="610"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="MonochromeLauncherIcon"
+        message="The application adaptive icon is missing a monochrome tag"
+        errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/mipmap-anydpi-v26/ic_launcher1.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="MonochromeLauncherIcon"
+        message="The application adaptive roundIcon is missing a monochrome tag"
+        errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/mipmap-anydpi-v26/ic_launcher1_round.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/barracuda.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/barracuda.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/help_btn_reset.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/help_btn_reset.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/help_btn_select.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/help_btn_select.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/help_btn_status.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/help_btn_status.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/logofwd2.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/logofwd2.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/officer.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/officer.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/wallpaper.webp` in densityless folder">
+        <location
+            file="src/main/res/drawable/wallpaper.webp"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryRequiredFeature"
+        message="Consider whether this feature (`android.hardware.telephony`) really is required for the app to function; you can set `android:required=&quot;false&quot;` to indicate that the feature is used but not required"
+        errorLine1="    &lt;uses-feature android:name=&quot;android.hardware.telephony&quot; android:required=&quot;true&quot;/>"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="21"
+            column="33"/>
+    </issue>
+
+</issues>

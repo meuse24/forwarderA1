@@ -468,7 +468,7 @@
     <string name="btn_back">Zurück</string>
     <string name="btn_close">Schließen</string>
     <string name="btn_confirm">Bestätigen</string>
-    <string name="copyright_notice">(C) 2025</string>
+    <string name="copyright_notice">(C) 2026</string>
 
     <!-- ==================== ADDITIONAL BUTTONS ==================== -->
     <string name="btn_later">Später</string>
@@ -669,5 +669,45 @@
 
     <!-- ==================== TEXT/OTHERS ==================== -->
     <string name="text_author_name">Günther Meusburger</string>
-    <string name="text_copyright">© 2025</string>
+    <string name="text_copyright">© 2026</string>
+    <string name="licensed_under_mit">Lizenziert unter MIT-Lizenz</string>
+
+    <!-- ==================== OPEN SOURCE INFO CARD ==================== -->
+    <string name="heading_open_source">Open Source</string>
+    <string name="open_source_license">MIT-Lizenz</string>
+    <string name="open_source_description">Diese App ist freie und quelloffene Software. Der vollständige Quellcode ist öffentlich auf GitHub verfügbar. Sie können den Code unter den Bedingungen der MIT-Lizenz einsehen, ändern und weitergeben.</string>
+    <string name="open_source_features_title">Was das bedeutet:</string>
+    <string name="open_source_feature_1">Volle Transparenz - jede Codezeile einsehbar</string>
+    <string name="open_source_feature_2">Kein verstecktes Tracking oder Datensammlung</string>
+    <string name="open_source_feature_3">Community-getriebene Entwicklung</string>
+    <string name="open_source_feature_4">Kostenlos nutzbar, änderbar und teilbar</string>
+    <string name="btn_view_source">Quellcode ansehen</string>
+    <string name="btn_report_issue">Fehler melden</string>
+
+    <!-- ==================== HELP SCREEN - TECHNICAL DETAILS ==================== -->
+    <string name="help_technical_heading">Technische Details</string>
+    <string name="help_loop_protection_heading">Loop-Schutz</string>
+    <string name="help_loop_protection_intro">Die App verhindert automatisch Endlosweiterleitungen:</string>
+    <string name="help_loop_protection_1">SMS von der Zielnummer werden nicht zurückgeleitet</string>
+    <string name="help_loop_protection_2">SMS können nicht an eigene SIM-Nummern weitergeleitet werden</string>
+    <string name="help_loop_protection_3">Alle blockierten Versuche werden im Log-Tab protokolliert</string>
+    <string name="help_multi_sim_heading">Multi-SIM Unterstützung</string>
+    <string name="help_multi_sim_intro">Für Geräte mit mehreren SIM-Karten:</string>
+    <string name="help_multi_sim_1">Wählen Sie, welche SIM SMS zur Weiterleitung empfängt</string>
+    <string name="help_multi_sim_2">Wählen Sie die ausgehende SIM für weitergeleitete SMS</string>
+    <string name="help_multi_sim_3">Konfigurieren Sie Rufumleitung pro SIM</string>
+    <string name="help_data_security_heading">Datensicherheit</string>
+    <string name="help_data_security_intro">Ihre Daten sind geschützt:</string>
+    <string name="help_data_security_1">Alle Einstellungen verschlüsselt auf dem Gerät gespeichert</string>
+    <string name="help_data_security_2">Keine Daten an externe Server gesendet</string>
+    <string name="help_data_security_3">SMS-Inhalte werden nicht dauerhaft gespeichert</string>
+    <string name="help_data_security_4">SMTP-Passwörter mit Android Keystore verschlüsselt</string>
+    <string name="help_opensource_heading">Open Source</string>
+    <string name="help_opensource_body">Diese App ist Open Source unter der MIT-Lizenz. Quellcode ansehen und Fehler melden unter:</string>
+
+    <!-- ==================== PRIVACY - LOOP PROTECTION ==================== -->
+    <string name="privacy_section_loop_protection_title_de">5. Loop-Schutz</string>
+    <string name="privacy_section_loop_protection_body_de">Die App enthält einen automatischen Loop-Schutz, um Endlosweiterleitungen zu verhindern:\n\n• SMS werden nicht weitergeleitet, wenn der Absender der Zielnummer entspricht\n• SMS werden nicht an Ihre eigenen SIM-Kartennummern weitergeleitet\n• Alle blockierten Weiterleitungsversuche werden zur Transparenz protokolliert\n\nDies gewährleistet einen sicheren Betrieb auch bei komplexen Multi-SIM-Konfigurationen.</string>
+    <string name="privacy_section_loop_protection_title_en">5. Loop Protection</string>
+    <string name="privacy_section_loop_protection_body_en">The app includes automatic loop protection to prevent endless forwarding loops:\n\n• SMS will not be forwarded if the sender matches the target number\n• SMS will not be forwarded to your own SIM card numbers\n• All blocked forwarding attempts are logged for transparency\n\nThis ensures safe operation even with complex multi-SIM configurations.</string>
 </resources>

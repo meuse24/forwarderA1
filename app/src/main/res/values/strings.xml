@@ -422,8 +422,10 @@
     <string name="privacy_section_email_title_de">3. E-Mail-Weiterleitung (optional)</string>
     <string name="privacy_section_email_body_de">Wenn Sie E-Mail-Weiterleitung aktivieren, werden SMS-Inhalte an die von Ihnen konfigurierten E-Mail-Adressen gesendet. Dazu sind SMTP-Zugangsdaten (Gmail, Outlook, etc.) erforderlich, die verschlüsselt gespeichert werden.</string>
     <string name="privacy_section_opensource_title_de">4. Open Source und Transparenz</string>
-    <string name="privacy_section_opensource_body_de">Diese App ist Open Source. Der vollständige Quellcode ist verfügbar unter: https://github.com/meuse24/forwarderA1\n\nSie können den Code einsehen und prüfen, dass keine versteckten Funktionen oder Datensammlung vorhanden sind.</string>
-    <string name="privacy_section_consent_title_de">5. Ihre Zustimmung</string>
+    <string name="privacy_section_opensource_body_de">Diese App ist Open Source und unter der MIT-Lizenz veröffentlicht. Der vollständige Quellcode ist verfügbar unter: https://github.com/meuse24/forwarderA1\n\nSie können den Code einsehen und prüfen, dass keine versteckten Funktionen oder Datensammlung vorhanden sind. Beiträge und Fehlermeldungen sind willkommen.</string>
+    <string name="privacy_section_loop_protection_title_de">5. Loop-Schutz</string>
+    <string name="privacy_section_loop_protection_body_de">Die App enthält einen automatischen Loop-Schutz, um Endlosweiterleitungen zu verhindern:\n\n• SMS werden nicht weitergeleitet, wenn der Absender der Zielnummer entspricht\n• SMS werden nicht an Ihre eigenen SIM-Kartennummern weitergeleitet\n• Alle blockierten Weiterleitungsversuche werden zur Transparenz protokolliert\n\nDies gewährleistet einen sicheren Betrieb auch bei komplexen Multi-SIM-Konfigurationen.</string>
+    <string name="privacy_section_consent_title_de">6. Ihre Zustimmung</string>
     <string name="privacy_section_consent_body_de">Durch Klicken auf „Akzeptieren“ bestätigen Sie, dass Sie:\n\n• Diese Datenschutzerklärung gelesen und verstanden haben\n• Der Verwendung der oben genannten Berechtigungen zustimmen\n• Verstehen, dass die App SMS-Inhalte weiterleitet\n• Die App auf eigene Verantwortung nutzen\n\nSie können die App jederzeit deinstallieren, um alle lokalen Daten zu entfernen.</string>
     <string name="privacy_btn_accept_de">Akzeptieren</string>
     <string name="privacy_btn_decline_de">Ablehnen</string>
@@ -446,8 +448,10 @@
     <string name="privacy_section_email_title_en">3. Email Forwarding (Optional)</string>
     <string name="privacy_section_email_body_en">If you enable email forwarding, SMS contents will be sent to the email addresses you configure. This requires entering SMTP credentials (Gmail, Outlook, etc.), which are stored encrypted.</string>
     <string name="privacy_section_opensource_title_en">4. Open Source and Transparency</string>
-    <string name="privacy_section_opensource_body_en">This app is open source. The complete source code is available at: https://github.com/meuse24/forwarderA1\n\nYou can review the code and verify that there are no hidden features or data collection.</string>
-    <string name="privacy_section_consent_title_en">5. Your Consent</string>
+    <string name="privacy_section_opensource_body_en">This app is open source and licensed under the MIT License. The complete source code is available at: https://github.com/meuse24/forwarderA1\n\nYou can review the code and verify that there are no hidden features or data collection. Contributions and bug reports are welcome.</string>
+    <string name="privacy_section_loop_protection_title_en">5. Loop Protection</string>
+    <string name="privacy_section_loop_protection_body_en">The app includes automatic loop protection to prevent endless forwarding loops:\n\n• SMS will not be forwarded if the sender matches the target number\n• SMS will not be forwarded to your own SIM card numbers\n• All blocked forwarding attempts are logged for transparency\n\nThis ensures safe operation even with complex multi-SIM configurations.</string>
+    <string name="privacy_section_consent_title_en">6. Your Consent</string>
     <string name="privacy_section_consent_body_en">By clicking “Accept” you confirm that you:\n\n• Have read and understood this privacy policy\n• Agree to the use of the permissions listed above\n• Understand that the app forwards SMS contents\n• Use the app at your own responsibility\n\nYou can uninstall the app at any time to remove all local data.</string>
     <string name="privacy_btn_accept_en">Accept</string>
     <string name="privacy_btn_decline_en">Decline</string>
@@ -562,8 +566,9 @@
     <string name="desc_app_logo">App Logo</string>
     <string name="desc_app_icon">App Icon</string>
     <string name="desc_version_badge">Version Barracuda</string>
-    <string name="text_copyright">© 2025</string>
+    <string name="text_copyright">© 2026</string>
     <string name="text_author_name">Günther Meusburger</string>
+    <string name="licensed_under_mit">Licensed under MIT License</string>
     <string name="desc_open">Open</string>
     <string name="desc_reset_forwarding">Reset all forwarding</string>
     <string name="desc_dialing_privacy">Privacy</string>
@@ -607,5 +612,45 @@
     <string name="btn_back">Back</string>
     <string name="btn_close">Close</string>
     <string name="btn_confirm">Confirm</string>
-    <string name="copyright_notice">(C) 2025</string>
+    <string name="copyright_notice">(C) 2026</string>
+
+    <!-- Missing Snackbar Messages -->
+    <string name="snackbar_mmi_code_sent">MMI Code sent</string>
+    <string name="snackbar_test_sms_sent">Test SMS sent</string>
+    <string name="snackbar_error_sending">Error sending: %1$s</string>
+    <string name="snackbar_invalid_email">Invalid email address</string>
+    <string name="snackbar_settings_saved">Settings saved</string>
+
+    <!-- ==================== OPEN SOURCE INFO CARD ==================== -->
+    <string name="heading_open_source">Open Source</string>
+    <string name="open_source_license">MIT License</string>
+    <string name="open_source_description">This app is free and open source software. The complete source code is publicly available on GitHub. You can review, modify, and redistribute the code under the terms of the MIT License.</string>
+    <string name="open_source_features_title">What this means:</string>
+    <string name="open_source_feature_1">Full transparency - review every line of code</string>
+    <string name="open_source_feature_2">No hidden tracking or data collection</string>
+    <string name="open_source_feature_3">Community-driven development</string>
+    <string name="open_source_feature_4">Free to use, modify, and share</string>
+    <string name="btn_view_source">View Source Code</string>
+    <string name="btn_report_issue">Report Issue</string>
+
+    <!-- ==================== HELP SCREEN - TECHNICAL DETAILS ==================== -->
+    <string name="help_technical_heading">Technical Details</string>
+    <string name="help_loop_protection_heading">Loop Protection</string>
+    <string name="help_loop_protection_intro">The app automatically prevents endless forwarding loops:</string>
+    <string name="help_loop_protection_1">SMS from the target number are not forwarded back</string>
+    <string name="help_loop_protection_2">SMS cannot be forwarded to your own SIM card numbers</string>
+    <string name="help_loop_protection_3">All blocked attempts are logged in the Log tab</string>
+    <string name="help_multi_sim_heading">Multi-SIM Support</string>
+    <string name="help_multi_sim_intro">For devices with multiple SIM cards:</string>
+    <string name="help_multi_sim_1">Choose which SIM receives SMS for forwarding</string>
+    <string name="help_multi_sim_2">Select outgoing SIM for forwarded SMS</string>
+    <string name="help_multi_sim_3">Configure call forwarding per SIM</string>
+    <string name="help_data_security_heading">Data Security</string>
+    <string name="help_data_security_intro">Your data is protected:</string>
+    <string name="help_data_security_1">All settings stored encrypted on device</string>
+    <string name="help_data_security_2">No data sent to external servers</string>
+    <string name="help_data_security_3">SMS contents are not permanently stored</string>
+    <string name="help_data_security_4">SMTP passwords encrypted with Android Keystore</string>
+    <string name="help_opensource_heading">Open Source</string>
+    <string name="help_opensource_body">This app is open source under the MIT License. View the source code and report issues at:</string>
 </resources>

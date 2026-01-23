@@ -470,6 +470,37 @@ private fun getHelpHtmlContent(
         ${context.getString(R.string.help_email_note)}
     </div>
 
+    <h2>${context.getString(R.string.help_technical_heading)}</h2>
+
+    <h3>${context.getString(R.string.help_loop_protection_heading)}</h3>
+    <p style="margin-bottom: 8px;">${context.getString(R.string.help_loop_protection_intro)}</p>
+    <ul style="margin-left: 16px; margin-bottom: 16px;">
+        <li>${context.getString(R.string.help_loop_protection_1)}</li>
+        <li>${context.getString(R.string.help_loop_protection_2)}</li>
+        <li>${context.getString(R.string.help_loop_protection_3)}</li>
+    </ul>
+
+    <h3>${context.getString(R.string.help_multi_sim_heading)}</h3>
+    <p style="margin-bottom: 8px;">${context.getString(R.string.help_multi_sim_intro)}</p>
+    <ul style="margin-left: 16px; margin-bottom: 16px;">
+        <li>${context.getString(R.string.help_multi_sim_1)}</li>
+        <li>${context.getString(R.string.help_multi_sim_2)}</li>
+        <li>${context.getString(R.string.help_multi_sim_3)}</li>
+    </ul>
+
+    <h3>${context.getString(R.string.help_data_security_heading)}</h3>
+    <p style="margin-bottom: 8px;">${context.getString(R.string.help_data_security_intro)}</p>
+    <ul style="margin-left: 16px; margin-bottom: 16px;">
+        <li>${context.getString(R.string.help_data_security_1)}</li>
+        <li>${context.getString(R.string.help_data_security_2)}</li>
+        <li>${context.getString(R.string.help_data_security_3)}</li>
+        <li>${context.getString(R.string.help_data_security_4)}</li>
+    </ul>
+
+    <h3>${context.getString(R.string.help_opensource_heading)}</h3>
+    <p style="margin-bottom: 8px;">${context.getString(R.string.help_opensource_body)}</p>
+    <p><a href="https://github.com/meuse24/forwarderA1" style="color: $primaryColor;">github.com/meuse24/forwarderA1</a></p>
+
 </body>
 </html>
 """.trimIndent()

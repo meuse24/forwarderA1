@@ -150,11 +150,13 @@ android {
         }
     }
 
-    // Lint options - check release builds but don't abort on warnings
+    // Lint options - strict for release builds
     lint {
         checkReleaseBuilds = true
-        abortOnError = false
+        abortOnError = true
         warningsAsErrors = false
+        // Baseline file for tracking existing issues
+        baseline = file("lint-baseline.xml")
     }
 
     packaging {
@@ -200,6 +202,9 @@ dependencies {
 
     // Logging
     implementation(libs.timber)
+
+    // Baseline Profile for improved startup performance
+    implementation(libs.androidx.profileinstaller)
 
     // Testing
     testImplementation(libs.junit)

@@ -1,6 +1,12 @@
 # SMS Forwarder Neo
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Android](https://img.shields.io/badge/Android-10%2B-green.svg)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-blue.svg)](https://kotlinlang.org)
+
 Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehenden SMS-Nachrichten per SMS und E-Mail. Die App läuft als Vordergrund-Dienst für zuverlässige Hintergrundverarbeitung.
+
+**Open Source** unter der MIT-Lizenz - vollständig transparent, keine versteckten Funktionen, keine Datensammlung.
 
 ## Features
 
@@ -25,34 +31,35 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 ## Technologie-Stack
 
 ### Plattform & Sprache
-- **Kotlin**: 1.9.0
-- **Target SDK**: 35 (Android 14)
+- **Kotlin**: 2.1.0
+- **Target SDK**: 35 (Android 15)
 - **Min SDK**: 29 (Android 10+)
 - **Compile SDK**: 36
 - **JDK**: 17
 
 ### UI Framework
 - **Jetpack Compose**: Moderne deklarative UI
+- **Compose BOM**: 2024.11.00
 - **Material Design 3**: Aktuelle Design-Standards
-- **Navigation Compose**: Typ-sichere Navigation
+- **Navigation Compose**: 2.8.5
 
 ### Architektur & Bibliotheken
-- **Clean Architecture**: Klare Trennung von Data, Domain und Presentation Layer
+- **Clean Architecture**: MVVM mit Repository Pattern
 - **ViewModels**: Factory-Pattern für Dependency Injection
-- **Coroutines**: Asynchrone Programmierung
-- **StateFlow**: Reaktive Datenverwaltung
-- **Security Crypto**: Verschlüsselte SharedPreferences
-- **libphonenumber**: Telefonnummer-Validierung
-- **JavaMail**: E-Mail-Versand (SMTP)
-- **WorkManager**: Hintergrundaufgaben
-- **Room**: Für zukünftige Datenbankerweiterungen
+- **Coroutines & Flow**: Asynchrone Programmierung und reaktive Datenverwaltung
+- **Security Crypto**: Verschlüsselte SharedPreferences (AES256-GCM)
+- **libphonenumber**: 8.13.52 - Telefonnummer-Validierung
+- **JavaMail**: 1.6.7 - E-Mail-Versand (SMTP)
+- **Timber**: 5.0.1 - Strukturiertes Logging
+- **Coil**: 2.7.0 - Bildverarbeitung
 
 ## Voraussetzungen
 
 ### Entwicklungsumgebung
-- **Android Studio**: Hedgehog (2023.1.1) oder neuer
+- **Android Studio**: Ladybug (2024.2.1) oder neuer
 - **JDK**: Version 17
-- **Gradle**: 8.x
+- **Gradle**: 8.7+
+- **Android Gradle Plugin**: 8.7.3
 - **Git**: Für Versionskontrolle
 
 ### Android-Gerät/Emulator
@@ -467,7 +474,31 @@ chmod +x gradlew
 
 ## Lizenz
 
-Dieses Projekt ist für den privaten Gebrauch bestimmt. Alle Rechte vorbehalten.
+Dieses Projekt ist unter der **MIT-Lizenz** lizenziert.
+
+```
+MIT License
+
+Copyright (c) 2026 Günther Meusburger
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## Kontakt
 
@@ -483,14 +514,23 @@ Dieses Projekt ist für den privaten Gebrauch bestimmt. Alle Rechte vorbehalten.
 
 ---
 
-**Version**: Barracuda (versionCode 4)
+**Version**: Barracuda
 **Build**: Debug/Release
-**Letzte Aktualisierung**: 2025-12-11
+**Letzte Aktualisierung**: 2026-01-23
 
-### Neueste Änderungen (2025-12-11)
-- ✅ **Loop Protection**: Kritischer Schutzmechanismus gegen SMS-Endlosschleifen implementiert (Sender- und Own-SIM-Check)
-- ✅ Verbesserte Benutzerführung bei MMI-Code-Wählvorgängen
-- ✅ 4-Sekunden-Warnung vor jedem Wählvorgang mit zentrierter Formatierung
-- ✅ Deutliche Warnung: "⚠️ BITTE WARTEN ⚠️ - NICHT BEDIENEN!"
-- ✅ Klare Anweisungen zum Abwarten des Wählvorgangs
-- ✅ Automatische Rückkehr zum Hauptbildschirm
+### Neueste Änderungen (2026-01-23)
+- ✅ **Open Source**: Vollständige MIT-Lizenz Dokumentation
+- ✅ **Info Screen**: Open Source Card mit GitHub-Links und Lizenzhinweis
+- ✅ **Hilfe Screen**: Technische Details zu Loop-Schutz, Multi-SIM und Datensicherheit
+- ✅ **Datenschutzerklärung**: Loop Protection Section hinzugefügt
+- ✅ **Copyright**: Aktualisiert auf 2026
+- ✅ **System Info**: Erweitert mit Kotlin 2.1, Compose BOM, JDK 17
+- ✅ **Android 15/16**: Unterstützung in Version-Erkennung hinzugefügt
+- ✅ **Lint**: abortOnError aktiviert mit Baseline
+- ✅ **Baseline Profile**: Für verbesserte App-Startzeit
+
+### Frühere Änderungen
+- ✅ **Loop Protection**: Kritischer Schutzmechanismus gegen SMS-Endlosschleifen (Sender- und Own-SIM-Check)
+- ✅ **Timber Logging**: Strukturiertes Logging mit JSON Lines Format
+- ✅ **Dialog Consolidation**: Vereinheitlichtes Dialog-System
+- ✅ **Manual SIM Number Editing**: Manuelle SIM-Nummern-Bearbeitung

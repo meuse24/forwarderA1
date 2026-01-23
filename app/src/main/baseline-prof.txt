@@ -1,0 +1,59 @@
+# Baseline Profile for SMS Forwarder Neo A1
+# This profile improves app startup and runtime performance by pre-compiling critical code paths
+
+# App entry points and main classes
+HSPLinfo/meuse24/smsforwarderneoA1/MainActivity;->**(**)**
+HSPLinfo/meuse24/smsforwarderneoA1/MainApplication;->**(**)**
+
+# ViewModels - critical for UI state
+HSPLinfo/meuse24/smsforwarderneoA1/presentation/viewmodel/**;->**(**)**
+
+# Compose UI - critical rendering paths
+HSPLandroidx/compose/runtime/**;->**(**)**
+HSPLandroidx/compose/ui/**;->**(**)**
+HSPLandroidx/compose/foundation/**;->**(**)**
+HSPLandroidx/compose/material3/**;->**(**)**
+HSPLandroidx/compose/animation/**;->**(**)**
+
+# Navigation
+HSPLandroidx/navigation/**;->**(**)**
+
+# Lifecycle - critical for state management
+HSPLandroidx/lifecycle/**;->**(**)**
+
+# Activity Compose integration
+HSPLandroidx/activity/compose/**;->**(**)**
+HSPLandroidx/activity/ComponentActivity;->**(**)**
+
+# Core KTX
+HSPLandroidx/core/**;->**(**)**
+
+# Coroutines - used throughout the app
+HSPLkotlinx/coroutines/**;->**(**)**
+
+# App domain and data layers
+HSPLinfo/meuse24/smsforwarderneoA1/domain/**;->**(**)**
+HSPLinfo/meuse24/smsforwarderneoA1/data/**;->**(**)**
+HSPLinfo/meuse24/smsforwarderneoA1/service/**;->**(**)**
+
+# Presentation layer
+HSPLinfo/meuse24/smsforwarderneoA1/presentation/**;->**(**)**
+
+# UI Theme
+HSPLinfo/meuse24/smsforwarderneoA1/ui/theme/**;->**(**)**
+
+# Utility classes
+HSPLinfo/meuse24/smsforwarderneoA1/util/**;->**(**)**
+
+# Security crypto for encrypted preferences
+HSPLandroidx/security/crypto/**;->**(**)**
+
+# Timber logging
+HSPLtimber/log/Timber;->**(**)**
+HSPLtimber/log/Timber$Tree;->**(**)**
+
+# Coil image loading
+HSPLcoil/**;->**(**)**
+
+# Phone number validation
+HSPLcom/google/i18n/phonenumbers/**;->**(**)**

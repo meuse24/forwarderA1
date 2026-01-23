@@ -1,6 +1,6 @@
 # 📊 SMS Forwarder Neo A1 - Projektstruktur
 
-> **Stand**: 2025-01-30 | **Produktionsreife Version**
+> **Stand**: 2026-01-23 | **Produktionsreife Version**
 
 ## 📈 Gesamtstatistik
 
@@ -88,7 +88,7 @@ info.meuse24.smsforwarderneoA1/
 
 | Datei | Zeilen | Beschreibung |
 |-------|--------|--------------|
-| `data/local/Logger.kt` | 544 | Strukturiertes Logging-System (XML/CSV/HTML) |
+| `data/local/FileLoggingTree.kt` | ~250 | Timber-basiertes Logging (JSON Lines) |
 | `data/local/SharedPreferencesManager.kt` | 505 | Encrypted SharedPreferences |
 | `data/local/PermissionHandler.kt` | 86 | Runtime Permission Management |
 
@@ -300,15 +300,15 @@ ui/theme/
 - **DI**: Manual Factory Pattern (kein Hilt)
 - **Async**: Kotlin Coroutines + Flow
 - **Storage**: Encrypted SharedPreferences
-- **Logging**: Custom XML/CSV Logger
+- **Logging**: Timber + FileLoggingTree (JSON Lines)
 - **Email**: JavaMail API
 - **Phone**: libphonenumber (Google)
 
 ### Build System
 - **Build Tool**: Gradle (Kotlin DSL)
-- **Target SDK**: 34 (Android 14)
+- **Target SDK**: 35 (Android 15)
 - **Min SDK**: 29 (Android 10)
-- **Language**: Kotlin 1.9.0
+- **Language**: Kotlin 2.1.0
 - **JDK**: Java 17
 
 ---
@@ -387,4 +387,4 @@ delay(4000)  // 4 Sekunden Warnung
 
 ---
 
-**Generiert**: 2025-01-30 | **Tool**: Claude Code
+**Generiert**: 2026-01-23 | **Tool**: Claude Code

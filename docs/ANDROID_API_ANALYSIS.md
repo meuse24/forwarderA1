@@ -12,7 +12,7 @@ Nach Analyse aller selbstgebauten Komponenten: **Die meisten Custom-Implementier
 | Komponente | Status | Android-Alternative? | Empfehlung |
 |------------|--------|---------------------|------------|
 | **EmailSender** | ✅ Behalten | ❌ Keine native API | NOTWENDIG |
-| **Logger** | ✅ Behalten | ⚠️ Logcat (ungeeignet) | NOTWENDIG |
+| **Logger (FileLoggingTree)** | ✅ Optimal | ✅ Timber + Custom Tree | MIGRIERT |
 | **PhoneNumberValidator** | ✅ Behalten | ✅ libphonenumber (verwendet!) | OPTIMAL |
 | **SharedPreferencesManager** | ✅ Behalten | ⚠️ DataStore (Migration möglich) | NICE-TO-HAVE |
 | **CarrierTrie** | ✅ Behalten | ❌ Keine API | NOTWENDIG |
@@ -54,46 +54,32 @@ class EmailSender(host, port, username, password) {
 
 ---
 
-## 2. Logger (XML-basiertes Logging)
+## 2. Logger (Timber + FileLoggingTree)
 
-### ⚠️ **Android Logcat existiert, aber ungeeignet - Behalten!**
+### ✅ **Timber mit Custom FileLoggingTree - Optimal!**
 
-**Aktuell (data/local/Logger.kt):**
+**Aktuell (data/local/FileLoggingTree.kt):**
 ```kotlin
-class Logger {
-    - Structured XML logging
+class FileLoggingTree : Timber.Tree() {
+    - JSON Lines Format (.jsonl)
     - File rotation (5MB default)
-    - HTML/CSV export
+    - CSV export
     - Async writing mit Coroutines
-    - Pattern-based highlighting
+    - Structured metadata
 }
 ```
 
-**Android-Alternativen:**
-1. **android.util.Log / Logcat**
-   - ❌ Wird bei System-Neustart gelöscht
-   - ❌ Keine strukturierte Persistenz
-   - ❌ Kein Export zu HTML/CSV
-   - ❌ Keine User-sichtbare Log-Ansicht in App
-
-2. **Timber** (Third-party Library)
-   - ⚠️ Benötigt zusätzliche Dependency
-   - ⚠️ Keine integrierte XML/HTML-Export-Funktion
-   - ⚠️ Müsste trotzdem selbst erweitert werden
-
-3. **Firebase Crashlytics**
-   - ❌ Nur für Crashes, nicht für normale Logs
-   - ❌ Cloud-Abhängigkeit
-   - ❌ Datenschutz-Bedenken
+**Update 2025-12-13:** Migration von Custom XML Logger zu Timber + FileLoggingTree
 
 **Bewertung:**
-- ✅ **Custom Logger ist perfekt für den Use-Case**
+- ✅ **Timber + Custom Tree ist die beste Lösung**
 - ✅ Persistentes Logging für User-Debugging
-- ✅ Export-Funktionen (HTML/CSV) einzigartig
+- ✅ CSV Export für Analyse
+- ✅ JSON Lines Format für einfaches Parsing
 - ✅ Structured Metadata (component, action, details)
-- ✅ Performance-optimiert (Append-only mode)
+- ✅ -350 Zeilen Code durch Migration
 
-**Empfehlung:** ✅ **BEHALTEN** - Logcat ist kein Ersatz
+**Empfehlung:** ✅ **OPTIMAL** - Bereits migriert auf Timber
 
 ---
 
@@ -285,7 +271,7 @@ requestPermission.launch(Manifest.permission.SEND_SMS)
 ### ✅ **BEHALTEN (100% richtig so):**
 
 1. **EmailSender** - Keine Alternative für automatischen SMTP-Versand
-2. **Logger** - Persistentes Logging mit Export ist einzigartig
+2. **FileLoggingTree** - Timber + JSON Lines für persistentes Logging
 3. **PhoneNumberValidator** - Verwendet bereits libphonenumber (optimal!)
 4. **CarrierTrie** - Keine API für Carrier-Erkennung
 5. **Alle Service-Komponenten** - App-spezifische Logik, muss custom sein
@@ -364,7 +350,7 @@ requestPermission.launch(Manifest.permission.SEND_SMS)
 | Komponente | Qualität | Standard-Konformität | Notwendigkeit |
 |------------|----------|---------------------|---------------|
 | EmailSender | ⭐⭐⭐⭐⭐ | ✅ JavaMail Standard | 🔴 KRITISCH |
-| Logger | ⭐⭐⭐⭐⭐ | ✅ Best Practice | 🔴 KRITISCH |
+| FileLoggingTree | ⭐⭐⭐⭐⭐ | ✅ Timber Standard | 🔴 KRITISCH |
 | PhoneNumberValidator | ⭐⭐⭐⭐⭐ | ✅ libphonenumber | 🔴 KRITISCH |
 | CarrierTrie | ⭐⭐⭐⭐⭐ | ✅ Algorithmus korrekt | 🟠 WICHTIG |
 | SharedPreferencesManager | ⭐⭐⭐⭐☆ | ✅ EncryptedSharedPrefs | 🟢 AKZEPTABEL |
@@ -386,7 +372,7 @@ Die App verwendet **genau die richtigen Custom-Implementierungen** an den richti
 **Verbleibende Custom-Implementierungen sind ALLE gerechtfertigt:**
 
 1. **EmailSender** - KEINE Android-API für automatischen SMTP-Versand
-2. **Logger** - Persistentes Logging mit Export ist einzigartig
+2. **FileLoggingTree** - Timber + JSON Lines für strukturiertes Logging
 3. **PhoneNumberValidator** - Verwendet bereits Google's libphonenumber
 4. **CarrierTrie** - KEINE API für Carrier-Erkennung
 5. **SharedPreferencesManager** - Funktioniert, DataStore wäre Nice-to-have

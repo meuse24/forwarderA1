@@ -24,9 +24,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -170,6 +172,11 @@ fun InfoScreen() {
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Text(
+                            text = stringResource(R.string.licensed_under_mit),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -221,6 +228,140 @@ fun InfoScreen() {
                         url = "https://meuse24.github.io/forwarderA1/",
                         context = context
                     )
+                }
+            }
+
+            // Open Source Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = 0.8f },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Verified,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.heading_open_source),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.open_source_license),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    RoundedCornerShape(4.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+
+                    Text(
+                        text = stringResource(R.string.open_source_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Text(
+                        text = stringResource(R.string.open_source_features_title),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        listOf(
+                            R.string.open_source_feature_1,
+                            R.string.open_source_feature_2,
+                            R.string.open_source_feature_3,
+                            R.string.open_source_feature_4
+                        ).forEach { featureRes ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "•",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = stringResource(featureRes),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, "https://github.com/meuse24/forwarderA1".toUri())
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Code,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(R.string.btn_view_source),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, "https://github.com/meuse24/forwarderA1/issues".toUri())
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.BugReport,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(R.string.btn_report_issue),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
                 }
             }
 
@@ -580,7 +721,32 @@ private fun getHtmlContent(isDarkTheme: Boolean, context: Context): String {
 
         <div class="info-item">
             <div class="info-label">${context.getString(R.string.html_label_language)}</div>
-            <div class="info-value">${context.getString(R.string.html_value_kotlin)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_kotlin)} 2.1</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">${context.getString(R.string.html_label_compose_bom)}</div>
+            <div class="info-value">2024.11.00</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">${context.getString(R.string.html_label_concurrency)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_concurrency)}</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">${context.getString(R.string.html_label_data_storage)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_encrypted_prefs)}</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">${context.getString(R.string.html_label_background_service)}</div>
+            <div class="info-value">${context.getString(R.string.html_value_foreground_service)}</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">${context.getString(R.string.html_label_jdk)}</div>
+            <div class="info-value">17</div>
         </div>
     </div>
 
@@ -648,6 +814,8 @@ private fun LinkItem(
 
 private fun getAndroidVersionName(sdkInt: Int): String {
     return when (sdkInt) {
+        36 -> "16"                                     // API 36 - Android 16
+        Build.VERSION_CODES.VANILLA_ICE_CREAM -> "15" // API 35 - Android 15
         Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> "14"  // API 34
         Build.VERSION_CODES.TIRAMISU -> "13"          // API 33
         Build.VERSION_CODES.S_V2 -> "12L/12.1"        // API 32

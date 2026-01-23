@@ -16,8 +16,10 @@ javamail = "1.6.7"
 composeIcons = "1.7.5"
 coil = "2.7.0"
 timber = "5.0.1"
+profileinstaller = "1.4.1"
 
 [libraries]
+androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
 
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 compose-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "composeIcons" }
