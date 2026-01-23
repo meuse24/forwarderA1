@@ -613,8 +613,11 @@ class ContactsViewModel(
     }
 
     private suspend fun activateForwardingInternal(contact: Contact): ForwardingResult {
-        // Loop Protection: Check if target number matches any known SIM number
-        val ownNumbers = prefsManager.getSimPhoneNumbers().values
+        // Loop Protection: Check if target number matches any known SIM number (manual OR auto-detected)
+        val storedNumbers = prefsManager.getSimPhoneNumbers().values.toSet()
+        val autoDetectedNumbers = PhoneSmsUtils.getAllSimInfo(application).mapNotNull { it.phoneNumber }.toSet()
+        
+        val ownNumbers = storedNumbers + autoDetectedNumbers
         val validator = PhoneNumberValidator(application)
 
         for (ownNumber in ownNumbers) {

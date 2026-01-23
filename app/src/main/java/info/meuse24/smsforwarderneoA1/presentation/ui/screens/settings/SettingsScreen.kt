@@ -54,6 +54,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ChangeP
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.PinDialog
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.EmailViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.SimManagementViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
 
 @Composable
@@ -61,7 +62,8 @@ fun SettingsScreen(
     viewModel: ContactsViewModel,
     emailViewModel: EmailViewModel,
     testUtilsViewModel: TestUtilsViewModel,
-    navigationViewModel: NavigationViewModel
+    navigationViewModel: NavigationViewModel,
+    simManagementViewModel: SimManagementViewModel
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val scrollState = rememberScrollState()
@@ -134,6 +136,7 @@ fun SettingsScreen(
             ) {
                 SimManagementSection(
                     viewModel = viewModel,
+                    simManagementViewModel = simManagementViewModel,
                     onFocusChanged = { isAnyFieldFocused = it },
                     sectionTitleStyle = sectionTitleStyle
                 )

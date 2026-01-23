@@ -264,6 +264,13 @@
     <string name="placeholder_phone_number_example">z.B. 0043664123456789</string>
     <string name="btn_skip">Überspringen</string>
 
+    <!-- Edit SIM Number Dialog -->
+    <string name="dialog_title_edit_sim_number">Telefonnummer bearbeiten</string>
+    <string name="msg_edit_sim_number_explanation">Sie können die Telefonnummer für diese SIM-Karte manuell ändern. Diese Nummer wird für Loop-Schutz-Prüfungen verwendet.</string>
+    <string name="msg_edit_sim_number_saved">SIM-Telefonnummer gespeichert</string>
+
+    <string name="label_manually_overridden">Manuell überschrieben</string>
+
     <!-- ==================== INFO SCREEN ==================== -->
     <string name="btn_privacy_policy">Datenschutzerklärung</string>
     <string name="heading_links">Links</string>

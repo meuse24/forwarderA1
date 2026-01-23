@@ -66,6 +66,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.SimNumb
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.UssdProgressDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupErrorDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupProgressDialog
+import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.EditSimNumberDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.CustomTopAppBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.help.HelpScreen
@@ -942,6 +943,8 @@ class MainActivity : ComponentActivity() {
         // showOwnNumberMissingDialog StateFlow entfernt
         val showSimNumbersDialog by simManagementViewModel.showSimNumbersDialog.collectAsState()
         val missingSims by simManagementViewModel.missingSims.collectAsState()
+        val editingSim by simManagementViewModel.editingSim.collectAsState()
+        val editingSimNumber by simManagementViewModel.editingSimNumber.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
 
         // Critical Permissions Dialog State
@@ -1028,7 +1031,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             "mail" -> MailScreen(emailViewModel)
-                            "setup" -> SettingsScreen(viewModel, emailViewModel, testUtilsViewModel, navigationViewModel)
+                            "setup" -> SettingsScreen(viewModel, emailViewModel, testUtilsViewModel, navigationViewModel, simManagementViewModel)
                             "log" -> LogScreen(logViewModel)
                             "info" -> InfoScreen()
                         }
@@ -1066,6 +1069,21 @@ class MainActivity : ComponentActivity() {
                     onDismiss = { simManagementViewModel.hideSimNumbersDialog() },
                     onSaveNumber = { subscriptionId, phoneNumber ->
                         simManagementViewModel.saveSimNumber(subscriptionId, phoneNumber)
+                    }
+                )
+            }
+
+            // Edit Single SIM Dialog - Shows dialog to manually edit SIM phone number
+            // Triggered by clicking on a SIM card in SimManagementSection
+            editingSim?.let { sim ->
+                EditSimNumberDialog(
+                    simInfo = sim,
+                    currentNumber = editingSimNumber,
+                    onDismiss = { simManagementViewModel.hideEditSimDialog() },
+                    onSave = { number ->
+                        simManagementViewModel.saveSimNumber(sim.subscriptionId, number)
+                        simManagementViewModel.hideEditSimDialog()
+                        SnackbarManager.showSuccess(getString(R.string.msg_edit_sim_number_saved))
                     }
                 )
             }
@@ -1416,13 +1434,13 @@ class MainActivity : ComponentActivity() {
                         message = "SIM-Nummer fehlt - Dialog wird angezeigt",
                         details = mapOf("subscription_id" to simInfo.subscriptionId)
                     )
-                } else if (!simInfo.phoneNumber.isNullOrEmpty() && stored != simInfo.phoneNumber) {
-                    // Auto-erkannte Nummer in Preferences speichern
-                    prefsManager.setSimPhoneNumber(simInfo.subscriptionId, simInfo.phoneNumber)
+                } else if (!simInfo.phoneNumber.isNullOrEmpty()) {
+                    // Auto-detected number available
+                    // Do NOT save to preferences automatically to distinguish from manual entry
                     LoggingManager.logInfo(
                         component = "MainActivity",
-                        action = "STORE_SIM_NUMBER",
-                        message = "Auto-erkannte SIM-Nummer gespeichert",
+                        action = "SIM_DETECTED",
+                        message = "SIM-Nummer automatisch erkannt",
                         details = mapOf(
                             "subscription_id" to simInfo.subscriptionId,
                             "slot" to simInfo.slotIndex,

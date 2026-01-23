@@ -184,6 +184,7 @@
     <string name="msg_not_configured">Not configured</string>
     <string name="label_auto_detected">Auto-detected</string>
     <string name="label_manually_entered">Manually entered</string>
+    <string name="label_manually_overridden">Manually overridden</string>
 
     <!-- SIM Summary -->
     <string name="heading_summary">Summary:</string>
@@ -262,6 +263,11 @@
     <string name="label_phone_number">Phone Number</string>
     <string name="placeholder_phone_number_example">e.g. 0043664123456789</string>
     <string name="btn_skip">Skip</string>
+
+    <!-- Edit SIM Number Dialog -->
+    <string name="dialog_title_edit_sim_number">Edit Phone Number</string>
+    <string name="msg_edit_sim_number_explanation">You can manually change the phone number for this SIM card. This number is used for loop protection checks.</string>
+    <string name="msg_edit_sim_number_saved">SIM phone number saved</string>
 
     <!-- ==================== INFO SCREEN ==================== -->
     <string name="btn_privacy_policy">Privacy Policy</string>

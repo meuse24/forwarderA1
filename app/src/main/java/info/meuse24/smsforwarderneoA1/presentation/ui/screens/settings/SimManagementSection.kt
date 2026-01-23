@@ -1,5 +1,6 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
@@ -24,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,16 +46,19 @@ import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings.PhoneSettingsSection
+import info.meuse24.smsforwarderneoA1.presentation.viewmodel.SimManagementViewModel
 
 @Composable
 fun SimManagementSection(
     viewModel: ContactsViewModel,
+    simManagementViewModel: SimManagementViewModel,
     onFocusChanged: (Boolean) -> Unit,
     sectionTitleStyle: TextStyle
 ) {
     val context = LocalContext.current
     var simInfoList by remember { mutableStateOf<List<SimInfo>>(emptyList()) }
-    var storedNumbers by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
+    // Use storedNumbers from ViewModel
+    val storedNumbers by simManagementViewModel.storedNumbers.collectAsState()
     var defaultSimIds by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
@@ -60,10 +66,9 @@ fun SimManagementSection(
     LaunchedEffect(Unit) {
         try {
             val sims = PhoneSmsUtils.getAllSimInfo(context)
-            val stored = AppContainer.getPrefsManagerSafe()?.getSimPhoneNumbers() ?: emptyMap()
+            // storedNumbers loaded by ViewModel init
             val defaults = PhoneSmsUtils.getDefaultSimIds(context)
             simInfoList = sims
-            storedNumbers = stored
             defaultSimIds = defaults
             isLoading = false
         } catch (e: Exception) {
@@ -149,7 +154,8 @@ fun SimManagementSection(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 4.dp)
+                        .clickable { simManagementViewModel.showEditSimDialog(sim, currentNumber) },
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
@@ -284,39 +290,83 @@ fun SimManagementSection(
                             )
                         }
 
-                        // Source Info
-                        if (currentNumber.isNotEmpty()) {
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = MaterialTheme.shapes.small,
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = if (sim.isAutoDetected) Icons.Default.Visibility else Icons.Default.Edit,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (sim.isAutoDetected) {
-                                    stringResource(R.string.label_auto_detected)
-                                } else {
-                                    stringResource(R.string.label_manually_entered)
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                            }
-                        }
-                    }
-                }
-            }
+                                                                        // Source Info
+
+                                                                        if (currentNumber.isNotEmpty()) {
+
+                                                                            // Determine Status
+
+                                                                            val hasSystemNumber = !sim.phoneNumber.isNullOrEmpty()
+
+                                                                            val hasStoredNumber = storedNumbers.containsKey(sim.subscriptionId)
+
+                                                
+
+                                                                            val (labelRes, icon) = when {
+
+                                                                                hasSystemNumber && hasStoredNumber -> Pair(R.string.label_manually_overridden, Icons.Default.Edit)
+
+                                                                                hasStoredNumber -> Pair(R.string.label_manually_entered, Icons.Default.Keyboard)
+
+                                                                                else -> Pair(R.string.label_auto_detected, Icons.Default.Visibility)
+
+                                                                            }
+
+                                                
+
+                                                                            Surface(
+
+                                                        modifier = Modifier.fillMaxWidth(),
+
+                                                        shape = MaterialTheme.shapes.small,
+
+                                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+
+                                                    ) {
+
+                                                        Row(
+
+                                                            modifier = Modifier.padding(12.dp),
+
+                                                            verticalAlignment = Alignment.CenterVertically
+
+                                                        ) {
+
+                                                            Icon(
+
+                                                                imageVector = icon,
+
+                                                                contentDescription = null,
+
+                                                                modifier = Modifier.size(16.dp),
+
+                                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+
+                                                            )
+
+                                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                                            Text(
+
+                                                                text = stringResource(labelRes),
+
+                                                                style = MaterialTheme.typography.bodySmall,
+
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                                                            )
+
+                                                        }
+
+                                                    }
+
+                                                }
+
+                                            }
+
+                                        }
+
+                                    }
 
             // Summary info
             if (simInfoList.isNotEmpty()) {

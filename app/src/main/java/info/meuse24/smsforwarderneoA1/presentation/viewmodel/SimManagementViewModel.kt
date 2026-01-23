@@ -32,6 +32,34 @@ class SimManagementViewModel(
     private val _showSimNumbersDialog = MutableStateFlow(false)
     val showSimNumbersDialog: StateFlow<Boolean> = _showSimNumbersDialog.asStateFlow()
 
+    // Edit Single SIM Dialog State
+    private val _editingSim = MutableStateFlow<SimInfo?>(null)
+    val editingSim: StateFlow<SimInfo?> = _editingSim.asStateFlow()
+    
+    private val _editingSimNumber = MutableStateFlow("")
+    val editingSimNumber: StateFlow<String> = _editingSimNumber.asStateFlow()
+
+    private val _storedNumbers = MutableStateFlow<Map<Int, String>>(emptyMap())
+    val storedNumbers: StateFlow<Map<Int, String>> = _storedNumbers.asStateFlow()
+
+    init {
+        loadStoredNumbers()
+    }
+
+    fun loadStoredNumbers() {
+        try {
+            _storedNumbers.value = prefsManager.getSimPhoneNumbers()
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "SimManagementViewModel",
+                action = "LOAD_NUMBERS_ERROR",
+                message = "Fehler beim Laden der gespeicherten SIM-Nummern",
+                error = e
+            )
+            _storedNumbers.value = emptyMap()
+        }
+    }
+
     /**
      * Request user to input phone numbers for missing SIM cards.
      *
@@ -42,6 +70,22 @@ class SimManagementViewModel(
     fun requestMissingSimNumbers(sims: List<SimInfo>) {
         _missingSims.value = sims
         _showSimNumbersDialog.value = true
+    }
+
+    /**
+     * Show dialog to edit a specific SIM number.
+     */
+    fun showEditSimDialog(sim: SimInfo, currentNumber: String) {
+        _editingSim.value = sim
+        _editingSimNumber.value = currentNumber
+    }
+
+    /**
+     * Hide the edit SIM dialog.
+     */
+    fun hideEditSimDialog() {
+        _editingSim.value = null
+        _editingSimNumber.value = ""
     }
 
     /**
@@ -65,6 +109,7 @@ class SimManagementViewModel(
         try {
             if (phoneNumber.isNotBlank()) {
                 prefsManager.setSimPhoneNumber(subscriptionId, phoneNumber.trim())
+                loadStoredNumbers()
                 LoggingManager.logInfo(
                     component = "SimManagementViewModel",
                     action = "SAVE_SIM_NUMBER",
