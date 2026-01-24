@@ -28,6 +28,7 @@ import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import info.meuse24.smsforwarderneoA1.util.permission.PermissionHelper
 import info.meuse24.smsforwarderneoA1.util.phone.CarrierTrie
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicInteger
 
 enum class UssdRequestType {
     ACTIVATE_FORWARDING,
@@ -50,6 +51,13 @@ data class UssdRequestResult(
 class PhoneSmsUtils private constructor() {
 
     companion object {
+
+        /**
+         * Thread-safe Counter für eindeutige PendingIntent requestCodes.
+         * Vermeidet Kollisionen bei schnellen aufeinanderfolgenden SMS-Sends.
+         * Int overflow ist unkritisch - Android behandelt requestCodes als opaque IDs.
+         */
+        private val pendingIntentRequestCode = AtomicInteger(0)
 
         /**
          * Anonymisiert SMS-Text für Logging-Zwecke.
@@ -236,7 +244,7 @@ class PhoneSmsUtils private constructor() {
                     for (i in parts.indices) {
                         val sentIntent = PendingIntent.getBroadcast(
                             context,
-                            System.currentTimeMillis().toInt() + i,  // Eindeutiger requestCode
+                            pendingIntentRequestCode.getAndIncrement(),
                             Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
                                 putExtra("part_index", i)
                                 putExtra("total_parts", parts.size)
@@ -246,7 +254,7 @@ class PhoneSmsUtils private constructor() {
                         )
                         val deliveredIntent = PendingIntent.getBroadcast(
                             context,
-                            System.currentTimeMillis().toInt() + i + 1000,  // Eindeutiger requestCode
+                            pendingIntentRequestCode.getAndIncrement(),
                             Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
                                 putExtra("part_index", i)
                                 putExtra("total_parts", parts.size)
@@ -283,7 +291,7 @@ class PhoneSmsUtils private constructor() {
                     // Single SMS - direkt mit text, kein Umweg über parts[0]
                     val sentIntent = PendingIntent.getBroadcast(
                         context,
-                        System.currentTimeMillis().toInt(),  // Eindeutiger requestCode
+                        pendingIntentRequestCode.getAndIncrement(),
                         Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
                             putExtra("part_index", -1)  // Single SMS = -1
                             putExtra("total_parts", 1)
@@ -293,7 +301,7 @@ class PhoneSmsUtils private constructor() {
                     )
                     val deliveredIntent = PendingIntent.getBroadcast(
                         context,
-                        System.currentTimeMillis().toInt() + 1000,  // Eindeutiger requestCode
+                        pendingIntentRequestCode.getAndIncrement(),
                         Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
                             putExtra("part_index", -1)  // Single SMS = -1
                             putExtra("total_parts", 1)
@@ -412,7 +420,7 @@ class PhoneSmsUtils private constructor() {
                     for (i in parts.indices) {
                         val sentIntent = PendingIntent.getBroadcast(
                             context,
-                            System.currentTimeMillis().toInt() + i,
+                            pendingIntentRequestCode.getAndIncrement(),
                             Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
                                 putExtra("part_index", i)
                                 putExtra("total_parts", parts.size)
@@ -425,7 +433,7 @@ class PhoneSmsUtils private constructor() {
 
                         val deliveredIntent = PendingIntent.getBroadcast(
                             context,
-                            System.currentTimeMillis().toInt() + i + 1000,
+                            pendingIntentRequestCode.getAndIncrement(),
                             Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
                                 putExtra("part_index", i)
                                 putExtra("total_parts", parts.size)
@@ -462,7 +470,7 @@ class PhoneSmsUtils private constructor() {
                     // Single SMS - direkt mit text, kein Umweg über parts[0]
                     val sentIntent = PendingIntent.getBroadcast(
                         context,
-                        System.currentTimeMillis().toInt(),
+                        pendingIntentRequestCode.getAndIncrement(),
                         Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
                             putExtra("part_index", -1)
                             putExtra("total_parts", 1)
@@ -474,7 +482,7 @@ class PhoneSmsUtils private constructor() {
 
                     val deliveredIntent = PendingIntent.getBroadcast(
                         context,
-                        System.currentTimeMillis().toInt() + 1000,
+                        pendingIntentRequestCode.getAndIncrement(),
                         Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
                             putExtra("part_index", -1)
                             putExtra("total_parts", 1)

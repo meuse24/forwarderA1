@@ -30,6 +30,7 @@ import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
@@ -44,17 +45,18 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.mail.MessagingException
 
 data class SmsMessagePart(
     val body: String,
     val timestamp: Long,
-    val referenceNumber: Int,  // UDH concat reference number (or UUID hash for single-part)
-    val sequencePosition: Int,
+    val referenceNumber: Int,      // Hash der intentId - gruppiert Parts desselben Intents
+    val sequencePosition: Int,     // Array-Index aus getMessagesFromIntent() = Reihenfolge der Parts
     val totalParts: Int,
     val sender: String,
     val subscriptionId: Int = -1,  // -1 = unbekannt/nicht verfügbar
-    val intentId: String  // Unique ID per received Intent (prevents merging unrelated messages)
+    val intentId: String           // Unique UUID pro empfangenem Intent
 )
 
 class SmsForegroundService : Service() {
@@ -82,8 +84,11 @@ class SmsForegroundService : Service() {
         @Volatile
         private var isRunning = false
 
-        // Retry-Counter für fehlerhafte SMS-Verarbeitungen
-        private val retryCounter = mutableMapOf<String, Int>()
+        // Retry-Counter für fehlerhafte SMS-Verarbeitungen (thread-safe)
+        private val retryCounter = ConcurrentHashMap<String, Int>()
+
+        // Aktive Retry-Jobs tracken (verhindert Double-Schedule)
+        private val activeRetryJobs = ConcurrentHashMap<String, Job>()
 
         fun startService(context: Context) {
             if (!isRunning) {
@@ -327,14 +332,14 @@ class SmsForegroundService : Service() {
                 // Generate unique ID for this Intent to prevent merging unrelated messages
                 val intentId = UUID.randomUUID().toString()
 
-                val messageParts = messages.mapNotNull { smsMessage ->
+                val messageParts = messages.mapIndexedNotNull { index, smsMessage ->
                     smsMessage?.originatingAddress?.let { sender ->
                         smsMessage.messageBody?.let { body ->
                             SmsMessagePart(
                                 body = body,
                                 timestamp = smsMessage.timestampMillis,
-                                referenceNumber = generateMessageGroupId(smsMessage, intentId),
-                                sequencePosition = smsMessage.indexOnIcc,
+                                referenceNumber = intentId.hashCode(),
+                                sequencePosition = index,  // Array-Index = natürliche Reihenfolge der Multipart-Teile
                                 totalParts = messages.size,
                                 sender = sender,
                                 subscriptionId = subscriptionId,
@@ -568,8 +573,22 @@ class SmsForegroundService : Service() {
         // Eindeutiger Key für diese SMS-Gruppe
         val retryKey = "${sender}_${parts.hashCode()}"
 
-        // Aktueller Retry-Count für diese Nachricht
-        val currentRetryCount = retryCounter.getOrDefault(retryKey, 0) + 1
+        // Prüfe ob bereits ein Retry-Job für diesen Key läuft (verhindert Double-Schedule)
+        val existingJob = activeRetryJobs[retryKey]
+        if (existingJob?.isActive == true) {
+            LoggingManager.logDebug(
+                component = "SmsForegroundService",
+                action = "RETRY_ALREADY_SCHEDULED",
+                message = "Retry-Job läuft bereits für diesen Key, überspringe",
+                details = mapOf("retry_key" to retryKey)
+            )
+            return
+        }
+
+        // Atomares Increment des Retry-Counters (thread-safe)
+        val currentRetryCount = retryCounter.compute(retryKey) { _, currentValue ->
+            (currentValue ?: 0) + 1
+        }!!
 
         if (currentRetryCount > MAX_RETRIES) {
             LoggingManager.logError(
@@ -583,12 +602,10 @@ class SmsForegroundService : Service() {
                 )
             )
             retryCounter.remove(retryKey)
+            activeRetryJobs.remove(retryKey)
             SnackbarManager.showError(getString(R.string.snackbar_sms_retry_failed, sender, MAX_RETRIES))
             return
         }
-
-        // Speichere aktuellen Retry-Count
-        retryCounter[retryKey] = currentRetryCount
 
         // Exponentielles Backoff: 5s, 10s, 15s
         val delayMs = INITIAL_RETRY_DELAY * currentRetryCount
@@ -605,11 +622,12 @@ class SmsForegroundService : Service() {
             )
         )
 
-        serviceScope.launch {
+        // Job starten und tracken
+        val job = serviceScope.launch {
             delay(delayMs)
             try {
                 processMessageGroup(sender, parts)
-                // Bei Erfolg: Counter zurücksetzen
+                // Bei Erfolg: Counter und Job-Tracking zurücksetzen
                 retryCounter.remove(retryKey)
             } catch (e: Exception) {
                 LoggingManager.logError(
@@ -622,8 +640,19 @@ class SmsForegroundService : Service() {
                         "retry_attempt" to currentRetryCount
                     )
                 )
+                // Job-Tracking entfernen BEVOR handleProcessingError aufgerufen wird,
+                // damit scheduleRetry einen neuen Job starten kann (Double-Schedule-Schutz)
+                activeRetryJobs.remove(retryKey)
+                // Retry-Kette fortsetzen (ruft ggf. erneut scheduleRetry auf, bis MAX_RETRIES)
+                handleProcessingError(sender, parts, e)
+            } finally {
+                // Cleanup für Erfolgsfall (bei Exception bereits im catch entfernt)
+                activeRetryJobs.remove(retryKey)
             }
         }
+
+        // Job in Map speichern für Double-Schedule-Prüfung
+        activeRetryJobs[retryKey] = job
     }
 
     private fun buildForwardedSmsMessage(
@@ -794,37 +823,6 @@ class SmsForegroundService : Service() {
                 )
             )
             throw e
-        }
-    }
-
-    /**
-     * Generate a stable group ID for multi-part SMS messages.
-     *
-     * FIXED (v2): Now uses Intent-specific UUID instead of time window.
-     * This prevents unrelated single-part messages from being merged.
-     *
-     * Strategy:
-     * 1. Try to use indexOnIcc (sequence number in UDH) if available
-     * 2. Fall back to intentId hash (unique per Intent broadcast)
-     *
-     * This ensures:
-     * - Multi-part SMS from same Intent are grouped together
-     * - Single-part SMS from different Intents are NOT merged
-     * - No time-window collisions between unrelated messages
-     */
-    private fun generateMessageGroupId(message: SmsMessage, intentId: String): Int {
-        // indexOnIcc returns -1 for messages not stored on SIM
-        // For multi-part SMS, it typically contains the sequence number
-        val indexOnIcc = message.indexOnIcc
-
-        return if (indexOnIcc > 0) {
-            // Multi-part SMS: use indexOnIcc as part of group ID
-            // This provides stable grouping across message parts
-            indexOnIcc
-        } else {
-            // Single-part SMS or no SIM storage: use intentId hash
-            // Each Intent gets a unique UUID, preventing merging of unrelated messages
-            intentId.hashCode()
         }
     }
 
