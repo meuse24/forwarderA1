@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
  * Shared animation utilities for dialog components.
  *
  * Provides reusable animation composables to eliminate code duplication
- * across different dialog implementations (e.g., MmiWarningDialog, LoopProtectionDialog).
+ * across different dialog implementations (for example, LoopProtectionDialog).
  */
 
 /**

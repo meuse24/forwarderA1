@@ -12,6 +12,18 @@ import androidx.lifecycle.viewModelScope
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
 import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.MmiExecutionMode
+import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
+import info.meuse24.smsforwarderneoA1.domain.model.PersistedMmiOperation
+import info.meuse24.smsforwarderneoA1.domain.model.MmiOperationState
+import info.meuse24.smsforwarderneoA1.domain.model.MmiEvidence
+import info.meuse24.smsforwarderneoA1.domain.model.MmiOperationReducer
+import info.meuse24.smsforwarderneoA1.domain.model.MmiOperationPolicy
+import info.meuse24.smsforwarderneoA1.domain.model.ForwardingResolutionReducer
+import info.meuse24.smsforwarderneoA1.domain.model.DialPath
+import info.meuse24.smsforwarderneoA1.domain.model.MmiAuditEntry
+import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
+import java.util.UUID
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
@@ -24,6 +36,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 /**
@@ -34,9 +48,13 @@ class ContactsViewModel(
     private val application: Application,
     private val prefsManager: SharedPreferencesManager
 ) : AndroidViewModel(application) {
+    private companion object {
+        const val VOICE_MMI_EVIDENCE_TIMEOUT_MS = 20_000L
+    }
 
     // Callbacks
     var onDialMmiCode: ((String) -> Unit)? = null
+    var onDialStatusCode: ((String) -> Unit)? = null
     var onLaunchContactPicker: (() -> Unit)? = null
     var onErrorOccurred: ((NavigationViewModel.ErrorDialogState) -> Unit)? = null
 
@@ -80,9 +98,6 @@ class ContactsViewModel(
     private val _internationalDialPrefix = MutableStateFlow(prefsManager.getInternationalDialPrefix())
     val internationalDialPrefix: StateFlow<String> = _internationalDialPrefix.asStateFlow()
 
-    private val _mmiWarningEnabled = MutableStateFlow(prefsManager.isMmiWarningEnabled())
-    val mmiWarningEnabled: StateFlow<Boolean> = _mmiWarningEnabled.asStateFlow()
-
     private val _maxLogSizeMB = MutableStateFlow(prefsManager.getMaxLogSizeMB())
     val maxLogSizeMB: StateFlow<Int> = _maxLogSizeMB.asStateFlow()
 
@@ -91,14 +106,6 @@ class ContactsViewModel(
     // Loop Protection Dialog State
     private val _showLoopProtectionDialog = MutableStateFlow<LoopProtectionDialogData?>(null)
     val showLoopProtectionDialog: StateFlow<LoopProtectionDialogData?> = _showLoopProtectionDialog.asStateFlow()
-
-    // MMI Warning Dialog State
-    private val _showMmiWarningDialog = MutableStateFlow(false)
-    val showMmiWarningDialog: StateFlow<Boolean> = _showMmiWarningDialog.asStateFlow()
-
-    // MMI Confirmation Dialog State
-    private val _mmiConfirmationState = MutableStateFlow<MmiConfirmationState?>(null)
-    val mmiConfirmationState: StateFlow<MmiConfirmationState?> = _mmiConfirmationState.asStateFlow()
 
     // USSD Progress Dialog State
     private val _showUssdInProgress = MutableStateFlow(false)
@@ -130,6 +137,22 @@ class ContactsViewModel(
 
     private val _pendingForwardingRequest = MutableStateFlow<PendingForwardingRequest?>(null)
     val pendingForwardingRequest: StateFlow<PendingForwardingRequest?> = _pendingForwardingRequest.asStateFlow()
+    private var pendingMmiWatchdog: Job? = null
+    private var voiceMmiEvidenceWatchdog: Job? = null
+    private var settledVoiceMmiOperation: PendingForwardingRequest? = null
+    private var mmiReservationInProgress = false
+    private var lastCompletedForwardingRequest: PendingForwardingRequest? = null
+
+    private val _forwardingVerification = MutableStateFlow(prefsManager.getForwardingVerification())
+    val forwardingVerification: StateFlow<ForwardingVerification> = _forwardingVerification.asStateFlow()
+
+    /**
+     * The "report failure" hint is deliberately session-local.  The persisted
+     * verification is status information, not an instruction to re-show a
+     * completed-operation hint after an app restart.
+     */
+    private val _showTransientForwardingHint = MutableStateFlow(false)
+    val showTransientForwardingHint: StateFlow<Boolean> = _showTransientForwardingHint.asStateFlow()
 
     class Factory : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -155,20 +178,31 @@ class ContactsViewModel(
     }
 
     data class PendingForwardingRequest(
+        val id: String = UUID.randomUUID().toString(),
         val action: ForwardingAction,
         val contact: Contact?,
         val code: String,
-        val isUssd: Boolean
+        val executionMode: MmiExecutionMode,
+        val dialedAtMillis: Long = System.currentTimeMillis(),
+        val state: MmiOperationState = MmiOperationState.DIALING,
+        val verification: ForwardingVerification = ForwardingVerification.NOT_CHECKED,
+        val evidence: MmiEvidence = MmiEvidence(),
+        val targetSubscriptionId: Int? = null,
+        val dialPath: DialPath = DialPath.NOT_DISPATCHED,
+        val userMessage: String? = null
+    ) {
+        val isUssd: Boolean get() = executionMode == MmiExecutionMode.USSD_CALLBACK
+    }
+
+    private fun PendingForwardingRequest.toPersistedOperation() = PersistedMmiOperation(
+        id, action.name, code, executionMode, dialedAtMillis,
+        contact?.name, contact?.phoneNumber, contact?.description, state, verification, evidence,
+        targetSubscriptionId, dialPath, userMessage
     )
 
     data class LoopProtectionDialogData(
         val targetNumber: String,
         val ownNumber: String
-    )
-
-    data class MmiConfirmationState(
-        val contactName: String?,
-        val contactNumber: String?
     )
 
     init {
@@ -222,10 +256,166 @@ class ContactsViewModel(
                 message = "Gespeicherter Kontakt wiederhergestellt",
                 details = mapOf(
                     "contact" to savedContactName,
-                    "number" to savedPhoneNumber,
+                    "number" to MmiCodeMasker.maskNumber(savedPhoneNumber),
                     "forwarding_active" to _forwardingActive.value
                 )
             )
+        }
+        restorePendingForwardingRequest()
+    }
+
+    private fun restorePendingForwardingRequest() {
+        val stored = prefsManager.getPendingMmiRequest() ?: return
+        if (stored.state == MmiOperationState.SETTLED) {
+            prefsManager.clearPendingMmiRequest()
+            return
+        }
+        val action = runCatching { ForwardingAction.valueOf(stored.action) }.getOrElse {
+            prefsManager.clearPendingMmiRequest()
+            LoggingManager.logWarning(component = "ContactsViewModel", action = "MMI_OPERATION_INVALID", message = "Ungültigen persistierten MMI-Vorgang verworfen")
+            return
+        }
+        val pending = PendingForwardingRequest(
+            id = stored.id,
+            action = action,
+            contact = stored.contactNumber?.let { Contact(stored.contactName.takeIf { !it.isNullOrBlank() } ?: "Unbekannt", it, stored.contactDescription ?: it) },
+            code = stored.code,
+            executionMode = stored.mode,
+            dialedAtMillis = stored.dialedAtMillis,
+            state = stored.state,
+            verification = stored.verification,
+            evidence = stored.evidence,
+            targetSubscriptionId = stored.targetSubscriptionId,
+            dialPath = stored.dialPath,
+            userMessage = stored.userMessage
+        )
+        if (MmiOperationPolicy.isExpired(pending.executionMode, pending.dialedAtMillis, System.currentTimeMillis())) {
+            prefsManager.clearPendingMmiRequest()
+            _forwardingVerification.value = ForwardingVerification.DIAL_FAILED
+            prefsManager.saveForwardingVerification(ForwardingVerification.DIAL_FAILED)
+            LoggingManager.logWarning(component = "ContactsViewModel", action = "MMI_OPERATION_EXPIRED", message = "Wiederhergestellter MMI-Vorgang ist abgelaufen")
+        } else {
+            _pendingForwardingRequest.value = pending
+            schedulePendingMmiWatchdog(pending)
+            LoggingManager.logInfo(component = "ContactsViewModel", action = "MMI_OPERATION_RESTORED", message = "Laufender MMI-Vorgang wiederhergestellt")
+        }
+    }
+
+    private fun schedulePendingMmiWatchdog(pending: PendingForwardingRequest) {
+        pendingMmiWatchdog?.cancel()
+        pendingMmiWatchdog = viewModelScope.launch {
+            val timeout = MmiOperationPolicy.timeoutFor(pending.executionMode)
+            delay((pending.dialedAtMillis + timeout - System.currentTimeMillis()).coerceAtLeast(0L))
+            if (_pendingForwardingRequest.value?.id == pending.id) {
+                if (pending.isUssd) {
+                    val reduced = MmiOperationReducer.withTimeout(pending.toPersistedOperation())
+                    val updated = pending.copy(
+                        state = reduced.state,
+                        verification = reduced.verification,
+                        evidence = reduced.evidence
+                    )
+                    _pendingForwardingRequest.value = updated
+                    prefsManager.savePendingMmiRequest(updated.toPersistedOperation())
+                    dismissUssdProgressDialog()
+                    resolvePendingForwardingResult(pending.id, MmiOperationPolicy.shouldContinueSmsForwardingAfterTimeout(pending.executionMode), reduced.verification, "USSD_TIMEOUT_UNKNOWN_NO_RESPONSE", "Keine USSD-Antwort empfangen")
+                } else {
+                    val reduced = MmiOperationReducer.withTimeout(pending.toPersistedOperation())
+                    val updated = pending.copy(
+                        state = reduced.state,
+                        verification = reduced.verification,
+                        evidence = reduced.evidence
+                    )
+                    _pendingForwardingRequest.value = updated
+                    prefsManager.savePendingMmiRequest(updated.toPersistedOperation())
+                    resolvePendingForwardingResult(pending.id, MmiOperationPolicy.shouldContinueSmsForwardingAfterTimeout(pending.executionMode), reduced.verification, "MMI_OPERATION_TIMEOUT", "MMI-Vorgang ohne Ergebnis abgelaufen")
+                }
+            }
+        }
+    }
+
+    fun recordUssdEvidence(operationId: String, response: String, success: Boolean) {
+        val current = _pendingForwardingRequest.value
+            ?.takeIf { MmiOperationPolicy.matchesPendingOperation(it.id, operationId) } ?: return
+        val reduced = MmiOperationReducer.withUssdResponse(
+            current.toPersistedOperation(), MmiCodeMasker.maskFreeText(response), success
+        )
+        val updated = current.copy(
+            state = reduced.state,
+            verification = reduced.verification,
+            evidence = reduced.evidence
+        )
+        _pendingForwardingRequest.value = updated
+        prefsManager.savePendingMmiRequest(updated.toPersistedOperation())
+    }
+
+    fun recordDialDispatch(operationId: String, subscriptionId: Int, path: DialPath, message: String? = null) {
+        val current = _pendingForwardingRequest.value?.takeIf { it.id == operationId } ?: return
+        val updated = current.copy(targetSubscriptionId = subscriptionId, dialPath = path, userMessage = message)
+        _pendingForwardingRequest.value = updated
+        prefsManager.savePendingMmiRequest(updated.toPersistedOperation())
+    }
+
+    fun recordVoiceMmiEvidence(offHookAtMillis: Long?, idleAtMillis: Long) {
+        val current = _pendingForwardingRequest.value?.takeIf { !it.isUssd }
+            ?: settledVoiceMmiOperation ?: return
+        val reduced = MmiOperationReducer.withCallState(current.toPersistedOperation(), offHookAtMillis, idleAtMillis)
+        val updated = current.copy(evidence = reduced.evidence)
+        if (_pendingForwardingRequest.value?.id == current.id) {
+            _pendingForwardingRequest.value = updated
+            prefsManager.savePendingMmiRequest(updated.toPersistedOperation())
+        } else {
+            settledVoiceMmiOperation = updated
+        }
+        LoggingManager.logInfo(
+            component = "ContactsViewModel",
+            action = "MMI_CALL_EVIDENCE",
+            message = "MMI-Anrufstatus als Evidenz erfasst",
+            details = mapOf(
+                "call_observed" to updated.evidence.callObserved,
+                "call_duration_ms" to (updated.evidence.callDurationMs ?: "unknown")
+            )
+        )
+    }
+
+    /**
+     * Shows the optional failure-report hint only after the observed voice-MMI
+     * call has ended.  The forwarding workflow itself has already continued
+     * when Telecom accepted the request; this only controls the UI timing.
+     */
+    fun showVoiceMmiCompletionHint() {
+        val settled = settledVoiceMmiOperation
+            ?.takeIf { it.verification == ForwardingVerification.ASSUMED_SUCCESS }
+            ?: return
+        _showTransientForwardingHint.value = true
+        LoggingManager.logInfo(
+            component = "ContactsViewModel",
+            action = "MMI_COMPLETION_HINT_SHOWN",
+            message = "Hinweis zur MMI-Rückmeldung nach Anrufende aktiviert",
+            details = mapOf("operation_id" to settled.id)
+        )
+    }
+
+    private fun startVoiceMmiEvidenceWatchdog(operation: PendingForwardingRequest) {
+        voiceMmiEvidenceWatchdog?.cancel()
+        settledVoiceMmiOperation = operation
+        voiceMmiEvidenceWatchdog = viewModelScope.launch {
+            delay(VOICE_MMI_EVIDENCE_TIMEOUT_MS)
+            val current = settledVoiceMmiOperation?.takeIf { it.id == operation.id } ?: return@launch
+            if (!current.evidence.callObserved) {
+                val reduced = MmiOperationReducer.withMissingCallObservation(current.toPersistedOperation())
+                settledVoiceMmiOperation = current.copy(evidence = reduced.evidence)
+                LoggingManager.logWarning(
+                    component = "ContactsViewModel",
+                    action = "MMI_CALL_EVIDENCE_TIMEOUT",
+                    message = "Kein OFFHOOK innerhalb des Evidenzfensters beobachtet",
+                    details = mapOf("operation_id" to operation.id)
+                )
+            }
+            // Call-state callbacks are global. Do not attribute later, unrelated calls
+            // to this MMI operation once its short evidence window has elapsed.
+            if (settledVoiceMmiOperation?.id == operation.id) {
+                settledVoiceMmiOperation = null
+            }
         }
     }
 
@@ -374,7 +564,7 @@ class ContactsViewModel(
                                 message = "Kontakt aus Picker extrahiert",
                                 details = mapOf(
                                     "name" to displayName,
-                                    "number" to phoneNumber,
+                                    "number" to MmiCodeMasker.maskNumber(phoneNumber),
                                     "type" to typeLabel
                                 )
                             )
@@ -422,7 +612,7 @@ class ContactsViewModel(
         }
     }
 
-    fun resolvePendingForwardingResult(success: Boolean, source: String, message: String? = null) {
+    fun resolvePendingForwardingResult(operationId: String, success: Boolean, verification: ForwardingVerification, source: String, message: String? = null) {
         val pending = _pendingForwardingRequest.value ?: run {
             LoggingManager.logWarning(
                 component = "ContactsViewModel",
@@ -436,28 +626,61 @@ class ContactsViewModel(
             )
             return
         }
+        if (!MmiOperationPolicy.matchesPendingOperation(pending.id, operationId)) {
+            LoggingManager.logWarning(component = "ContactsViewModel", action = "FORWARDING_RESULT_IGNORED", message = "Verspätetes Ergebnis für anderen MMI-Vorgang ignoriert", details = mapOf("operation_id" to operationId))
+            return
+        }
+
+        if (!pending.isUssd && verification == ForwardingVerification.ASSUMED_SUCCESS) {
+            startVoiceMmiEvidenceWatchdog(
+                pending.copy(
+                    state = MmiOperationState.SETTLED,
+                    verification = verification
+                )
+            )
+        }
+
+        lastCompletedForwardingRequest = pending
 
         _pendingForwardingRequest.value = null
+        pendingMmiWatchdog?.cancel()
+        mmiReservationInProgress = false
+        prefsManager.clearPendingMmiRequest()
+        _forwardingVerification.value = verification
+        // For voice MMI, wait for the observed call end before showing the
+        // short hint. USSD has a real callback and can show it immediately.
+        _showTransientForwardingHint.value = pending.isUssd &&
+            verification == ForwardingVerification.ASSUMED_SUCCESS
+        prefsManager.saveForwardingVerification(verification)
         val reason = message?.takeIf { it.isNotBlank() }
             ?: application.getString(R.string.snackbar_forwarding_unknown_reason)
+        val resolution = ForwardingResolutionReducer.resolve(pending.action.name, success)
+        prefsManager.appendMmiAudit(
+            MmiAuditEntry(
+                timestampMillis = System.currentTimeMillis(), operationId = pending.id, action = pending.action.name,
+                executionMode = pending.executionMode, targetSubscriptionId = pending.targetSubscriptionId,
+                dialPath = pending.dialPath, verification = verification, evidence = pending.evidence,
+                message = MmiCodeMasker.maskFreeText(reason)
+            )
+        )
 
         when (pending.action) {
             ForwardingAction.ACTIVATE -> {
-                if (success) {
+                if (resolution.forwardingActive == true) {
                     val contact = pending.contact
-                    contact?.let {
+                    if (resolution.contactHandling == ForwardingResolutionReducer.ContactHandling.SAVE_PENDING_CONTACT) contact?.let {
                         viewModelScope.launch {
                             _selectedContact.value = it
-                            _forwardingActive.value = true
+                            _forwardingActive.value = resolution.forwardingActive
                         }
                         prefsManager.saveSelectedPhoneNumber(it.phoneNumber)
                         prefsManager.saveContactName(it.name)
                     } ?: run {
                         viewModelScope.launch {
-                            _forwardingActive.value = true
+                            _forwardingActive.value = resolution.forwardingActive
                         }
                     }
-                    prefsManager.saveForwardingStatus(true)
+                    prefsManager.saveForwardingStatus(resolution.forwardingActive)
                     val notificationMessage = if (contact != null) {
                         "Weiterleitung aktiviert zu ${contact.name} (${contact.phoneNumber})"
                     } else {
@@ -467,14 +690,15 @@ class ContactsViewModel(
 
                     LoggingManager.logInfo(
                         component = "ContactsViewModel",
-                        action = "FORWARDING_CONFIRMED",
-                        message = "Aktivierung der Weiterleitung bestätigt",
+                        action = if (verification == ForwardingVerification.CONFIRMED_SUCCESS) "FORWARDING_CONFIRMED" else "FORWARDING_ASSUMED",
+                        message = if (verification == ForwardingVerification.CONFIRMED_SUCCESS) "Aktivierung der Weiterleitung bestätigt" else "Aktivierung der Weiterleitung angenommen",
                         details = mapOf(
                             "source" to source,
-                            "code" to pending.code,
-                            "is_ussd" to pending.isUssd,
+                            "code" to MmiCodeMasker.mask(pending.code),
+                            "execution_mode" to pending.executionMode.name,
                             "contact" to (pending.contact?.name ?: "unknown"),
-                            "number" to (pending.contact?.phoneNumber ?: "unknown")
+                            "number" to (pending.contact?.phoneNumber?.takeIf { it.isNotBlank() }
+                                ?.let(MmiCodeMasker::maskNumber) ?: "unknown")
                         )
                     )
                 } else {
@@ -484,8 +708,8 @@ class ContactsViewModel(
                         message = "Aktivierung der Weiterleitung nicht bestätigt",
                         details = mapOf(
                             "source" to source,
-                            "code" to pending.code,
-                            "is_ussd" to pending.isUssd,
+                            "code" to MmiCodeMasker.mask(pending.code),
+                            "execution_mode" to pending.executionMode.name,
                             "reason" to reason
                         )
                     )
@@ -496,23 +720,25 @@ class ContactsViewModel(
             }
 
             ForwardingAction.DEACTIVATE -> {
-                if (success) {
+                if (resolution.forwardingActive == false) {
                     viewModelScope.launch {
                         _selectedContact.value = null
-                        _forwardingActive.value = false
+                        _forwardingActive.value = resolution.forwardingActive
                     }
-                    prefsManager.clearSelection()
-                    prefsManager.saveForwardingStatus(false)
+                    if (resolution.contactHandling == ForwardingResolutionReducer.ContactHandling.CLEAR) {
+                        prefsManager.clearSelection()
+                    }
+                    prefsManager.saveForwardingStatus(resolution.forwardingActive)
                     updateNotification("Weiterleitung deaktiviert")
 
                     LoggingManager.logInfo(
                         component = "ContactsViewModel",
-                        action = "FORWARDING_CONFIRMED",
-                        message = "Deaktivierung der Weiterleitung bestätigt",
+                        action = if (verification == ForwardingVerification.CONFIRMED_SUCCESS) "FORWARDING_CONFIRMED" else "FORWARDING_ASSUMED",
+                        message = if (verification == ForwardingVerification.CONFIRMED_SUCCESS) "Deaktivierung der Weiterleitung bestätigt" else "Deaktivierung der Weiterleitung angenommen",
                         details = mapOf(
                             "source" to source,
-                            "code" to pending.code,
-                            "is_ussd" to pending.isUssd,
+                            "code" to MmiCodeMasker.mask(pending.code),
+                            "execution_mode" to pending.executionMode.name,
                             "previous_contact" to (pending.contact?.name ?: "unknown")
                         )
                     )
@@ -523,8 +749,8 @@ class ContactsViewModel(
                         message = "Deaktivierung der Weiterleitung nicht bestätigt",
                         details = mapOf(
                             "source" to source,
-                            "code" to pending.code,
-                            "is_ussd" to pending.isUssd,
+                            "code" to MmiCodeMasker.mask(pending.code),
+                            "execution_mode" to pending.executionMode.name,
                             "reason" to reason
                         )
                     )
@@ -549,12 +775,70 @@ class ContactsViewModel(
         }
     }
 
+    /** Records a user-reported carrier-side failure without stopping SMS forwarding. */
+    fun reportForwardingFailure() {
+        _showTransientForwardingHint.value = false
+        _forwardingVerification.value = ForwardingVerification.USER_REPORTED_FAILURE
+        prefsManager.saveForwardingVerification(ForwardingVerification.USER_REPORTED_FAILURE)
+        LoggingManager.logWarning(component = "ContactsViewModel", action = "FORWARDING_USER_REPORTED_FAILURE", message = "Nutzer meldet Fehler der Netzrufumleitung")
+    }
+
+    /** User explicitly accepts continuing the independent SMS forwarding despite a carrier-side warning. */
+    fun continueWithAssumedForwarding() {
+        _forwardingVerification.value = ForwardingVerification.ASSUMED_SUCCESS
+        _showTransientForwardingHint.value = true
+        prefsManager.saveForwardingVerification(ForwardingVerification.ASSUMED_SUCCESS)
+        LoggingManager.logInfo(component = "ContactsViewModel", action = "FORWARDING_USER_CONTINUED", message = "Nutzer setzt SMS-Weiterleitung trotz MMI-Warnung bewusst fort")
+    }
+
+    fun dismissTransientForwardingHint() {
+        _showTransientForwardingHint.value = false
+    }
+
+    /** Repeats the last completed MMI request with a new correlation id. */
+    fun retryLastForwardingOperation() {
+        val previous = lastCompletedForwardingRequest ?: run {
+            SnackbarManager.showError("Kein Rufumleitungs-Vorgang zum Wiederholen verfügbar")
+            return
+        }
+        if (!MmiOperationPolicy.mayStartOperation(_pendingForwardingRequest.value != null, mmiReservationInProgress)) return
+        val retry = previous.copy(
+            id = UUID.randomUUID().toString(),
+            dialedAtMillis = System.currentTimeMillis(),
+            state = MmiOperationState.DIALING,
+            verification = ForwardingVerification.NOT_CHECKED,
+            evidence = MmiEvidence(),
+            targetSubscriptionId = null,
+            dialPath = DialPath.NOT_DISPATCHED,
+            userMessage = "Wiederholung"
+        )
+        mmiReservationInProgress = true
+        _pendingForwardingRequest.value = retry
+        prefsManager.savePendingMmiRequest(retry.toPersistedOperation())
+        schedulePendingMmiWatchdog(retry)
+        onDialMmiCode?.invoke(retry.code) ?: resolvePendingForwardingResult(
+            retry.id, false, ForwardingVerification.DIAL_FAILED, "MMI_RETRY_NO_CALLBACK", "MMI-Code konnte nicht gesendet werden"
+        )
+    }
+
     private fun manageForwardingStatus(
         action: ForwardingAction,
         contact: Contact? = null,
         onResult: (ForwardingResult) -> Unit
     ) {
         viewModelScope.launch {
+            if (!MmiOperationPolicy.mayStartOperation(_pendingForwardingRequest.value != null, mmiReservationInProgress)) {
+                LoggingManager.logWarning(
+                    component = "ContactsViewModel",
+                    action = "FORWARDING_REQUEST_BLOCKED",
+                    message = "MMI-Vorgang läuft bereits; weitere Aktion verworfen"
+                )
+                onResult(ForwardingResult.Error("Ein Rufumleitungs-Vorgang läuft bereits"))
+                return@launch
+            }
+            // Reserve before switching to Dispatchers.IO so a second tap cannot pass
+            // the check while the first operation is still being prepared.
+            mmiReservationInProgress = true
             try {
                 val result = when (action) {
                     ForwardingAction.ACTIVATE -> {
@@ -588,6 +872,9 @@ class ContactsViewModel(
                     }
                 }
 
+                if (result is ForwardingResult.Error && _pendingForwardingRequest.value == null) {
+                    mmiReservationInProgress = false
+                }
                 onResult(result)
 
             } catch (e: Exception) {
@@ -608,6 +895,7 @@ class ContactsViewModel(
                         e.stackTraceToString()
                     )
                 )
+                mmiReservationInProgress = false
             }
         }
     }
@@ -627,8 +915,8 @@ class ContactsViewModel(
                     action = "LOOP_PROTECTION_TRIGGERED",
                     message = "Kontaktauswahl blockiert: Zielnummer ist eigene SIM-Karte",
                     details = mapOf(
-                        "target" to contact.phoneNumber,
-                        "own_number" to ownNumber
+                        "target" to MmiCodeMasker.maskNumber(contact.phoneNumber),
+                        "own_number" to MmiCodeMasker.maskNumber(ownNumber)
                     )
                 )
 
@@ -647,12 +935,15 @@ class ContactsViewModel(
             action = ForwardingAction.ACTIVATE,
             contact = contact,
             code = activateCode,
-            isUssd = activateCode.endsWith("#")
+            executionMode = prefsManager.getMmiExecutionMode(activateCode)
         )
         _pendingForwardingRequest.value = pendingRequest
+        schedulePendingMmiWatchdog(pendingRequest)
+        prefsManager.savePendingMmiRequest(pendingRequest.toPersistedOperation())
 
         onDialMmiCode?.invoke(activateCode) ?: run {
             _pendingForwardingRequest.value = null
+            prefsManager.clearPendingMmiRequest()
             LoggingManager.logError(
                 component = "ContactsViewModel",
                 action = "ACTIVATE_FORWARDING",
@@ -667,7 +958,7 @@ class ContactsViewModel(
             message = "Aktivierung der Weiterleitung angefordert",
             details = mapOf(
                 "contact" to contact.name,
-                "number" to contact.phoneNumber
+                "number" to MmiCodeMasker.maskNumber(contact.phoneNumber)
             )
         )
 
@@ -682,12 +973,15 @@ class ContactsViewModel(
             action = ForwardingAction.DEACTIVATE,
             contact = prevContact,
             code = deactivateCode,
-            isUssd = deactivateCode.endsWith("#")
+            executionMode = prefsManager.getMmiExecutionMode(deactivateCode)
         )
         _pendingForwardingRequest.value = pendingRequest
+        schedulePendingMmiWatchdog(pendingRequest)
+        prefsManager.savePendingMmiRequest(pendingRequest.toPersistedOperation())
 
         onDialMmiCode?.invoke(deactivateCode) ?: run {
             _pendingForwardingRequest.value = null
+            prefsManager.clearPendingMmiRequest()
             LoggingManager.logError(
                 component = "ContactsViewModel",
                 action = "DEACTIVATE_FORWARDING",
@@ -728,24 +1022,6 @@ class ContactsViewModel(
 
     fun dismissLoopProtectionDialog() {
         _showLoopProtectionDialog.value = null
-    }
-
-    // MMI Warning Dialog Management
-    fun showMmiWarningDialog() {
-        _showMmiWarningDialog.value = true
-    }
-
-    fun dismissMmiWarningDialog() {
-        _showMmiWarningDialog.value = false
-    }
-
-    // MMI Confirmation Dialog Management
-    fun showMmiConfirmationDialog(contactName: String?, contactNumber: String?) {
-        _mmiConfirmationState.value = MmiConfirmationState(contactName, contactNumber)
-    }
-
-    fun dismissMmiConfirmationDialog() {
-        _mmiConfirmationState.value = null
     }
 
     // USSD Progress Dialog Management
@@ -794,7 +1070,8 @@ class ContactsViewModel(
                         message = "Weiterleitung bleibt beim App-Beenden aktiv",
                         details = mapOf(
                             "contact" to (_selectedContact.value?.name ?: "unknown"),
-                            "number" to (_selectedContact.value?.phoneNumber ?: "unknown")
+                            "number" to (_selectedContact.value?.phoneNumber?.takeIf { it.isNotBlank() }
+                                ?.let(MmiCodeMasker::maskNumber) ?: "unknown")
                         )
                     )
                 }
@@ -822,7 +1099,7 @@ class ContactsViewModel(
                         message = "Speichere aktiven Weiterleitungskontakt",
                         details = mapOf(
                             "contact" to currentContact.name,
-                            "number" to currentContact.phoneNumber,
+                            "number" to MmiCodeMasker.maskNumber(currentContact.phoneNumber),
                             "is_active" to true
                         )
                     )
@@ -942,20 +1219,6 @@ class ContactsViewModel(
         )
     }
 
-    fun updateMmiWarningEnabled(enabled: Boolean) {
-        _mmiWarningEnabled.value = enabled
-        prefsManager.setMmiWarningEnabled(enabled)
-
-        LoggingManager.logInfo(
-            component = "ContactsViewModel",
-            action = "UPDATE_MMI_WARNING_ENABLED",
-            message = "MMI-Warnung ${if (enabled) "aktiviert" else "deaktiviert"}",
-            details = mapOf(
-                "enabled" to enabled
-            )
-        )
-    }
-
     fun updateMaxLogSizeMB(sizeMB: Int) {
         _maxLogSizeMB.value = sizeMB
         prefsManager.setMaxLogSizeMB(sizeMB)
@@ -971,9 +1234,18 @@ class ContactsViewModel(
     }
 
     fun queryForwardingStatus() {
+        if (!MmiOperationPolicy.mayStartOperation(_pendingForwardingRequest.value != null, mmiReservationInProgress)) {
+            LoggingManager.logWarning(
+                component = "ContactsViewModel",
+                action = "FORWARDING_STATUS_BLOCKED",
+                message = "Statusabfrage während laufendem MMI-Vorgang verworfen"
+            )
+            SnackbarManager.showInfo(application.getString(R.string.snackbar_forwarding_operation_running))
+            return
+        }
         val statusCode = prefsManager.getMmiStatusCode()
 
-        onDialMmiCode?.invoke(statusCode) ?: run {
+        onDialStatusCode?.invoke(statusCode) ?: run {
             LoggingManager.logError(
                 component = "ContactsViewModel",
                 action = "QUERY_FORWARDING_STATUS",

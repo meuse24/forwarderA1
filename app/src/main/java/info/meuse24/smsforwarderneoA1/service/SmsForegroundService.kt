@@ -26,6 +26,7 @@ import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import kotlinx.coroutines.CoroutineScope
@@ -1047,6 +1048,17 @@ class SmsForegroundService : Service() {
                             append(" " + getString(R.string.notification_status_to_number, number))
                         }
                     }
+                    append("\n")
+                    append(
+                        when (prefs.getForwardingVerification()) {
+                            ForwardingVerification.ASSUMED_SUCCESS -> getString(R.string.forwarding_verification_assumed)
+                            ForwardingVerification.CONFIRMED_SUCCESS -> getString(R.string.forwarding_verification_confirmed)
+                            ForwardingVerification.UNKNOWN_NO_RESPONSE -> getString(R.string.forwarding_verification_unknown)
+                            ForwardingVerification.DIAL_FAILED -> getString(R.string.forwarding_verification_failed)
+                            ForwardingVerification.USER_REPORTED_FAILURE -> getString(R.string.forwarding_verification_user_failed)
+                            ForwardingVerification.NOT_CHECKED -> ""
+                        }
+                    )
                 }
                 if (prefs.isForwardSmsToEmail()) {
                     if (prefs.isForwardingActive()) append("\n")

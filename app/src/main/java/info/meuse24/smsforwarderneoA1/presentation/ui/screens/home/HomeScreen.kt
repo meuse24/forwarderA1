@@ -30,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.PhoneForwarded
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,10 +56,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import androidx.compose.ui.text.font.FontFamily
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.Contact
+import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
+import info.meuse24.smsforwarderneoA1.domain.model.MmiOperationState
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.AnimatedCard
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.AnimatedOutlinedButton
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.GradientBorderCard
@@ -70,6 +74,77 @@ import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 import info.meuse24.smsforwarderneoA1.ui.theme.ErrorGradient
 import info.meuse24.smsforwarderneoA1.ui.theme.PrimaryGradient
 import info.meuse24.smsforwarderneoA1.ui.theme.WarmContactGradient
+
+@Composable
+private fun ForwardingVerificationCard(viewModel: ContactsViewModel) {
+    val verification by viewModel.forwardingVerification.collectAsState()
+    val forwardingActive by viewModel.forwardingActive.collectAsState()
+    val showTransientHint by viewModel.showTransientForwardingHint.collectAsState()
+    if (verification == ForwardingVerification.NOT_CHECKED ||
+        (verification == ForwardingVerification.ASSUMED_SUCCESS && !showTransientHint)
+    ) return
+
+    // A1's voice response cannot be parsed. Show the operational hint briefly,
+    // but never require an acknowledgement before the user can continue working.
+    // It is deliberately not recreated from persisted status after an app restart.
+    LaunchedEffect(verification, showTransientHint) {
+        if (verification == ForwardingVerification.ASSUMED_SUCCESS && showTransientHint) {
+            delay(8_000)
+            viewModel.dismissTransientForwardingHint()
+        }
+    }
+
+    val text = when (verification) {
+        ForwardingVerification.ASSUMED_SUCCESS -> stringResource(
+            if (forwardingActive) {
+                R.string.forwarding_verification_assumed_activate
+            } else {
+                R.string.forwarding_verification_assumed_deactivate
+            }
+        )
+        ForwardingVerification.CONFIRMED_SUCCESS -> stringResource(R.string.forwarding_verification_confirmed)
+        ForwardingVerification.UNKNOWN_NO_RESPONSE -> stringResource(R.string.forwarding_verification_unknown)
+        ForwardingVerification.DIAL_FAILED -> stringResource(R.string.forwarding_verification_failed)
+        ForwardingVerification.USER_REPORTED_FAILURE -> stringResource(R.string.forwarding_verification_user_failed)
+        ForwardingVerification.NOT_CHECKED -> return
+    }
+    AnimatedCard(visible = true, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(text, fontWeight = FontWeight.Medium)
+            if (verification == ForwardingVerification.ASSUMED_SUCCESS) {
+                Button(onClick = viewModel::reportForwardingFailure) { Text(stringResource(R.string.forwarding_report_failure)) }
+            }
+            if (verification == ForwardingVerification.UNKNOWN_NO_RESPONSE ||
+                verification == ForwardingVerification.USER_REPORTED_FAILURE ||
+                (verification == ForwardingVerification.ASSUMED_SUCCESS && !forwardingActive)
+            ) {
+                Button(onClick = viewModel::queryForwardingStatus) { Text(stringResource(R.string.forwarding_query_status)) }
+            }
+            if (verification == ForwardingVerification.DIAL_FAILED || verification == ForwardingVerification.USER_REPORTED_FAILURE) {
+                Button(onClick = viewModel::retryLastForwardingOperation) { Text(stringResource(R.string.forwarding_retry)) }
+            }
+            if (verification == ForwardingVerification.USER_REPORTED_FAILURE) {
+                Button(onClick = viewModel::continueWithAssumedForwarding) { Text(stringResource(R.string.forwarding_continue)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PendingForwardingCard(viewModel: ContactsViewModel) {
+    val pending by viewModel.pendingForwardingRequest.collectAsState()
+    val operation = pending?.takeIf { it.state == MmiOperationState.DIALING } ?: return
+    AnimatedCard(visible = true, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(
+                if (operation.action == ContactsViewModel.ForwardingAction.ACTIVATE) R.string.forwarding_operation_activating
+                else R.string.forwarding_operation_deactivating
+            ),
+            modifier = Modifier.padding(12.dp),
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
 
 /**
  * Animated app logo with one-time 360° rotation on screen open and on touch
@@ -121,10 +196,11 @@ fun HomeScreen(
 ) {
     val selectedContact by viewModel.selectedContact.collectAsState()
     val forwardingActive by viewModel.forwardingActive.collectAsState()
+    val pendingOperation by viewModel.pendingForwardingRequest.collectAsState()
     val currentCallState by callState
 
     // Check if call is active (for button disabling)
-    val isCallActive = currentCallState == TelephonyManager.CALL_STATE_OFFHOOK
+    val isCallActive = currentCallState == TelephonyManager.CALL_STATE_OFFHOOK || pendingOperation != null
 
     // Initialisierung beim ersten Laden
     LaunchedEffect(Unit) {
@@ -191,6 +267,8 @@ fun LandscapeLayout(
     ) {
         // Top area
         CallStatusCard(callState = callState)
+        PendingForwardingCard(viewModel)
+        ForwardingVerificationCard(viewModel)
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -238,7 +316,7 @@ fun LandscapeLayout(
 
                 // Status Info Button
                 FloatingActionButton(
-                    onClick = { viewModel.queryForwardingStatus() },
+                    onClick = { if (!isCallActive) viewModel.queryForwardingStatus() },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
@@ -254,8 +332,10 @@ fun LandscapeLayout(
                 // Reset Button
                 FloatingActionButton(
                     onClick = {
-                        emailViewModel.updateForwardSmsToEmail(false)
-                        viewModel.resetAllForwarding()
+                        if (!isCallActive) {
+                            emailViewModel.updateForwardSmsToEmail(false)
+                            viewModel.resetAllForwarding()
+                        }
                     },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -293,6 +373,8 @@ fun PortraitLayout(
     ) {
         // Top area with CallStatusCard
         CallStatusCard(callState = callState)
+        PendingForwardingCard(viewModel)
+        ForwardingVerificationCard(viewModel)
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -351,7 +433,7 @@ fun PortraitLayout(
 
                 // Status Info Button
                 FloatingActionButton(
-                    onClick = { viewModel.queryForwardingStatus() },
+                    onClick = { if (!isCallActive) viewModel.queryForwardingStatus() },
                     containerColor = Color.Transparent,
                     contentColor = Color.Black,
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
@@ -379,8 +461,10 @@ fun PortraitLayout(
                 // Reset Button
                 FloatingActionButton(
                     onClick = {
-                        emailViewModel.updateForwardSmsToEmail(false)
-                        viewModel.resetAllForwarding()
+                        if (!isCallActive) {
+                            emailViewModel.updateForwardSmsToEmail(false)
+                            viewModel.resetAllForwarding()
+                        }
                     },
                     containerColor = Color.Transparent,
                     contentColor = Color.Black,
@@ -536,12 +620,15 @@ fun ContactSelectionSection(
                         // SIM card info for call forwarding (MMI)
                         val simInfo = when (mmiSimSelectionMode) {
                             info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode.DEFAULT_VOICE_SIM -> {
-                                // Find default voice SIM
                                 val defaultSim = availableSimCards.find {
                                     it.subscriptionId == defaultVoiceSubscriptionId
                                 }
                                 if (defaultSim != null) {
-                                    "${defaultSim.carrierName} (${defaultSim.phoneNumber ?: stringResource(R.string.suffix_not_available)})"
+                                    stringResource(
+                                        R.string.mmi_sim_default_voice_display,
+                                        defaultSim.carrierName?.takeIf { it.isNotBlank() }
+                                            ?: stringResource(R.string.mmi_sim_unknown_carrier)
+                                    )
                                 } else {
                                     stringResource(R.string.badge_default_voice)
                                 }
@@ -549,17 +636,27 @@ fun ContactSelectionSection(
                             info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode.ALWAYS_SIM_1 -> {
                                 val sim = availableSimCards.getOrNull(0)
                                 if (sim != null) {
-                                    "SIM 1: ${sim.carrierName} (${sim.phoneNumber ?: stringResource(R.string.suffix_not_available)})"
+                                    stringResource(
+                                        R.string.mmi_sim_slot_display,
+                                        1,
+                                        sim.carrierName?.takeIf { it.isNotBlank() }
+                                            ?: stringResource(R.string.mmi_sim_unknown_carrier)
+                                    )
                                 } else {
-                                    "SIM 1: ${stringResource(R.string.suffix_not_available)}"
+                                    stringResource(R.string.mmi_sim_slot_unavailable, 1)
                                 }
                             }
                             info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode.ALWAYS_SIM_2 -> {
                                 val sim = availableSimCards.getOrNull(1)
                                 if (sim != null) {
-                                    "SIM 2: ${sim.carrierName} (${sim.phoneNumber ?: stringResource(R.string.suffix_not_available)})"
+                                    stringResource(
+                                        R.string.mmi_sim_slot_display,
+                                        2,
+                                        sim.carrierName?.takeIf { it.isNotBlank() }
+                                            ?: stringResource(R.string.mmi_sim_unknown_carrier)
+                                    )
                                 } else {
-                                    "SIM 2: ${stringResource(R.string.suffix_not_available)}"
+                                    stringResource(R.string.mmi_sim_slot_unavailable, 2)
                                 }
                             }
                         }

@@ -55,13 +55,16 @@ import androidx.lifecycle.lifecycleScope
 import info.meuse24.smsforwarderneoA1.AppContainer.prefsManager
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.MmiExecutionMode
+import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
+import info.meuse24.smsforwarderneoA1.domain.model.MmiOperationPolicy
+import info.meuse24.smsforwarderneoA1.domain.model.DialPath
+import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CriticalPermissionsDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.ExitDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoadingScreen
-import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.MmiConfirmationDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.LoopProtectionDialog
-import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.MmiWarningDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.SimNumbersDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.UssdProgressDialog
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.CleanupErrorDialog
@@ -85,14 +88,13 @@ import info.meuse24.smsforwarderneoA1.service.SmsForegroundService
 import info.meuse24.smsforwarderneoA1.UssdRequestResult
 import info.meuse24.smsforwarderneoA1.UssdRequestType
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 class MainActivity : ComponentActivity() {
     private val viewModel: ContactsViewModel by viewModels { ContactsViewModel.Factory() }
@@ -119,9 +121,6 @@ class MainActivity : ComponentActivity() {
 
     // State für kritischen Berechtigungs-Dialog
 
-    // MMI Confirmation Job (still needed for lifecycle management)
-    private var mmiConfirmationJob: Job? = null
-    private var awaitingMmiConfirmation = false
 
     // Contact Picker Launcher
     private val contactPickerLauncher = registerForActivityResult(
@@ -141,6 +140,7 @@ class MainActivity : ComponentActivity() {
     private var telephonyCallback: TelephonyCallback? = null
     @Suppress("DEPRECATION")
     private var phoneStateListener: PhoneStateListener? = null
+    private var mmiOffHookAtMillis: Long? = null
 
     override fun attachBaseContext(newBase: android.content.Context) {
         // Read language from plain SharedPreferences (stored separately for early access)
@@ -154,7 +154,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Set the MMI code dial callback in ViewModel
-        viewModel.onDialMmiCode = { code -> dialCode(code) }
+        viewModel.onDialMmiCode = { code -> dialCode(code, viewModel.pendingForwardingRequest.value?.id) }
+        viewModel.onDialStatusCode = { code -> dialCode(code, null) }
 
         // Set the contact picker launcher callback
         viewModel.onLaunchContactPicker = { contactPickerLauncher.launch(null) }
@@ -377,6 +378,7 @@ class MainActivity : ComponentActivity() {
             telephonyCallback = object : TelephonyCallback(), TelephonyCallback.CallStateListener {
                 override fun onCallStateChanged(state: Int) {
                     _callState.value = state
+                    recordMmiCallEvidence(state)
                     LoggingManager.logInfo(
                         component = "MainActivity",
                         action = "CALL_STATE_CHANGED",
@@ -403,6 +405,7 @@ class MainActivity : ComponentActivity() {
                 @Deprecated("Deprecated in Java")
                 override fun onCallStateChanged(state: Int, phoneNumber: String?) {
                     _callState.value = state
+                    recordMmiCallEvidence(state)
                     LoggingManager.logInfo(
                         component = "MainActivity",
                         action = "CALL_STATE_CHANGED",
@@ -430,14 +433,20 @@ class MainActivity : ComponentActivity() {
      * Dial MMI code with speakerphone enabled and audio focus management.
      * Automatically waits if another call is active.
      */
-    fun dialCode(code: String) {
+    fun dialCode(code: String, operationId: String? = null) {
         if (code.isBlank()) {
             SnackbarManager.showWarning(getString(R.string.snackbar_mmi_code_empty))
+            operationId?.let {
+                viewModel.resolvePendingForwardingResult(it, false, ForwardingVerification.DIAL_FAILED, "DIAL_EMPTY_CODE", "MMI-Code ist leer")
+            }
             return
         }
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             SnackbarManager.showError(getString(R.string.snackbar_call_permission_missing))
+            operationId?.let {
+                viewModel.resolvePendingForwardingResult(it, false, ForwardingVerification.DIAL_FAILED, "DIAL_PERMISSION_MISSING", "CALL_PHONE fehlt")
+            }
             return
         }
 
@@ -448,25 +457,28 @@ class MainActivity : ComponentActivity() {
         } else {
             code
         }
-        val isUssdCode = normalizedCode.endsWith("#")
+        // The configured carrier mode is authoritative; do not infer it in multiple places.
+        val isUssdCode = prefsManager.getMmiExecutionMode(code) == MmiExecutionMode.USSD_CALLBACK
 
         // Launch coroutine to wait if call is active
         lifecycleScope.launch {
             val currentCallState = callState.value
-            val mmiWarningEnabled = viewModel.mmiWarningEnabled.value
-
             // Wait if call is active (not IDLE)
             if (currentCallState != TelephonyManager.CALL_STATE_IDLE) {
                 LoggingManager.logInfo(
                     component = "MainActivity",
                     action = "DIAL_MMI_WAITING",
                     message = "Warte bis aktueller Anruf beendet ist",
-                    details = mapOf("code" to normalizedCode, "callState" to currentCallState)
+                    details = mapOf("code" to MmiCodeMasker.mask(normalizedCode), "callState" to currentCallState)
                 )
                 SnackbarManager.showInfo(getString(R.string.snackbar_wait_for_call_end))
 
                 // Wait until call is idle
-                callState.first { it == TelephonyManager.CALL_STATE_IDLE }
+                val idleReached = withTimeoutOrNull(30_000) { callState.first { it == TelephonyManager.CALL_STATE_IDLE } }
+                if (!MmiOperationPolicy.shouldDialAfterWaitingForCall(idleReached != null)) {
+                    operationId?.let { viewModel.resolvePendingForwardingResult(it, false, ForwardingVerification.DIAL_FAILED, "CALL_BUSY_TIMEOUT", "Laufender Anruf nicht beendet") }
+                    return@launch
+                }
 
                 // Add buffer after call ends
                 delay(500)
@@ -475,55 +487,19 @@ class MainActivity : ComponentActivity() {
                     component = "MainActivity",
                     action = "DIAL_MMI_READY",
                     message = "Anruf beendet, wähle MMI-Code",
-                    details = mapOf("code" to normalizedCode)
-                )
-            }
-
-            // Show warning dialog BEFORE dialing (if enabled)
-            if (isUssdCode) {
-                LoggingManager.logInfo(
-                    component = "MainActivity",
-                    action = "DIAL_USSD_SKIP_WARNING",
-                    message = "Kein MMI-Warn-Dialog für USSD-Code",
-                    details = mapOf("code" to normalizedCode)
-                )
-            } else if (mmiWarningEnabled) {
-                LoggingManager.logInfo(
-                    component = "MainActivity",
-                    action = "DIAL_MMI_PREPARING",
-                    message = "Zeige Benutzer-Warnung vor Wählvorgang",
-                    details = mapOf(
-                        "code" to normalizedCode,
-                        "delay_ms" to 4000,
-                        "mmi_warning_enabled" to true
-                    )
-                )
-
-                // Show in-app dialog for 4 seconds
-                viewModel.showMmiWarningDialog()
-                delay(4000)
-                viewModel.dismissMmiWarningDialog()
-            } else {
-                LoggingManager.logInfo(
-                    component = "MainActivity",
-                    action = "DIAL_MMI_NO_WARNING",
-                    message = "MMI-Warnung deaktiviert in Einstellungen",
-                    details = mapOf(
-                        "code" to normalizedCode,
-                        "mmi_warning_enabled" to false
-                    )
+                    details = mapOf("code" to MmiCodeMasker.mask(normalizedCode))
                 )
             }
 
             // Proceed with dialing
-            dialCodeNow(normalizedCode, code, isUssdCode)
+            dialCodeNow(normalizedCode, code, isUssdCode, operationId)
         }
     }
 
     /**
      * Internal function to actually dial the MMI code (called after waiting if needed)
      */
-    private fun dialCodeNow(normalizedCode: String, originalCode: String, isUssdCode: Boolean) {
+    private fun dialCodeNow(normalizedCode: String, originalCode: String, isUssdCode: Boolean, operationId: String?) {
         try {
             // Determine which SIM to use for MMI code
             val mmiSimMode = prefsManager.getMmiSimSelectionMode()
@@ -539,20 +515,21 @@ class MainActivity : ComponentActivity() {
                     action = "DIAL_USSD_DETECTED",
                     message = "USSD-Code erkannt (endet mit #), verwende direkten USSD-Request",
                     details = mapOf(
-                        "code" to normalizedCode,
+                        "code" to MmiCodeMasker.mask(normalizedCode),
                         "mmi_sim_mode" to mmiSimMode.name,
                         "target_sub_id" to targetSubscriptionId
                     )
                 )
 
                 viewModel.showUssdProgressDialog()
+                operationId?.let { viewModel.recordDialDispatch(it, targetSubscriptionId, DialPath.USSD_REQUEST) }
 
                 val success = PhoneSmsUtils.sendUssdCode(
                     this,
                     normalizedCode,
                     targetSubscriptionId
                 ) { result ->
-                    handleUssdResult(result)
+                    handleUssdResult(result, operationId)
                 }
 
                 LoggingManager.logInfo(
@@ -560,8 +537,8 @@ class MainActivity : ComponentActivity() {
                     action = "DIAL_USSD_CODE",
                     message = if (success) "USSD-Code erfolgreich gesendet" else "USSD-Code senden fehlgeschlagen",
                     details = mapOf(
-                        "original_code" to originalCode,
-                        "normalized_code" to normalizedCode,
+                        "original_code" to MmiCodeMasker.mask(originalCode),
+                        "normalized_code" to MmiCodeMasker.mask(normalizedCode),
                         "mmi_sim_mode" to mmiSimMode.name,
                         "target_sub_id" to targetSubscriptionId,
                         "success" to success
@@ -569,11 +546,9 @@ class MainActivity : ComponentActivity() {
                 )
                 if (!success) {
                     viewModel.dismissUssdProgressDialog()
-                    viewModel.resolvePendingForwardingResult(
-                        success = false,
-                        source = "USSD_SEND_FAILED",
-                        message = getString(R.string.snackbar_ussd_general_error, getString(R.string.snackbar_forwarding_unknown_reason))
-                    )
+                    operationId?.let {
+                        viewModel.resolvePendingForwardingResult(it, false, ForwardingVerification.DIAL_FAILED, "USSD_SEND_FAILED", getString(R.string.snackbar_ussd_general_error, getString(R.string.snackbar_forwarding_unknown_reason)))
+                    }
                 }
                 return // Beende Funktion nach USSD-Request
             }
@@ -584,7 +559,7 @@ class MainActivity : ComponentActivity() {
                 action = "DIAL_MMI_DETECTED",
                 message = "MMI-Code erkannt (endet mit *), verwende Dialer",
                 details = mapOf(
-                    "code" to normalizedCode,
+                    "code" to MmiCodeMasker.mask(normalizedCode),
                     "mmi_sim_mode" to mmiSimMode.name,
                     "target_sub_id" to targetSubscriptionId
                 )
@@ -700,7 +675,7 @@ class MainActivity : ComponentActivity() {
 
             // Versuche ERST mit TelecomManager direkt zu wählen (funktioniert besser für MMI-Codes)
             var callPlaced = false
-            if (phoneAccountHandle != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 try {
                     val telecomManager = getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
                     if (telecomManager != null) {
@@ -713,8 +688,8 @@ class MainActivity : ComponentActivity() {
                             action = "DIAL_MMI_TELECOM",
                             message = "MMI-Code direkt über TelecomManager gewählt",
                             details = mapOf(
-                                "original_code" to originalCode,
-                                "normalized_code" to normalizedCode,
+                                "original_code" to MmiCodeMasker.mask(originalCode),
+                                "normalized_code" to MmiCodeMasker.mask(normalizedCode),
                                 "method" to "TelecomManager.placeCall"
                             )
                         )
@@ -738,8 +713,8 @@ class MainActivity : ComponentActivity() {
                     action = "DIAL_MMI_INTENT",
                     message = "MMI-Code über Intent.ACTION_CALL gewählt",
                     details = mapOf(
-                        "original_code" to originalCode,
-                        "normalized_code" to normalizedCode,
+                        "original_code" to MmiCodeMasker.mask(originalCode),
+                        "normalized_code" to MmiCodeMasker.mask(normalizedCode),
                         "method" to "Intent Fallback"
                     )
                 )
@@ -751,8 +726,8 @@ class MainActivity : ComponentActivity() {
                 action = "DIAL_MMI_CODE",
                 message = "MMI-Code gewählt mit Lautsprecher (endet mit *)",
                 details = mapOf(
-                    "original_code" to originalCode,
-                    "normalized_code" to normalizedCode,
+                    "original_code" to MmiCodeMasker.mask(originalCode),
+                    "normalized_code" to MmiCodeMasker.mask(normalizedCode),
                     "code_type" to "MMI (Dialer)",
                     "speakerphone" to true,
                     "plus_replaced" to (originalCode != normalizedCode),
@@ -763,7 +738,25 @@ class MainActivity : ComponentActivity() {
                 )
             )
 
-            scheduleMmiConfirmationDialogAfterCall()
+            operationId?.let {
+                viewModel.recordDialDispatch(
+                    it,
+                    targetSubscriptionId,
+                    if (callPlaced) DialPath.TELECOM_MANAGER else DialPath.ACTION_CALL
+                )
+            }
+
+            // Telecom accepts the request asynchronously. For A1 voice MMI this is the
+            // strongest machine-readable signal available, so SMS forwarding proceeds
+            // immediately while retaining the honest ASSUMED_SUCCESS verification state.
+            viewModel.pendingForwardingRequest.value?.takeIf { it.id == operationId }?.let { pending ->
+                viewModel.resolvePendingForwardingResult(
+                    operationId = pending.id,
+                    success = true,
+                    verification = ForwardingVerification.ASSUMED_SUCCESS,
+                    source = "MMI_ASSUMED_SUCCESS"
+                )
+            }
 
         } catch (e: Exception) {
             LoggingManager.logError(
@@ -771,95 +764,48 @@ class MainActivity : ComponentActivity() {
                 action = "DIAL_MMI_CODE",
                 message = "Fehler beim Wählen des MMI-Codes",
                 error = e,
-                details = mapOf("code" to originalCode)
+                details = mapOf("code" to MmiCodeMasker.mask(originalCode))
             )
             SnackbarManager.showError(getString(R.string.snackbar_dial_error, e.message ?: ""))
-            viewModel.resolvePendingForwardingResult(
-                success = false,
-                source = "DIAL_ERROR",
-                message = e.message
-            )
+            operationId?.let {
+                viewModel.resolvePendingForwardingResult(it, false, ForwardingVerification.DIAL_FAILED, "DIAL_ERROR", e.message)
+            }
         }
     }
 
-    private fun handleUssdResult(result: UssdRequestResult) {
+    private fun recordMmiCallEvidence(state: Int) {
+        val now = System.currentTimeMillis()
+        when (state) {
+            TelephonyManager.CALL_STATE_OFFHOOK -> {
+                mmiOffHookAtMillis = now
+                viewModel.recordVoiceMmiEvidence(mmiOffHookAtMillis, now)
+            }
+            TelephonyManager.CALL_STATE_IDLE -> {
+                if (mmiOffHookAtMillis != null) {
+                    viewModel.recordVoiceMmiEvidence(mmiOffHookAtMillis, now)
+                    mmiOffHookAtMillis = null
+                    // Start the short "report failure" window only after the
+                    // carrier announcement/call has actually ended.
+                    viewModel.showVoiceMmiCompletionHint()
+                }
+            }
+        }
+    }
+
+    private fun handleUssdResult(result: UssdRequestResult, operationId: String?) {
         viewModel.dismissUssdProgressDialog()
 
-        if (result.type == UssdRequestType.OTHER) {
-            return
-        }
-
         val sourceLabel = "USSD_${result.type.name}_${if (result.success) "SUCCESS" else "FAILED"}"
-        viewModel.resolvePendingForwardingResult(
-            success = result.success,
-            source = sourceLabel,
-            message = result.message
-        )
-    }
-
-    private fun showMmiConfirmationDialog() {
-        val pending = viewModel.pendingForwardingRequest.value ?: return
-        if (pending.isUssd) return
-
-        LoggingManager.logInfo(
-            component = "MainActivity",
-            action = "MMI_CONFIRMATION_PROMPT",
-            message = "Zeige Bestätigungsdialog nach MMI-Wählvorgang",
-            details = mapOf(
-                "action" to pending.action.name,
-                "code" to pending.code
+        operationId?.let {
+            viewModel.recordUssdEvidence(it, result.message.orEmpty(), result.success)
+            viewModel.resolvePendingForwardingResult(
+                operationId = it,
+                success = result.success,
+                verification = viewModel.pendingForwardingRequest.value?.verification
+                    ?: if (result.success) ForwardingVerification.CONFIRMED_SUCCESS else ForwardingVerification.DIAL_FAILED,
+                source = sourceLabel,
+                message = result.message
             )
-        )
-
-        viewModel.showMmiConfirmationDialog(
-            contactName = pending.contact?.name,
-            contactNumber = pending.contact?.phoneNumber
-        )
-
-        mmiConfirmationJob?.cancel()
-        mmiConfirmationJob = lifecycleScope.launch {
-            delay(4000)
-            if (viewModel.mmiConfirmationState.value != null) {
-                handleMmiConfirmationResult(success = true, source = "MMI_TIMEOUT_SUCCESS")
-            }
-        }
-    }
-
-    private fun scheduleMmiConfirmationDialogAfterCall() {
-        val pending = viewModel.pendingForwardingRequest.value ?: return
-        if (pending.isUssd) return
-
-        awaitingMmiConfirmation = true
-    }
-
-    private fun handleMmiConfirmationResult(success: Boolean, source: String) {
-        mmiConfirmationJob?.cancel()
-        viewModel.dismissMmiConfirmationDialog()
-        awaitingMmiConfirmation = false
-
-        viewModel.resolvePendingForwardingResult(
-            success = success,
-            source = source,
-            message = if (success) null else getString(R.string.mmi_confirmation_failure_reason)
-        )
-    }
-
-    private fun processPendingMmiConfirmationIfNeeded() {
-        if (!awaitingMmiConfirmation) return
-        val pending = viewModel.pendingForwardingRequest.value
-        if (pending == null || pending.isUssd) {
-            awaitingMmiConfirmation = false
-            return
-        }
-
-        mmiConfirmationJob?.cancel()
-        mmiConfirmationJob = lifecycleScope.launch {
-            if (callState.value != TelephonyManager.CALL_STATE_IDLE) {
-                callState.first { it == TelephonyManager.CALL_STATE_IDLE }
-            }
-            delay(250) // sicherstellen, dass der Dialer geschlossen ist
-            showMmiConfirmationDialog()
-            awaitingMmiConfirmation = false
         }
     }
 
@@ -897,7 +843,6 @@ class MainActivity : ComponentActivity() {
             navigationViewModel.showCriticalPermissions(missing)
         }
 
-        processPendingMmiConfirmationIfNeeded()
     }
 
     override fun onDestroy() {
@@ -951,9 +896,6 @@ class MainActivity : ComponentActivity() {
         val showCriticalPermissionsDialog by navigationViewModel.showCriticalPermissionsDialog.collectAsState()
         val missingPermissions by navigationViewModel.missingPermissions.collectAsState()
 
-        // MMI Warning Dialog State
-        val showMmiWarningDialog by viewModel.showMmiWarningDialog.collectAsState()
-        val mmiConfirmationState by viewModel.mmiConfirmationState.collectAsState()
         val showUssdInProgress by viewModel.showUssdInProgress.collectAsState()
 
         // Cleanup Effect
@@ -1178,15 +1120,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            // MMI Warning Dialog - Beautiful overlay shown before dialing MMI codes
-            if (showMmiWarningDialog) {
-                MmiWarningDialog(
-                    onDismiss = {
-                        viewModel.dismissMmiWarningDialog()
-                    }
-                )
-            }
-
             // Loop Protection Dialog - Critical warning when selecting own SIM as target
             val loopProtectionDialogData by viewModel.showLoopProtectionDialog.collectAsState()
             loopProtectionDialogData?.let { data ->
@@ -1196,15 +1129,6 @@ class MainActivity : ComponentActivity() {
                     onDismiss = {
                         viewModel.dismissLoopProtectionDialog()
                     }
-                )
-            }
-
-            if (mmiConfirmationState != null) {
-                MmiConfirmationDialog(
-                    contactName = mmiConfirmationState?.contactName,
-                    contactNumber = mmiConfirmationState?.contactNumber,
-                    onConfirm = { handleMmiConfirmationResult(true, "MMI_USER_CONFIRMED") },
-                    onDecline = { handleMmiConfirmationResult(false, "MMI_USER_DECLINED") }
                 )
             }
 

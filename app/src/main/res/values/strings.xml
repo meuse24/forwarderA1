@@ -136,8 +136,6 @@
     <string name="placeholder_mmi_status">*021**</string>
     <string name="btn_preset_a1_austria">A1</string>
     <string name="btn_preset_standard">Standard</string>
-    <string name="toggle_mmi_warning">4-second warning before dialing</string>
-    <string name="desc_mmi_warning">Shows warning before MMI code execution</string>
 
     <!-- ==================== EMAIL SETTINGS SECTION ==================== -->
     <string name="label_smtp_host">SMTP Server</string>
@@ -196,16 +194,16 @@
     <!-- ==================== SIM SELECTION SECTION ==================== -->
     <string name="suffix_default_sms">(Default SMS)</string>
     <string name="suffix_not_available">(not available)</string>
+    <string name="mmi_sim_default_voice_display">Default voice SIM: %1$s</string>
+    <string name="mmi_sim_slot_display">SIM %1$d: %2$s</string>
+    <string name="mmi_sim_slot_unavailable">SIM %1$d: not available</string>
+    <string name="mmi_sim_unknown_carrier">Unknown carrier</string>
 
     <!-- ==================== CALL STATUS CARD ==================== -->
     <string name="status_mmi_code_executing">Executing MMI code…</string>
     <string name="status_incoming_call">Incoming call…</string>
 
     <!-- ==================== DIALOGS ==================== -->
-
-    <!-- MMI Warning Dialog -->
-    <string name="warning_await_dialing">Automatic dialing in progress!</string>
-    <string name="btn_execute_now">Dial Now</string>
 
     <!-- Loop Protection Dialog -->
     <string name="loop_protection_title">⚠️ LOOP PROTECTION!</string>
@@ -520,11 +518,21 @@
     <string name="ussd_progress_body">Please wait until the network responds…</string>
     <string name="section_call_forwarding_settings">Call forwarding</string>
     <string name="hint_mmi_sim_alignment">Choose the SIM for call forwarding first. The MMI/USSD codes below must match that SIM/carrier.</string>
-    <string name="mmi_confirmation_title">Did the call forwarding code work?</string>
-    <string name="mmi_confirmation_body">Please confirm the result. If you do nothing, success is assumed after 4 seconds.</string>
-    <string name="mmi_confirmation_positive">Yes, it worked</string>
-    <string name="mmi_confirmation_negative">No, it failed</string>
     <string name="mmi_confirmation_failure_reason">User reported that the forwarding code failed</string>
+    <string name="forwarding_verification_assumed_activate">Call forwarding initiated — report only if it failed.</string>
+    <string name="forwarding_verification_assumed_deactivate">Call forwarding deactivation initiated — report only if it failed.</string>
+    <string name="forwarding_verification_assumed">Call forwarding initiated — report only if it failed.</string>
+    <string name="forwarding_verification_confirmed">Call forwarding confirmed.</string>
+    <string name="forwarding_verification_unknown">Call forwarding: no network response received.</string>
+    <string name="forwarding_verification_failed">Call forwarding could not be dialed.</string>
+    <string name="forwarding_verification_user_failed">A call-forwarding failure was reported.</string>
+    <string name="forwarding_report_failure">Report failure</string>
+    <string name="forwarding_query_status">Check status</string>
+    <string name="forwarding_retry">Try again</string>
+    <string name="forwarding_continue">Continue anyway</string>
+    <string name="forwarding_operation_activating">Call forwarding is being activated. Controls are temporarily locked.</string>
+    <string name="forwarding_operation_deactivating">Call forwarding is being deactivated. Controls are temporarily locked.</string>
+    <string name="snackbar_forwarding_operation_running">A call-forwarding operation is already running.</string>
     <string name="snackbar_sms_send_failed">SMS to %1$s failed (%2$s).</string>
     <string name="snackbar_read_phone_permission_missing">Permission to read phone number missing</string>
     <string name="snackbar_read_phone_security_error">Security error retrieving phone number</string>

@@ -24,6 +24,7 @@ import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
+import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import info.meuse24.smsforwarderneoA1.util.permission.PermissionHelper
 import info.meuse24.smsforwarderneoA1.util.phone.CarrierTrie
@@ -612,8 +613,8 @@ class PhoneSmsUtils private constructor() {
                                 action = "USSD_RESPONSE",
                                 message = "MMI-Antwort empfangen",
                                 details = mapOf(
-                                    "request" to request,
-                                    "response" to response.toString(),
+                                    "request" to MmiCodeMasker.mask(request),
+                                    "response" to MmiCodeMasker.maskFreeText(response.toString()),
                                     "response_length" to response.length
                                 )
                             )
@@ -643,7 +644,7 @@ class PhoneSmsUtils private constructor() {
                                 action = "USSD_RESPONSE",
                                 message = "USSD-Anfrage fehlgeschlagen",
                                 details = mapOf(
-                                    "request" to request,
+                                    "request" to MmiCodeMasker.mask(request),
                                     "failure_code" to failureCode,
                                     "failure_reason" to failureReason
                                 )
@@ -667,7 +668,7 @@ class PhoneSmsUtils private constructor() {
                     action = "SEND_USSD",
                     message = "USSD-Anfrage gesendet",
                     details = mapOf(
-                        "code" to ussdCode,
+                        "code" to MmiCodeMasker.mask(ussdCode),
                         "code_type" to requestType.name.lowercase(),
                         "subscription_id" to subscriptionId,
                         "using_specific_sim" to (subscriptionId != -1)
@@ -683,7 +684,7 @@ class PhoneSmsUtils private constructor() {
                     message = "Sicherheitsfehler beim Senden des USSD-Codes",
                     error = e,
                     details = mapOf(
-                        "code" to ussdCode,
+                        "code" to MmiCodeMasker.mask(ussdCode),
                         "error_type" to "security_exception"
                     )
                 )
@@ -705,7 +706,7 @@ class PhoneSmsUtils private constructor() {
                     message = "Fehler beim Senden des USSD-Codes",
                     error = e,
                     details = mapOf(
-                        "code" to ussdCode,
+                        "code" to MmiCodeMasker.mask(ussdCode),
                         "error_type" to e.javaClass.simpleName
                     )
                 )

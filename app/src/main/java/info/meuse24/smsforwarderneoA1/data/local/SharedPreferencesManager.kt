@@ -5,9 +5,19 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import info.meuse24.smsforwarderneoA1.LoggingManager
+import info.meuse24.smsforwarderneoA1.domain.model.PersistedMmiOperation
+import info.meuse24.smsforwarderneoA1.domain.model.MmiOperationState
+import info.meuse24.smsforwarderneoA1.domain.model.MmiEvidence
 import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.MmiExecutionMode
+import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
+import info.meuse24.smsforwarderneoA1.domain.model.DialPath
+import info.meuse24.smsforwarderneoA1.domain.model.MmiAuditEntry
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
+import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import java.io.File
+import org.json.JSONObject
+import org.json.JSONArray
 
 /**
  * Encrypted SharedPreferences manager for app settings.
@@ -82,7 +92,7 @@ class SharedPreferencesManager(private val context: Context) {
             action = "SAVE_PHONE_NUMBER",
             message = "Zielrufnummer aktualisiert",
             details = mapOf(
-                "number" to phoneNumber,
+                "number" to MmiCodeMasker.maskNumber(phoneNumber),
                 "forwarding_active" to isForwardingActive()
             )
         )
@@ -100,7 +110,7 @@ class SharedPreferencesManager(private val context: Context) {
             component = "SharedPreferencesManager",
             action = "STORE_ACTIVATE_FORWARDING",
             message = "Weiterleitung-Aktivierung gespeichert",
-            details = mapOf("number" to phoneNumber)
+            details = mapOf("number" to MmiCodeMasker.maskNumber(phoneNumber))
         )
     }
 
@@ -121,6 +131,13 @@ class SharedPreferencesManager(private val context: Context) {
     init {
         validateForwardingState()
         migrateOldPreferences()
+        removeLegacyMmiWarningPreference()
+        pruneMmiAudit()
+    }
+
+    /** Removes the no-longer-used pre-dial warning setting from existing installs. */
+    private fun removeLegacyMmiWarningPreference() {
+        prefs.edit().remove("mmi_warning_enabled").apply()
     }
 
     // Prüfe ob Weiterleitung aktiv ist
@@ -203,6 +220,85 @@ class SharedPreferencesManager(private val context: Context) {
 
     fun saveForwardingStatus(isActive: Boolean) =
         setPreference(KEY_FORWARDING_ACTIVE, isActive)
+
+    /** Classifies a code through the configured MMI profile, not a global suffix heuristic. */
+    fun getMmiExecutionMode(code: String): MmiExecutionMode {
+        val configuredEnding = when {
+            code == getMmiDeactivateCode() -> getMmiDeactivateCode().takeLast(1)
+            code == getMmiStatusCode() -> getMmiStatusCode().takeLast(1)
+            code.startsWith(getMmiActivatePrefix()) && code.endsWith(getMmiActivateSuffix()) -> getMmiActivateSuffix().takeLast(1)
+            else -> null
+        }
+        return if (configuredEnding == "#") MmiExecutionMode.USSD_CALLBACK else MmiExecutionMode.VOICE_MMI_CALL
+    }
+
+    fun saveForwardingVerification(value: ForwardingVerification) =
+        setPreference(KEY_FORWARDING_VERIFICATION, value.name)
+
+    fun getForwardingVerification(): ForwardingVerification =
+        getPreference(KEY_FORWARDING_VERIFICATION, ForwardingVerification.NOT_CHECKED.name)
+            .let { runCatching { ForwardingVerification.valueOf(it) }.getOrDefault(ForwardingVerification.NOT_CHECKED) }
+
+    fun savePendingMmiRequest(request: PersistedMmiOperation) {
+        val json = JSONObject().apply {
+            put("id", request.id); put("action", request.action); put("code", request.code)
+            put("mode", request.mode.name); put("dialed_at", request.dialedAtMillis)
+            put("state", request.state.name); put("verification", request.verification.name)
+            put("call_observed", request.evidence.callObserved); put("call_duration", request.evidence.callDurationMs)
+            put("watchdog_expired", request.evidence.watchdogExpired); put("ussd_response", request.evidence.ussdResponse)
+            put("contact_name", request.contactName); put("contact_number", request.contactNumber); put("contact_description", request.contactDescription)
+            put("target_subscription_id", request.targetSubscriptionId); put("dial_path", request.dialPath.name)
+            put("user_message", request.userMessage)
+        }
+        setPreference(KEY_PENDING_MMI_OPERATION, json.toString())
+    }
+
+    fun getPendingMmiRequest(): PersistedMmiOperation? = runCatching {
+        val raw = getPreference(KEY_PENDING_MMI_OPERATION, "")
+        if (raw.isBlank()) return null
+        val json = JSONObject(raw)
+        val number = json.optString("contact_number").takeIf { it.isNotBlank() }
+        PersistedMmiOperation(json.getString("id"), json.getString("action"), json.getString("code"), MmiExecutionMode.valueOf(json.getString("mode")), json.getLong("dialed_at"), json.optString("contact_name"), number, json.optString("contact_description"), MmiOperationState.valueOf(json.optString("state", MmiOperationState.DIALING.name)), ForwardingVerification.valueOf(json.optString("verification", ForwardingVerification.NOT_CHECKED.name)), MmiEvidence(json.optBoolean("call_observed"), json.optLong("call_duration").takeIf { it > 0 }, json.optBoolean("watchdog_expired"), json.optString("ussd_response").takeIf { it.isNotBlank() }), json.optInt("target_subscription_id").takeIf { it >= 0 }, runCatching { DialPath.valueOf(json.optString("dial_path", DialPath.NOT_DISPATCHED.name)) }.getOrDefault(DialPath.NOT_DISPATCHED), json.optString("user_message").takeIf { it.isNotBlank() })
+    }.getOrNull()
+
+    fun clearPendingMmiRequest() = setPreference(KEY_PENDING_MMI_OPERATION, "")
+
+    fun appendMmiAudit(entry: MmiAuditEntry) {
+        val cutoff = System.currentTimeMillis() - AUDIT_RETENTION_MS
+        val entries = runCatching {
+            val raw = getPreference(KEY_MMI_AUDIT, "")
+            if (raw.isBlank()) emptyList() else JSONArray(raw).let { array ->
+                (0 until array.length()).mapNotNull { index -> runCatching {
+                    val json = array.getJSONObject(index)
+                    MmiAuditEntry(json.getLong("timestamp"), json.getString("id"), json.getString("action"), MmiExecutionMode.valueOf(json.getString("mode")), json.optInt("subscription_id").takeIf { it >= 0 }, DialPath.valueOf(json.optString("dial_path", DialPath.NOT_DISPATCHED.name)), ForwardingVerification.valueOf(json.getString("verification")), MmiEvidence(json.optBoolean("call_observed"), json.optLong("call_duration").takeIf { it > 0 }, json.optBoolean("watchdog_expired"), json.optString("ussd_response").takeIf { it.isNotBlank() }), json.optString("message").takeIf { it.isNotBlank() })
+                }.getOrNull() }
+            }
+        }.getOrDefault(emptyList())
+        val retained = (entries + entry).filter { it.timestampMillis >= cutoff }.takeLast(MAX_AUDIT_ENTRIES)
+        val serialized = JSONArray().apply { retained.forEach { item -> put(JSONObject().apply {
+            put("timestamp", item.timestampMillis); put("id", item.operationId); put("action", item.action); put("mode", item.executionMode.name); put("subscription_id", item.targetSubscriptionId); put("dial_path", item.dialPath.name); put("verification", item.verification.name); put("call_observed", item.evidence.callObserved); put("call_duration", item.evidence.callDurationMs); put("watchdog_expired", item.evidence.watchdogExpired); put("ussd_response", item.evidence.ussdResponse); put("message", item.message)
+        }) } }
+        setPreference(KEY_MMI_AUDIT, serialized.toString())
+    }
+
+    private fun pruneMmiAudit() {
+        runCatching {
+            val raw = getPreference(KEY_MMI_AUDIT, "")
+            if (raw.isBlank()) return
+            val cutoff = System.currentTimeMillis() - AUDIT_RETENTION_MS
+            val retained = JSONArray().apply {
+                val entries = JSONArray(raw)
+                for (index in 0 until entries.length()) {
+                    val entry = entries.optJSONObject(index) ?: continue
+                    if (entry.optLong("timestamp") >= cutoff) put(entry)
+                }
+            }
+            setPreference(KEY_MMI_AUDIT, retained.toString())
+        }.onFailure {
+            setPreference(KEY_MMI_AUDIT, "")
+            LoggingManager.logWarning(component = "SharedPreferencesManager", action = "MMI_AUDIT_INVALID", message = "Ungültiges MMI-Audit verworfen")
+        }
+    }
 
     fun getSelectedPhoneNumber(): String =
         getPreference(KEY_SELECTED_PHONE, "")
@@ -530,20 +626,6 @@ class SharedPreferencesManager(private val context: Context) {
         getPreference(KEY_INTERNATIONAL_DIAL_PREFIX, DEFAULT_INTERNATIONAL_DIAL_PREFIX)
 
     /**
-     * Aktiviert/deaktiviert die 4-Sekunden-Warnung vor MMI-Code-Wahl.
-     * @param enabled true = Warnung anzeigen, false = Warnung überspringen
-     */
-    fun setMmiWarningEnabled(enabled: Boolean) =
-        setPreference(KEY_MMI_WARNING_ENABLED, enabled)
-
-    /**
-     * Prüft, ob die MMI-Warnung aktiviert ist.
-     * @return true wenn Warnung angezeigt werden soll (Standard), false zum Überspringen
-     */
-    fun isMmiWarningEnabled(): Boolean =
-        getPreference(KEY_MMI_WARNING_ENABLED, DEFAULT_MMI_WARNING_ENABLED)
-
-    /**
      * Setzt die maximale Log-Dateigröße in MB.
      * @param sizeMB Größe in MB (1-20, Standard: 5)
      */
@@ -665,7 +747,11 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_SIM_SELECTION_MODE = "sim_selection_mode"
         private const val KEY_MMI_SIM_SELECTION_MODE = "mmi_sim_selection_mode"
         private const val KEY_INTERNATIONAL_DIAL_PREFIX = "international_dial_prefix"
-        private const val KEY_MMI_WARNING_ENABLED = "mmi_warning_enabled"
+        private const val KEY_FORWARDING_VERIFICATION = "forwarding_verification"
+        private const val KEY_PENDING_MMI_OPERATION = "pending_mmi_operation"
+        private const val KEY_MMI_AUDIT = "mmi_audit"
+        private const val AUDIT_RETENTION_MS = 30L * 24 * 60 * 60 * 1000
+        private const val MAX_AUDIT_ENTRIES = 200
         private const val KEY_MAX_LOG_SIZE_MB = "max_log_size_mb"
         private const val KEY_PRIVACY_POLICY_ACCEPTED = "privacy_policy_accepted"
         private const val KEY_APP_LANGUAGE = "app_language"
@@ -686,9 +772,6 @@ class SharedPreferencesManager(private val context: Context) {
 
         // International Dial Prefix (Default für Österreich)
         private const val DEFAULT_INTERNATIONAL_DIAL_PREFIX = "00"
-
-        // MMI Warning (Default: enabled)
-        private const val DEFAULT_MMI_WARNING_ENABLED = true
 
         // Log Settings (Default: 5MB)
         private const val DEFAULT_MAX_LOG_SIZE_MB = 5

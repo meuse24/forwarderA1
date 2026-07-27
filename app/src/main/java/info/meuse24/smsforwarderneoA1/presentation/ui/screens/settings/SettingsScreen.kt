@@ -385,8 +385,7 @@ private fun CallForwardingSettingsSection(
         MmiCodeSettingsSection(
             viewModel = viewModel,
             onFocusChanged = onFocusChanged,
-            sectionTitleStyle = sectionTitleStyle,
-            showMmiWarningToggle = true
+            sectionTitleStyle = sectionTitleStyle
         )
     }
 }

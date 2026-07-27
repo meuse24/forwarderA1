@@ -137,8 +137,6 @@
     <string name="placeholder_mmi_status">*021**</string>
     <string name="btn_preset_a1_austria">A1</string>
     <string name="btn_preset_standard">Standard</string>
-    <string name="toggle_mmi_warning">4-Sekunden-Warnung vor Wählvorgang</string>
-    <string name="desc_mmi_warning">Zeigt Hinweis vor MMI-Code-Ausführung</string>
 
     <!-- ==================== EMAIL SETTINGS SECTION ==================== -->
     <string name="label_smtp_host">SMTP Server</string>
@@ -196,16 +194,16 @@
     <!-- ==================== SIM SELECTION SECTION ==================== -->
     <string name="suffix_default_sms">(Standard-SMS)</string>
     <string name="suffix_not_available">(nicht verfügbar)</string>
+    <string name="mmi_sim_default_voice_display">Standard-Sprach-SIM: %1$s</string>
+    <string name="mmi_sim_slot_display">SIM %1$d: %2$s</string>
+    <string name="mmi_sim_slot_unavailable">SIM %1$d: nicht verfügbar</string>
+    <string name="mmi_sim_unknown_carrier">Unbekannter Anbieter</string>
 
     <!-- ==================== CALL STATUS CARD ==================== -->
     <string name="status_mmi_code_executing">MMI-Code wird ausgeführt…</string>
     <string name="status_incoming_call">Eingehender Anruf…</string>
 
     <!-- ==================== DIALOGS ==================== -->
-
-    <!-- MMI Warning Dialog -->
-    <string name="warning_await_dialing">Automatischer Wählvorgang abwarten!</string>
-    <string name="btn_execute_now">Jetzt wählen</string>
 
     <!-- Loop Protection Dialog -->
     <string name="loop_protection_title">⚠️ LOOP-SCHUTZ!</string>
@@ -653,11 +651,21 @@
     <string name="ussd_progress_body">Bitte warten, bis das Netz geantwortet hat…</string>
     <string name="section_call_forwarding_settings">Rufumleitung</string>
     <string name="hint_mmi_sim_alignment">Wähle zuerst die SIM für die Rufumleitung. Die MMI/USSD-Codes darunter müssen zu dieser SIM bzw. dem Netzbetreiber passen.</string>
-    <string name="mmi_confirmation_title">Hat die Rufumleitung funktioniert?</string>
-    <string name="mmi_confirmation_body">Bitte kurz bestätigen. Ohne Eingabe wird nach 4 Sekunden ein Erfolg angenommen.</string>
-    <string name="mmi_confirmation_positive">Ja, hat funktioniert</string>
-    <string name="mmi_confirmation_negative">Nein, fehlgeschlagen</string>
     <string name="mmi_confirmation_failure_reason">Vom Benutzer als fehlgeschlagen markiert</string>
+    <string name="forwarding_verification_assumed_activate">Rufumleitung angestoßen – nur bei Fehler melden.</string>
+    <string name="forwarding_verification_assumed_deactivate">Deaktivieren der Rufumleitung angestoßen – nur bei Fehler melden.</string>
+    <string name="forwarding_verification_assumed">Rufumleitung angestoßen – nur bei Fehler melden.</string>
+    <string name="forwarding_verification_confirmed">Rufumleitung bestätigt.</string>
+    <string name="forwarding_verification_unknown">Rufumleitung: keine Netzantwort erhalten.</string>
+    <string name="forwarding_verification_failed">Rufumleitung konnte nicht gewählt werden.</string>
+    <string name="forwarding_verification_user_failed">Fehler der Rufumleitung wurde gemeldet.</string>
+    <string name="forwarding_report_failure">Fehler melden</string>
+    <string name="forwarding_query_status">Status prüfen</string>
+    <string name="forwarding_retry">Erneut versuchen</string>
+    <string name="forwarding_continue">Trotzdem fortsetzen</string>
+    <string name="forwarding_operation_activating">Rufumleitung wird aktiviert. Bedienelemente sind kurzzeitig gesperrt.</string>
+    <string name="forwarding_operation_deactivating">Rufumleitung wird deaktiviert. Bedienelemente sind kurzzeitig gesperrt.</string>
+    <string name="snackbar_forwarding_operation_running">Ein Rufumleitungs-Vorgang läuft bereits.</string>
     <string name="snackbar_wait_for_call_end">Bitte warten Sie, bis der aktuelle Anruf beendet ist</string>
 
     <!-- ==================== CONTENT DESCRIPTIONS ==================== -->

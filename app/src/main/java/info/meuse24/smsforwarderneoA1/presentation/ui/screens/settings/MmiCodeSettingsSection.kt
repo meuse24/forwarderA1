@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,14 +35,12 @@ import info.meuse24.smsforwarderneoA1.ContactsViewModel
 fun MmiCodeSettingsSection(
     viewModel: ContactsViewModel,
     onFocusChanged: (Boolean) -> Unit,
-    sectionTitleStyle: TextStyle,
-    showMmiWarningToggle: Boolean = false
+    sectionTitleStyle: TextStyle
 ) {
     val mmiActivatePrefix by viewModel.mmiActivatePrefix.collectAsState()
     val mmiActivateSuffix by viewModel.mmiActivateSuffix.collectAsState()
     val mmiDeactivateCode by viewModel.mmiDeactivateCode.collectAsState()
     val mmiStatusCode by viewModel.mmiStatusCode.collectAsState()
-    val mmiWarningEnabled by viewModel.mmiWarningEnabled.collectAsState()
 
     var isActivateFocused by remember { mutableStateOf(false) }
     var isActivateSuffixFocused by remember { mutableStateOf(false) }
@@ -138,31 +135,5 @@ fun MmiCodeSettingsSection(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (showMmiWarningToggle) {
-            // MMI Warning Toggle
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.toggle_mmi_warning),
-                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = stringResource(R.string.desc_mmi_warning),
-                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(
-                    checked = mmiWarningEnabled,
-                    onCheckedChange = { viewModel.updateMmiWarningEnabled(it) }
-                )
-            }
-        }
     }
 }
