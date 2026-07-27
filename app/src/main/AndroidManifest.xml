@@ -21,6 +21,18 @@
     <uses-feature android:name="android.hardware.telephony" android:required="true"/>
     <uses-feature android:name="android.software.sip" android:required="false"/>
 
+    <!--
+        Paketsichtbarkeit ab Android 11 (API 30).
+        Ohne diese Deklaration liefert PackageManager.getPackageInfo() fuer fremde Pakete
+        eine NameNotFoundException. Wird ausschliesslich fuer den RCS-Hinweis benoetigt:
+        Die App prueft, ob Google Messages installiert bzw. Standard-SMS-App ist, um zu
+        erklaeren, warum RCS-Chats nicht weitergeleitet werden koennen.
+        Dies ist KEINE Berechtigung und gewaehrt keinen Zugriff auf fremde App-Daten.
+    -->
+    <queries>
+        <package android:name="com.google.android.apps.messaging" />
+    </queries>
+
     <application
         android:name=".SmsForwarderApplication"
         android:allowBackup="true"

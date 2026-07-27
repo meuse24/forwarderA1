@@ -266,6 +266,55 @@ requestPermission.launch(Manifest.permission.SEND_SMS)
 
 ---
 
+## 8. RCS und Dritt-App-Zugriff (Analyse 2026-07)
+
+### ❌ **Keine nutzbare Android-API - Feature bewusst nicht gebaut!**
+
+**Fragestellung:** Kann die App RCS-Nachrichten aus Google Messages weiterleiten oder wenigstens den RCS-Status auslesen?
+
+**Antwort: Nein, in beiden Fällen.** Umgesetzt wurde stattdessen ein erklärender Hinweis (Startseite + Hilfe), der den Nutzer zum SMS-Fallback führt.
+
+#### 8.1 Nachrichtenzugriff
+
+| Weg | Ergebnis |
+|-----|----------|
+| `SMS_RECEIVED_ACTION` | ✅ funktioniert - aber ausschließlich für SMS. RCS läuft nicht über diesen Broadcast. |
+| `RcsMessageStore` / `content://rcs` | ❌ In Android 10 angelegt, nie freigegeben, `@hide`. Kein Bestandteil des öffentlichen SDK. |
+| `NotificationListenerService` | ❌ Geprüft und verworfen, siehe 8.3. |
+| RCS Messages Archival (Enterprise) | ❌ Setzt vollständig verwaltete Android-Enterprise-Geräte voraus. |
+
+#### 8.2 Statusabfrage
+
+| Weg | Ergebnis |
+|-----|----------|
+| `ImsRcsManager` / `RcsUceAdapter` (API 30+) | ❌ Öffentlich dokumentiert, aber alle aussagekräftigen Methoden verlangen `READ_PRIVILEGED_PHONE_STATE`, `READ_PRECISE_PHONE_STATE` oder Carrier Privileges. |
+| `CarrierConfigManager` | ❌ Liefert allenfalls, ob der Netzbetreiber RCS-Provisioning verlangt; seit Android 12 für Dritt-Apps gefiltert. |
+| Google Messages | ❌ Exportiert keinen Content Provider und keine API zum RCS-Status. |
+| `Telephony.Sms.getDefaultSmsPackage()` + `<queries>` | ✅ **Verwendet.** Zeigt nur, welche Nachrichten-App installiert bzw. Standard ist - nicht den RCS-Status. |
+
+**Wichtig:** Selbst mit privilegiertem Zugriff wäre die Antwort nicht die gesuchte. Die IMS-APIs beschreiben den RCS-Stack des Netzbetreibers, während Google Messages überwiegend Googles Jibe-Backend über die Datenverbindung nutzt.
+
+**Konsequenz für den Code:** Kein Text der App darf einen RCS-Status behaupten. Alle Formulierungen sind als Möglichkeit gehalten („falls RCS aktiv ist").
+
+#### 8.3 Warum kein NotificationListenerService
+
+Fünf harte Befunde, ausführlich in `rcs.md` (Anhang A):
+
+1. **Keine positive RCS-Erkennung.** Google Messages postet für SMS, MMS und RCS dieselbe `MessagingStyle`-Benachrichtigung; kein öffentliches Unterscheidungsfeld.
+2. **Android 15 redigiert Einmalcodes** für nicht privilegierte Listener (`RECEIVE_SENSITIVE_NOTIFICATIONS` ist unerreichbar) - ausgerechnet der wichtigste Anwendungsfall.
+3. **Kein Foreground-Service-Start aus dem Listener.** Der SMS-Broadcast stellt die App kurzzeitig auf die Power-Management-Allowlist, ein Listener-Callback nicht → `ForegroundServiceStartNotAllowedException`.
+4. **`onNotificationPosted` feuert auch bei Updates**, und `EXTRA_MESSAGES` enthält die gesamte Historie → ohne Wasserzeichen pro `sbn.key` mehrfache Weiterleitung.
+5. **Kosten und Play-Risiko.** RCS-Nachrichten sind lang und emoji-lastig (UCS-2 → 67 Zeichen/Segment); Play bewertet Benachrichtigungszugriff für eine Zusatzfunktion kritisch.
+
+#### 8.4 Umgesetzte Komponenten
+
+- `domain/model/GoogleMessagesState.kt` - Enum + reine `resolveGoogleMessagesState()`, ohne Android-Abhängigkeit und damit unit-testbar
+- `util/GoogleMessagesDetector.kt` - Context-Zugriff, fällt bei jedem Fehler auf `NOT_INSTALLED` zurück
+- `presentation/ui/screens/home/RcsHintCard.kt` - stateless Karte + Host mit Preference-Anbindung
+- `AndroidManifest.xml` - `<queries>`-Eintrag (Paketsichtbarkeit ab Android 11, **keine** Berechtigung)
+
+---
+
 ## Zusammenfassung & Empfehlungen
 
 ### ✅ **BEHALTEN (100% richtig so):**

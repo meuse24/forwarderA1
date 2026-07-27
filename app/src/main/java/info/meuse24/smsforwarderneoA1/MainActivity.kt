@@ -73,6 +73,7 @@ import info.meuse24.smsforwarderneoA1.presentation.ui.components.dialogs.EditSim
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.BottomNavigationBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.navigation.CustomTopAppBar
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.help.HelpScreen
+import info.meuse24.smsforwarderneoA1.presentation.ui.screens.help.HelpSection
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.home.HomeScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.info.InfoScreen
 import info.meuse24.smsforwarderneoA1.presentation.ui.screens.logs.LogScreen
@@ -957,6 +958,8 @@ class MainActivity : ComponentActivity() {
         val pagerState = rememberPagerState(pageCount = { screens.size })
         val coroutineScope = rememberCoroutineScope()
         var showHelpScreen by remember { mutableStateOf(false) }
+        // Bestimmt, welcher Hilfe-Abschnitt zuerst gezeigt wird (RCS-Hinweis vs. Hilfe-Button)
+        var helpInitialSection by remember { mutableStateOf(HelpSection.OVERVIEW) }
 
         // Navigation Effect - navigate to page when navigationTarget changes
         LaunchedEffect(navigationTarget, screens) {
@@ -1003,7 +1006,14 @@ class MainActivity : ComponentActivity() {
                                     emailViewModel = emailViewModel,
                                     testUtilsViewModel = testUtilsViewModel,
                                     callState = currentCallState,
-                                    onNavigateToHelp = { showHelpScreen = true }
+                                    onNavigateToHelp = {
+                                        helpInitialSection = HelpSection.OVERVIEW
+                                        showHelpScreen = true
+                                    },
+                                    onNavigateToRcsHelp = {
+                                        helpInitialSection = HelpSection.RCS
+                                        showHelpScreen = true
+                                    }
                                 )
                             }
                             "mail" -> MailScreen(emailViewModel)
@@ -1017,7 +1027,8 @@ class MainActivity : ComponentActivity() {
                     if (showHelpScreen) {
                         HelpScreen(
                             modifier = Modifier.fillMaxSize(),
-                            onNavigateBack = { showHelpScreen = false }
+                            onNavigateBack = { showHelpScreen = false },
+                            initialSection = helpInitialSection
                         )
                     }
                 }

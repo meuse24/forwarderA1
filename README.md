@@ -28,6 +28,16 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 - **Test-Utilities**: Integrierte Tools zum Testen der SMS-Funktionalität
 - **Heartbeat-Monitoring**: Automatische Überwachung der Dienstverfügbarkeit
 - **Rufumleitung per MMI/USSD**: Wählweg passend zur konfigurierten SIM; A1-Sprach-MMI und generische `#`-USSD-Codes werden getrennt behandelt
+- **RCS-Hinweis**: Erklärt auf der Startseite und in der Hilfe, warum RCS-Chats nicht weitergeleitet werden können, und wie man den SMS-Fallback herstellt
+
+### Bekannte Grenzen
+
+Die App leitet **SMS** weiter. Nicht weitergeleitet werden:
+
+- **RCS-Chats** (Google Messages): Android liefert RCS-Nachrichten grundsätzlich nicht an Dritt-Apps aus – unabhängig von Berechtigungen. Wer alle Textnachrichten weiterleiten möchte, deaktiviert RCS auf dem weiterleitenden Gerät; die Kontakte senden dann automatisch wieder SMS. Die App weist darauf hin und erklärt die Schritte in der Hilfe.
+- **MMS** (Bilder, Videos, Sprachnachrichten): Die App empfängt keinen `WAP_PUSH_RECEIVED`-Broadcast.
+
+Der RCS-Status selbst ist für eine normale App nicht auslesbar; die App behauptet ihn deshalb nirgends. Hintergrund, geprüfte Alternativen und die Begründung gegen einen `NotificationListenerService` stehen in [`rcs.md`](rcs.md).
 
 ## Technologie-Stack
 

@@ -714,6 +714,33 @@
     <string name="help_opensource_heading">Open Source</string>
     <string name="help_opensource_body">Diese App ist Open Source unter der MIT-Lizenz. Quellcode ansehen und Fehler melden unter:</string>
 
+    <!-- ==================== HELP SCREEN - RCS ==================== -->
+    <string name="help_rcs_heading">RCS-Chats: Warum kommen manche Nachrichten nicht an?</string>
+    <string name="help_rcs_intro">Kommen einzelne Nachrichten nicht an, liegt das meist an RCS-Chats. Google Messages sendet Nachrichten zwischen Android-Geräten als RCS statt als SMS. Android liefert RCS-Nachrichten nicht an andere Apps aus – auch nicht mit zusätzlichen Berechtigungen. Diese App kann sie deshalb nicht weiterleiten.</string>
+    <string name="help_rcs_step1_title">Ursache:</string>
+    <string name="help_rcs_step1_body">RCS ist der Nachfolger von SMS und läuft über die Datenverbindung. Nur die Nachrichten-App selbst hat Zugriff darauf. Es liegt also kein Fehler in der Weiterleitung vor.</string>
+    <string name="help_rcs_step2_title">Selbst prüfen:</string>
+    <string name="help_rcs_step2_body">Die App kann den RCS-Status technisch nicht auslesen – Sie aber schon. Öffnen Sie Google Messages, tippen Sie auf Ihr Profilbild, dann auf &lt;code&gt;Nachrichteneinstellungen&lt;/code&gt; und &lt;code&gt;RCS-Chats&lt;/code&gt;. Dort steht der Verbindungsstatus. Im Alltag erkennen Sie RCS an Lesebestätigungen und der Tippanzeige in der Unterhaltung.</string>
+    <string name="help_rcs_step3_title">Lösung:</string>
+    <string name="help_rcs_step3_body">Deaktivieren Sie RCS auf diesem Gerät: Google Messages, Profilbild, &lt;code&gt;Nachrichteneinstellungen&lt;/code&gt;, &lt;code&gt;RCS-Chats&lt;/code&gt; ausschalten. Danach senden Ihre Kontakte automatisch wieder klassische SMS, und die Weiterleitung erfasst alle Textnachrichten.</string>
+    <string name="help_rcs_dualsim_warning">Bei zwei SIM-Karten: RCS ist an die Rufnummer gebunden, nicht an das Gerät. Deaktivieren Sie RCS für jede Rufnummer einzeln. Eine nur halb abgeschaltete Konfiguration ist die häufigste Ursache dafür, dass weiterhin Nachrichten fehlen.</string>
+    <string name="help_rcs_patience_warning">Nicht mehrfach umschalten: Die Abmeldung wirkt nicht sofort, weil sendende Geräte sich die RCS-Fähigkeit einer Rufnummer eine Zeit lang merken. Ein Test direkt nach dem Abschalten ist nicht aussagekräftig. Wer RCS wiederholt ein- und ausschaltet, kann vorübergehend von RCS gesperrt werden.</string>
+    <string name="help_rcs_stuck_note">Bleiben Nachrichten weiterhin aus, können Sie Ihre Rufnummer unter messages.google.com/disable-chat serverseitig von RCS abmelden.</string>
+    <string name="help_rcs_after_heading">Was sich danach ändert</string>
+    <string name="help_rcs_after_1">Bilder, Videos und Sprachnachrichten kommen als MMS und werden ebenfalls nicht weitergeleitet – weitergeleitet werden nur Textnachrichten</string>
+    <string name="help_rcs_after_2">Die Ende-zu-Ende-Verschlüsselung von RCS entfällt; bei einer Weiterleitung per SMS oder E-Mail besteht sie ohnehin nicht</string>
+    <string name="help_rcs_after_3">Lesebestätigung, Tippanzeige und hohe Bildqualität stehen auf diesem Gerät nicht mehr zur Verfügung</string>
+    <string name="help_rcs_test_note">Test: Senden Sie von einem zweiten Gerät eine Textnachricht und prüfen Sie, ob die Weiterleitung ankommt. Ein Test zwischen den beiden SIM-Karten desselben Geräts ist nicht aussagekräftig.</string>
+
+    <!-- ==================== HOME SCREEN - RCS HINT ==================== -->
+    <string name="rcs_hint_default_app">Sie nutzen Google Messages. Falls dort RCS-Chats aktiv sind, werden diese Nachrichten nicht weitergeleitet – Android liefert sie nicht an andere Apps aus.</string>
+    <string name="rcs_hint_installed_not_default">Google Messages ist installiert, aber nicht Ihre Standard-App. Ihre Rufnummer könnte noch für RCS registriert sein – dann fehlen einzelne Nachrichten. Abmelden können Sie sie unter messages.google.com/disable-chat.</string>
+    <string name="rcs_hint_action_learn_more">Mehr erfahren</string>
+    <string name="rcs_hint_action_dismiss">Verstanden</string>
+    <string name="toggle_show_rcs_hint">RCS-Hinweis auf der Startseite</string>
+    <string name="desc_show_rcs_hint">Erinnert daran, dass RCS-Chats aus Google Messages nicht weitergeleitet werden können. Der ausführliche Text steht jederzeit in der Hilfe.</string>
+    <string name="msg_rcs_hint_not_applicable">Google Messages ist auf diesem Gerät nicht installiert – der Hinweis ist nicht relevant.</string>
+
     <!-- ==================== PRIVACY - LOOP PROTECTION ==================== -->
     <string name="privacy_section_loop_protection_title_de">5. Loop-Schutz</string>
     <string name="privacy_section_loop_protection_body_de">Die App enthält einen automatischen Loop-Schutz, um Endlosweiterleitungen zu verhindern:\n\n• SMS werden nicht weitergeleitet, wenn der Absender der Zielnummer entspricht\n• SMS werden nicht an Ihre eigenen SIM-Kartennummern weitergeleitet\n• Alle blockierten Weiterleitungsversuche werden zur Transparenz protokolliert\n\nDies gewährleistet einen sicheren Betrieb auch bei komplexen Multi-SIM-Konfigurationen.</string>

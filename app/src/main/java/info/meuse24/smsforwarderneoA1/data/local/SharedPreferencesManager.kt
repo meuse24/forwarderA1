@@ -685,6 +685,20 @@ class SharedPreferencesManager(private val context: Context) {
         getPreference(KEY_SIM2_RECEIVE_ENABLED, true)
 
     /**
+     * Merkt sich, dass der Nutzer den RCS-Hinweis auf der Startseite ausgeblendet hat.
+     * @param dismissed true = Hinweis wird nicht mehr angezeigt
+     */
+    fun setRcsHintDismissed(dismissed: Boolean) =
+        setPreference(KEY_RCS_HINT_DISMISSED, dismissed)
+
+    /**
+     * Prüft, ob der RCS-Hinweis bereits ausgeblendet wurde.
+     * @return true wenn ausgeblendet, false wenn er angezeigt werden soll (Standard)
+     */
+    fun isRcsHintDismissed(): Boolean =
+        getPreference(KEY_RCS_HINT_DISMISSED, false)
+
+    /**
      * Speichert die ausgewählte App-Sprache.
      * WICHTIG: Wird in normalen (unverschlüsselten) Preferences gespeichert,
      * da sie in attachBaseContext() gelesen werden muss (vor verschlüsselter Initialisierung).
@@ -756,6 +770,7 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_SIM1_RECEIVE_ENABLED = "sim1_receive_enabled"
         private const val KEY_SIM2_RECEIVE_ENABLED = "sim2_receive_enabled"
+        private const val KEY_RCS_HINT_DISMISSED = "rcs_hint_dismissed"
 
         // BMI/A1 Codes (New Defaults)
         private const val DEFAULT_MMI_ACTIVATE_PREFIX = "*21*"

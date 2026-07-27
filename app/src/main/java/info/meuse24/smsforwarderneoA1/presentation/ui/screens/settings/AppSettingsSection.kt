@@ -30,6 +30,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import info.meuse24.smsforwarderneoA1.domain.model.GoogleMessagesState
+import info.meuse24.smsforwarderneoA1.presentation.ui.screens.home.RcsHintVisibility
+import info.meuse24.smsforwarderneoA1.util.GoogleMessagesDetector
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -245,6 +248,50 @@ fun AppSettingsSection(
                             context.getString(R.string.warning_incomplete_smtp_settings)
                         )
                     }
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // RCS-Hinweis auf der Startseite ein-/ausblenden.
+        // Ohne diesen Schalter waere "Verstanden" eine Sackgasse: Der Hinweis liesse sich
+        // nie wieder zurueckholen.
+        val googleMessagesAvailable = remember {
+            GoogleMessagesDetector.detect(context) != GoogleMessagesState.NOT_INSTALLED
+        }
+        LaunchedEffect(Unit) { RcsHintVisibility.load(prefsManager) }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = stringResource(R.string.toggle_show_rcs_hint),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (googleMessagesAvailable)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Text(
+                    text = if (googleMessagesAvailable)
+                        stringResource(R.string.desc_show_rcs_hint)
+                    else
+                        stringResource(R.string.msg_rcs_hint_not_applicable),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = !RcsHintVisibility.isDismissed,
+                enabled = googleMessagesAvailable,
+                onCheckedChange = { checked ->
+                    RcsHintVisibility.setDismissed(prefsManager, !checked)
                 }
             )
         }

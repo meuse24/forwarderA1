@@ -130,6 +130,14 @@ Oder erstelle eine auf GitHub Pages basierend auf der in-app Policy.
 - `FOREGROUND_SERVICE`: Zuverlässige Hintergrundverarbeitung
 - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: Service-Kontinuität
 
+**Paketsichtbarkeit (`<queries>`, keine Berechtigung):**
+- `com.google.android.apps.messaging`: Die App prüft, ob Google Messages installiert bzw. Standard-SMS-App ist, um zu erklären, warum RCS-Chats nicht weitergeleitet werden können. Es wird kein Zugriff auf fremde App-Daten gewährt; die Data-Safety-Angaben ändern sich dadurch nicht.
+
+**Bewusst NICHT angefordert:**
+- **Benachrichtigungszugriff** (`BIND_NOTIFICATION_LISTENER_SERVICE`): Eine Weiterleitung von RCS über Benachrichtigungen wurde geprüft und verworfen (siehe `rcs.md`, Anhang A). Play bewertet den Zugriff auf sensible Informationen danach, ob er für eine beworbene Kernfunktion erforderlich ist – für eine Zusatzfunktion ist das ein reales Ablehnungsrisiko. Diese Entscheidung ist bei künftigen Feature-Wünschen zu berücksichtigen.
+
+**Store-Listing-Hinweis:** Die Beschreibung muss die Grenze benennen ("leitet SMS weiter; RCS-Chats und MMS werden von Android nicht an Dritt-Apps ausgeliefert"), damit die beworbene Funktion und der tatsächliche Umfang übereinstimmen.
+
 ### 3. **App Content**
 
 #### Zielgruppe

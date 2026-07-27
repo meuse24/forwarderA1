@@ -662,4 +662,31 @@
     <string name="help_data_security_4">SMTP passwords encrypted with Android Keystore</string>
     <string name="help_opensource_heading">Open Source</string>
     <string name="help_opensource_body">This app is open source under the MIT License. View the source code and report issues at:</string>
+
+    <!-- ==================== HELP SCREEN - RCS ==================== -->
+    <string name="help_rcs_heading">RCS chats: why do some messages never arrive?</string>
+    <string name="help_rcs_intro">If individual messages never arrive, RCS chats are usually the reason. Google Messages sends messages between Android devices as RCS instead of SMS. Android does not deliver RCS messages to other apps – not even with additional permissions. This app therefore cannot forward them.</string>
+    <string name="help_rcs_step1_title">Cause:</string>
+    <string name="help_rcs_step1_body">RCS is the successor to SMS and runs over the data connection. Only the messaging app itself can access it. So this is not a fault in the forwarding.</string>
+    <string name="help_rcs_step2_title">Check it yourself:</string>
+    <string name="help_rcs_step2_body">The app cannot read the RCS status – but you can. Open Google Messages, tap your profile picture, then &lt;code&gt;Messages settings&lt;/code&gt; and &lt;code&gt;RCS chats&lt;/code&gt;. The connection status is shown there. In everyday use you can recognise RCS by read receipts and the typing indicator in a conversation.</string>
+    <string name="help_rcs_step3_title">Solution:</string>
+    <string name="help_rcs_step3_body">Turn off RCS on this device: Google Messages, profile picture, &lt;code&gt;Messages settings&lt;/code&gt;, turn off &lt;code&gt;RCS chats&lt;/code&gt;. Your contacts will then automatically send classic SMS again, and forwarding will capture all text messages.</string>
+    <string name="help_rcs_dualsim_warning">With two SIM cards: RCS is tied to the phone number, not to the device. Turn off RCS for each number separately. A configuration that is only half disabled is the most common reason for messages still going missing.</string>
+    <string name="help_rcs_patience_warning">Do not toggle repeatedly: deregistration does not take effect immediately, because sending devices remember a number\'s RCS capability for a while. A test right after turning it off is not meaningful. Repeatedly turning RCS on and off can get you temporarily blocked from RCS.</string>
+    <string name="help_rcs_stuck_note">If messages still fail to arrive, you can deregister your number from RCS server-side at messages.google.com/disable-chat.</string>
+    <string name="help_rcs_after_heading">What changes afterwards</string>
+    <string name="help_rcs_after_1">Images, videos and voice messages arrive as MMS and are not forwarded either – only text messages are forwarded</string>
+    <string name="help_rcs_after_2">The end-to-end encryption of RCS no longer applies; it does not exist for forwarding by SMS or email anyway</string>
+    <string name="help_rcs_after_3">Read receipts, typing indicators and high image quality are no longer available on this device</string>
+    <string name="help_rcs_test_note">Test: send a text message from a second device and check whether the forwarding arrives. A test between the two SIM cards of the same device is not meaningful.</string>
+
+    <!-- ==================== HOME SCREEN - RCS HINT ==================== -->
+    <string name="rcs_hint_default_app">You are using Google Messages. If RCS chats are active there, those messages are not forwarded – Android does not deliver them to other apps.</string>
+    <string name="rcs_hint_installed_not_default">Google Messages is installed but is not your default app. Your number may still be registered for RCS – in that case individual messages will be missing. You can deregister it at messages.google.com/disable-chat.</string>
+    <string name="rcs_hint_action_learn_more">Learn more</string>
+    <string name="rcs_hint_action_dismiss">Got it</string>
+    <string name="toggle_show_rcs_hint">RCS notice on the home screen</string>
+    <string name="desc_show_rcs_hint">Reminds you that RCS chats from Google Messages cannot be forwarded. The full explanation is always available in the help section.</string>
+    <string name="msg_rcs_hint_not_applicable">Google Messages is not installed on this device – the notice is not relevant.</string>
 </resources>

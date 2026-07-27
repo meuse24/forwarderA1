@@ -192,7 +192,8 @@ fun HomeScreen(
     emailViewModel: EmailViewModel,
     testUtilsViewModel: TestUtilsViewModel,
     callState: androidx.compose.runtime.State<Int>,
-    onNavigateToHelp: () -> Unit = {}
+    onNavigateToHelp: () -> Unit = {},
+    onNavigateToRcsHelp: () -> Unit = onNavigateToHelp
 ) {
     val selectedContact by viewModel.selectedContact.collectAsState()
     val forwardingActive by viewModel.forwardingActive.collectAsState()
@@ -230,7 +231,8 @@ fun HomeScreen(
                     forwardingActive = forwardingActive,
                     isCallActive = isCallActive,
                     callState = currentCallState,
-                    onNavigateToHelp = onNavigateToHelp
+                    onNavigateToHelp = onNavigateToHelp,
+                    onNavigateToRcsHelp = onNavigateToRcsHelp
                 )
             } else {
                 PortraitLayout(
@@ -241,7 +243,8 @@ fun HomeScreen(
                     forwardingActive = forwardingActive,
                     isCallActive = isCallActive,
                     callState = currentCallState,
-                    onNavigateToHelp = onNavigateToHelp
+                    onNavigateToHelp = onNavigateToHelp,
+                    onNavigateToRcsHelp = onNavigateToRcsHelp
                 )
             }
         }
@@ -257,7 +260,8 @@ fun LandscapeLayout(
     forwardingActive: Boolean,
     isCallActive: Boolean,
     callState: Int,
-    onNavigateToHelp: () -> Unit = {}
+    onNavigateToHelp: () -> Unit = {},
+    onNavigateToRcsHelp: () -> Unit = onNavigateToHelp
 ) {
     Column(
         modifier = Modifier
@@ -269,6 +273,7 @@ fun LandscapeLayout(
         CallStatusCard(callState = callState)
         PendingForwardingCard(viewModel)
         ForwardingVerificationCard(viewModel)
+        RcsHintCardHost(onNavigateToHelp = onNavigateToRcsHelp)
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -362,7 +367,8 @@ fun PortraitLayout(
     forwardingActive: Boolean,
     isCallActive: Boolean,
     callState: Int,
-    onNavigateToHelp: () -> Unit = {}
+    onNavigateToHelp: () -> Unit = {},
+    onNavigateToRcsHelp: () -> Unit = onNavigateToHelp
 ) {
     rememberCoroutineScope()
     Column(
@@ -375,6 +381,7 @@ fun PortraitLayout(
         CallStatusCard(callState = callState)
         PendingForwardingCard(viewModel)
         ForwardingVerificationCard(viewModel)
+        RcsHintCardHost(onNavigateToHelp = onNavigateToRcsHelp)
 
         Spacer(modifier = Modifier.weight(1f))
 

@@ -44,10 +44,28 @@ import androidx.compose.ui.viewinterop.AndroidView
 import info.meuse24.smsforwarderneoA1.R
 import java.io.ByteArrayOutputStream
 
+/**
+ * Einstiegspunkt in die Hilfe. Bestimmt, welcher Abschnitt zuerst gezeigt wird.
+ *
+ * Die Hilfe ist eine WebView, in der JavaScript bewusst deaktiviert ist. Ein Anker-Sprung
+ * (`scrollTo`/`#id`) ist damit nicht moeglich, und JavaScript nur zum Scrollen zu
+ * aktivieren waere in einer SMS-App unverhaeltnismaessig. Stattdessen wird der gesuchte
+ * Abschnitt an den Anfang des Dokuments gestellt; die uebrige Hilfe folgt vollstaendig
+ * und in unveraenderter Reihenfolge darunter.
+ */
+enum class HelpSection {
+    /** Normale Reihenfolge, Einstieg ueber den Hilfe-Button. */
+    OVERVIEW,
+
+    /** Einstieg ueber den RCS-Hinweis auf der Startseite. */
+    RCS
+}
+
 @Composable
 fun HelpScreen(
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    initialSection: HelpSection = HelpSection.OVERVIEW
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -123,7 +141,7 @@ fun HelpScreen(
                             setBackgroundColor(if (isDarkTheme) 0xFF121212.toInt() else 0xFFFFFFFF.toInt())
                             loadDataWithBaseURL(
                                 null,
-                                getHelpHtmlContent(isDarkTheme, cachedImages, context),
+                                getHelpHtmlContent(isDarkTheme, cachedImages, context, initialSection),
                                 "text/html",
                                 "UTF-8",
                                 null
@@ -136,7 +154,7 @@ fun HelpScreen(
                         // Only reload if content might have changed (e.g., theme change)
                         view.loadDataWithBaseURL(
                             null,
-                            getHelpHtmlContent(isDarkTheme, cachedImages, context),
+                            getHelpHtmlContent(isDarkTheme, cachedImages, context, initialSection),
                             "text/html",
                             "UTF-8",
                             null
@@ -177,7 +195,8 @@ private fun drawableToBase64(context: Context, drawableId: Int): String {
 private fun getHelpHtmlContent(
     isDarkTheme: Boolean,
     cachedImages: Map<String, String>,
-    context: Context
+    context: Context,
+    initialSection: HelpSection = HelpSection.OVERVIEW
 ): String {
     val backgroundColor = if (isDarkTheme) "#121212" else "#FFFFFF"
     val textColor = if (isDarkTheme) "#E0E0E0" else "#333333"
@@ -195,6 +214,63 @@ private fun getHelpHtmlContent(
     val btnResetBase64 = cachedImages["reset"] ?: ""
 
     val locale = context.resources.configuration.locales[0].language
+
+    // Wird je nach Einstiegspunkt an den Anfang oder an die regulaere Position gesetzt.
+    val rcsSection = """
+    <h2>${context.getString(R.string.help_rcs_heading)}</h2>
+
+    <p style="margin-bottom: 12px; line-height: 1.5;">
+        ${context.getString(R.string.help_rcs_intro)}
+    </p>
+
+    <div class="step">
+        <span class="step-number">1.</span>
+        <div class="step-content">
+            <strong>${context.getString(R.string.help_rcs_step1_title)}</strong>
+            ${context.getString(R.string.help_rcs_step1_body)}
+        </div>
+    </div>
+
+    <div class="step">
+        <span class="step-number">2.</span>
+        <div class="step-content">
+            <strong>${context.getString(R.string.help_rcs_step2_title)}</strong>
+            ${context.getString(R.string.help_rcs_step2_body)}
+        </div>
+    </div>
+
+    <div class="step">
+        <span class="step-number">3.</span>
+        <div class="step-content">
+            <strong>${context.getString(R.string.help_rcs_step3_title)}</strong>
+            ${context.getString(R.string.help_rcs_step3_body)}
+            <div class="highlight-red">
+                ${context.getString(R.string.help_rcs_dualsim_warning)}
+            </div>
+            <div class="highlight-red">
+                ${context.getString(R.string.help_rcs_patience_warning)}
+            </div>
+        </div>
+    </div>
+
+    <div class="note">
+        ${context.getString(R.string.help_rcs_stuck_note)}
+    </div>
+
+    <h3>${context.getString(R.string.help_rcs_after_heading)}</h3>
+    <ul style="margin-left: 16px; margin-bottom: 16px;">
+        <li>${context.getString(R.string.help_rcs_after_1)}</li>
+        <li>${context.getString(R.string.help_rcs_after_2)}</li>
+        <li>${context.getString(R.string.help_rcs_after_3)}</li>
+    </ul>
+
+    <div class="note">
+        ${context.getString(R.string.help_rcs_test_note)}
+    </div>
+"""
+
+    val rcsSectionAtTop = if (initialSection == HelpSection.RCS) rcsSection else ""
+    val rcsSectionInPlace = if (initialSection == HelpSection.RCS) "" else rcsSection
 
     return """
 <!DOCTYPE html>
@@ -362,6 +438,8 @@ private fun getHelpHtmlContent(
         ${context.getString(R.string.help_html_intro)}
     </p>
 
+    $rcsSectionAtTop
+
     <h2>${context.getString(R.string.help_html_steps_heading)}</h2>
 
     <div class="step">
@@ -469,6 +547,8 @@ private fun getHelpHtmlContent(
     <div class="note">
         ${context.getString(R.string.help_email_note)}
     </div>
+
+    $rcsSectionInPlace
 
     <h2>${context.getString(R.string.help_technical_heading)}</h2>
 
