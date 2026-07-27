@@ -174,7 +174,7 @@ Android Studio verwendet automatisch das integrierte JDK.
 - **JDK:** 21 (mitgeliefert mit Android Studio JBR)
 - **Gradle:** 8.13 (Wrapper im Projekt enthalten)
 - **Min Android SDK:** API 29 (Android 10)
-- **Target Android SDK:** API 35 (Android 15)
+- **Target Android SDK:** API 36 (Android 16)
 
 ## Nützliche Gradle-Tasks
 

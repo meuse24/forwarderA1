@@ -43,7 +43,7 @@ Der RCS-Status selbst ist für eine normale App nicht auslesbar; die App behaupt
 
 ### Plattform & Sprache
 - **Kotlin**: 2.1.0
-- **Target SDK**: 35 (Android 15)
+- **Target SDK**: 36 (Android 16)
 - **Min SDK**: 29 (Android 10+)
 - **Compile SDK**: 36
 - **JDK**: 17
@@ -70,7 +70,7 @@ Der RCS-Status selbst ist für eine normale App nicht auslesbar; die App behaupt
 - **Android Studio**: Ladybug (2024.2.1) oder neuer
 - **JDK**: Version 17
 - **Gradle**: 8.7+
-- **Android Gradle Plugin**: 8.7.3
+- **Android Gradle Plugin**: 8.9.1
 - **Git**: Für Versionskontrolle
 
 ### Android-Gerät/Emulator

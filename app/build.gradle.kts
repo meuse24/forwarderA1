@@ -52,7 +52,7 @@ android {
     }
 
     namespace = "info.meuse24.smsforwarderneoA1"
-    compileSdk = 35
+    compileSdk = 36
 
     signingConfigs {
         create("release") {
@@ -68,7 +68,7 @@ android {
     defaultConfig {
         applicationId = "info.meuse24.smsforwarderneoA1"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 5
         versionName = "Barracuda 4.1.0"
 

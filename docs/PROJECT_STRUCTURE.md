@@ -306,7 +306,7 @@ ui/theme/
 
 ### Build System
 - **Build Tool**: Gradle (Kotlin DSL)
-- **Target SDK**: 35 (Android 15)
+- **Target SDK**: 36 (Android 16)
 - **Min SDK**: 29 (Android 10)
 - **Language**: Kotlin 2.1.0
 - **JDK**: Java 17

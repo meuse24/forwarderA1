@@ -24,13 +24,17 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
@@ -171,8 +175,11 @@ class MainActivity : ComponentActivity() {
             navigationViewModel.setErrorState(errorState)
         }
 
-        // Normale Statusleiste - kein Edge-to-Edge
-        WindowCompat.setDecorFitsSystemWindows(window, true)
+        // Edge-to-Edge: Ab targetSdk 36 erzwingt Android 16 die randlose Darstellung;
+        // setDecorFitsSystemWindows(true) wird dort ignoriert. Das Wallpaper zeichnet
+        // deshalb bewusst unter Status- und Navigationsleiste, waehrend die Bedienelemente
+        // ueber WindowInsets (Scaffold bzw. safeDrawing) eingerueckt bleiben.
+        enableEdgeToEdge()
 
         // Status Bar Icons auf dunkel setzen (für besseren Kontrast auf hellem Hintergrund)
         WindowCompat.getInsetsController(window, window.decorView)?.apply {
@@ -1034,11 +1041,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // Snackbar außerhalb des Scaffolds aber innerhalb der Box
+            // Snackbar außerhalb des Scaffolds aber innerhalb der Box.
+            // Da er nicht im Scaffold liegt, bekommt er dessen Insets nicht - unter
+            // Edge-to-Edge (targetSdk 36) muss die Statusleiste selbst abgezogen werden.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.TopCenter)  // Ausrichtung oben
+                    .windowInsetsPadding(WindowInsets.statusBars)
                     .padding(top = 40.dp)  // Abstand zur TopBar
                     .offset(y = 8.dp)  // Feinjustierung
             ) {
