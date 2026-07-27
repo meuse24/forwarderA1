@@ -18,6 +18,7 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ### Geändert
 
 - **Target- und Compile-SDK auf 36 (Android 16) angehoben**, Android Gradle Plugin von 8.7.3 auf 8.9.1 (Mindestversion für `compileSdk` 36). Gradle 8.13, Kotlin 2.1.0 und JDK 17 bleiben unverändert. `minSdk` bleibt bei 29.
+- **Mehr nutzbare Höhe auf der Startseite.** Die Kopfleiste hatte 56 dp feste Höhe ohne jeden Inhalt und färbt jetzt nur noch den Statusleistenbereich ein. Zusätzlich steht die transiente Meldung „Rufumleitung angestoßen" kompakt in einer Zeile (Text links, Aktion rechts) statt als hoher Block. Zuvor wurden beim Einrichten einer Weiterleitung der Deaktivieren-Button und die Aktionsbuttons unten aus dem sichtbaren Bereich geschoben. Die Fehlerzustände behalten ihre ausführliche Darstellung.
 - **Edge-to-Edge umgesetzt.** Android 16 erzwingt ab `targetSdk` 36 die randlose Darstellung; ein Opt-out gibt es nicht mehr. `WindowCompat.setDecorFitsSystemWindows(window, true)` ist durch `enableEdgeToEdge()` ersetzt. `CustomTopAppBar` ist kein Material3-`TopAppBar` und behandelt seine Statusleisten-Insets jetzt selbst; der außerhalb des Scaffolds liegende Snackbar ebenfalls. Die `BottomNavigationBar` nutzt `NavigationBar` und regelt das bereits selbst.
 
 ### Dokumentation

@@ -35,6 +35,7 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -108,6 +109,32 @@ private fun ForwardingVerificationCard(viewModel: ContactsViewModel) {
         ForwardingVerification.USER_REPORTED_FAILURE -> stringResource(R.string.forwarding_verification_user_failed)
         ForwardingVerification.NOT_CHECKED -> return
     }
+    // Der haeufigste Fall ist die transiente Erfolgsmeldung nach dem Wahlvorgang. Sie steht
+    // nur 8 Sekunden und wuerde als hohe Karte den Inhalt darunter - insbesondere den
+    // Deaktivieren-Button - aus dem sichtbaren Bereich schieben. Deshalb hier kompakt in
+    // einer Zeile: Text links, Aktion rechts.
+    val compactAssumedSuccess = verification == ForwardingVerification.ASSUMED_SUCCESS && forwardingActive
+    if (compactAssumedSuccess) {
+        AnimatedCard(visible = true, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = text,
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = viewModel::reportForwardingFailure) {
+                    Text(stringResource(R.string.forwarding_report_failure))
+                }
+            }
+        }
+        return
+    }
+
     AnimatedCard(visible = true, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(text, fontWeight = FontWeight.Medium)

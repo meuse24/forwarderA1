@@ -13,12 +13,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Schlanke Kopfleiste ohne Titel.
+ * Kopfleiste ohne eigenen Inhalt.
  *
- * Bewusst kein Material3-TopAppBar, deshalb muessen die WindowInsets selbst behandelt
- * werden: Seit targetSdk 36 erzwingt Android 16 Edge-to-Edge, sodass die Leiste sonst
- * unter der Statusleiste liegen wuerde. Die Surface faerbt den Statusleistenbereich mit,
- * der 56-dp-Inhalt beginnt darunter.
+ * Sie faerbt ausschliesslich den Bereich hinter der Statusleiste ein, damit deren Icons
+ * lesbar bleiben - das Wallpaper darunter ist stellenweise dunkel. Bewusst kein
+ * Material3-TopAppBar, deshalb werden die WindowInsets selbst behandelt: Seit targetSdk 36
+ * erzwingt Android 16 Edge-to-Edge, sonst laege die Leiste unter der Statusleiste.
+ *
+ * Eine feste Zusatzhoehe gibt es absichtlich nicht mehr: Da die Leiste keinen Titel und
+ * keine Aktionen enthaelt, waeren das 56 dp toter Raum. Der Platz fehlt auf der Startseite
+ * genau dann, wenn zusaetzliche Statuskarten eingeblendet werden und der Inhalt sonst
+ * unten aus dem sichtbaren Bereich geschoben wuerde.
  */
 @Composable
 fun CustomTopAppBar(title: String) {
@@ -31,9 +36,6 @@ fun CustomTopAppBar(title: String) {
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .height(56.dp)
-        ) {
-            // Kein Text mehr - nur farbige TopAppBar
-        }
+        )
     }
 }
