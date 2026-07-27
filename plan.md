@@ -12,20 +12,20 @@ zeitnah aktivieren und dabei transparent unterscheiden zwischen:
 
 Der Ablauf darf weder auf eine Dialogbestätigung noch auf ein IDLE-Call-State-Ereignis unbegrenzt warten.
 
-## Ist-Zustand (verifiziert am Code)
+## Ausgangslage vor der Umsetzung (erledigt)
 
-| Befund | Fundstelle |
+Die folgenden Befunde beschrieben den Ausgangspunkt. Sie sind durch die in diesem Dokument festgelegte Umsetzung
+behoben und dienen nur noch der Nachvollziehbarkeit.
+
+| Früherer Befund | Status |
 | --- | --- |
-| Unbegrenztes `callState.first { IDLE }` ohne Watchdog | `MainActivity.kt:858`, `MainActivity.kt:469` |
-| Dialog-Timeout wird als Erfolg gewertet (`MMI_TIMEOUT_SUCCESS`) | `MainActivity.kt:820-825` |
-| MMI/USSD-Unterscheidung per `endsWith("#")`, dreifach dupliziert | `ContactsViewModel.kt:650`, `:685`, `MainActivity.kt:451` |
-| `awaitingMmiConfirmation` ist ein flüchtiges Activity-Feld | `MainActivity.kt:124` |
-| `_pendingForwardingRequest` ist ein nicht persistierter Single-Slot ohne ID | `ContactsViewModel.kt:131`, `:157-162` |
-| `resolvePendingForwardingResult` gleicht das Ergebnis nicht gegen den Vorgang ab | `ContactsViewModel.kt:425-440` |
-| `TelecomManager.placeCall` wird nur bei `phoneAccountHandle != null` versucht | `MainActivity.kt:703` |
-| Zielrufnummer wird im Klartext geloggt – auch als Bestandteil des MMI-Codes | `ContactsViewModel.kt:477`, `MainActivity.kt:464/478/545/590/716/755` |
-| A1-Defaults enden nie auf `#`, der USSD-Callback-Pfad ist damit unerreichbar | `SharedPreferencesManager.kt:676-679` |
-| Keine Unit-Tests vorhanden | `app/src/test/.../ExampleUnitTest.kt` |
+| Unbegrenzte Call-State-Wartezeiten | Erledigt: 30-s-Watchdog vor dem Wählen, 20-s-Evidenzfenster und harte 60-s-Grenze. |
+| Dialog-Timeout wurde als Erfolg gewertet | Erledigt: `MMI_TIMEOUT_SUCCESS` und der Bestätigungsdialog sind entfernt. |
+| Mehrdeutige MMI-/USSD-Erkennung | Erledigt: `MmiExecutionMode` wird aus der Konfiguration abgeleitet und im Vorgang mitgeführt. |
+| Flüchtiger Vorgang ohne ID-Korrelation | Erledigt: persistierter Vorgang, Zustandsmodell, ID-Abgleich und Sperre gegen Doppelauslösung. |
+| `placeCall` nur mit Phone-Account-Handle | Erledigt: `TelecomManager.placeCall()` wird auch ohne Handle versucht; `ACTION_CALL` bleibt Fallback. |
+| Klartext-Zielnummern in App-Logs | Erledigt: zentrale MMI-/Nummernmaskierung und maskierter Audit-Ringpuffer. |
+| Keine Unit-Tests der Zustandslogik | Erledigt: Android-freie Reducer/Policy mit JVM-Unit-Tests. |
 
 ## Fachliche Entscheidung
 
@@ -62,9 +62,9 @@ SMS-Weiterleitung abschaltet, während die Rufumleitung im Netz möglicherweise 
 Vorgang für abgeschlossen, Anrufe laufen aber weiter zum fremden Ziel.
 
 Regel: Auch bei Deaktivierung wird `forwardingActive` sofort auf `false` gesetzt (die App soll nicht ungewollt
-weiterleiten), aber der Verifikationsstatus `ASSUMED_SUCCESS` erzeugt hier eine **dauerhafte, sichtbare Warnung**
-mit Handlungsaufforderung „Rufumleitung im Netz prüfen“ und Direktzugriff auf den Statuscode `*021**`. Die Warnung
-verschwindet nur durch bestätigte Prüfung oder erneuten Deaktivierungsversuch.
+weiterleiten). Nach Ende des MMI-Anrufs erscheint acht Sekunden lang der Hinweis „Deaktivieren der Rufumleitung
+angestoßen – nur bei Fehler melden.“ Der Nachweisgrad bleibt anschließend in der Foreground-Benachrichtigung
+erhalten; die Statusabfrage bleibt über die App erreichbar.
 
 ## Datenmodell
 
@@ -114,8 +114,8 @@ Der Zustand ist Teil des persistierten Vorgangs und dient zugleich als Nebenläu
 
 ### Persistenter Vorgang
 
-Der laufende Vorgang muss Process Death überleben — beim Wechsel in den Dialer kann die Activity getötet werden,
-und heute verschwindet der Vorgang dann lautlos mitsamt `awaitingMmiConfirmation`.
+Der laufende Vorgang muss Process Death überleben — beim Wechsel in den Dialer kann die Activity getötet werden.
+Der frühere Verlust des Vorgangs mitsamt `awaitingMmiConfirmation` ist durch die Persistenz behoben.
 
 ```kotlin
 data class MmiOperation(
@@ -134,7 +134,7 @@ data class MmiOperation(
 
 Persistiert wird in `SharedPreferencesManager` (JSON, ein Slot für den laufenden Vorgang plus ein begrenzter,
 maskierter Audit-Ringpuffer). Beim App-Start wird ein noch offener Vorgang geladen und über den Watchdog aufgelöst,
-statt ihn zu verlieren.
+statt ihn wie früher lautlos zu verlieren.
 
 **ID-Abgleich:** `resolvePendingForwardingResult` erhält die `operationId` als Pflichtparameter und ignoriert
 Ergebnisse, deren ID nicht zum aktuellen Vorgang passt. Das schließt die heutige Lücke, dass ein verspätetes
@@ -191,12 +191,12 @@ Der Callback bleibt maßgeblich.
 - Callback erfolgreich → `CONFIRMED_SUCCESS`, `evidence.ussdResponse` gesetzt
 - Callback fehlgeschlagen → `DIAL_FAILED`
 - Kein Callback innerhalb 30 s → `UNKNOWN_NO_RESPONSE` mit `watchdogExpired = true`, `UssdProgressDialog`
-  schließen (heute bleibt er in diesem Fall unbegrenzt stehen)
+  schließen.
 
 **Ausdrücklich nicht `ASSUMED_SUCCESS`.** Bei USSD ist der Callback die einzige vorgesehene Rückmeldung; bleibt er
 aus, existiert kein positives Indiz — anders als bei Sprach-MMI, wo der entgegengenommene Wählauftrag und ein
 beobachtetes OFFHOOK als schwache Evidenz taugen. Ein Timeout hier als „angenommen erfolgreich" zu werten wäre
-derselbe Denkfehler wie das heutige `MMI_TIMEOUT_SUCCESS`, nur an anderer Stelle.
+derselbe Denkfehler wie das frühere `MMI_TIMEOUT_SUCCESS`, nur an anderer Stelle.
 
 Die SMS-Weiterleitung wird nach der fachlichen Entscheidung trotzdem aktiviert — der Nachweisgrad bleibt aber
 „unbekannt" und erzeugt eine dauerhafte Warnung.
@@ -289,60 +289,51 @@ weiterzuleitender SMS. Stattdessen wird deutlich gewarnt und eine explizite Bedi
 Falls organisatorisch erforderlich, kann eine Einstellung „bei gemeldetem MMI-Fehler SMS-Weiterleitung stoppen“
 ergänzt werden; Standard ist sie nicht.
 
-## Migrations- und UI-Schritte
+## Migrations- und UI-Stand
 
 - Bestehende gespeicherte aktive Weiterleitungen erhalten beim Update `NOT_CHECKED`, nicht rückwirkend
   `CONFIRMED_SUCCESS`. `NOT_CHECKED` erzeugt bewusst **keine** Warnung — der Zustand ist Folge der Migration, nicht
   eines beobachteten Problems.
-- Home-Screen zeigt bei aktivierter Weiterleitung klein den Nachweisgrad: „Angenommen” / „Bestätigt” /
-  „Unbekannt” / „Fehler gemeldet”.
-- Bei `USER_REPORTED_FAILURE`, `DIAL_FAILED`, `UNKNOWN_NO_RESPONSE` oder `watchdogExpired` dauerhafte Warnung, bis
-  erneuter Versuch oder bewusste Bestätigung erfolgt.
+- Nach einem Sprach-MMI erscheint nach Anrufende acht Sekunden lang eine Statuskarte mit Nachweisgrad und
+  „Fehler melden“. Der Hinweis wird beim Neustart nicht erneut angezeigt.
+- Der Nachweisgrad wird persistiert und in der Foreground-Benachrichtigung geführt. Bei
+  `USER_REPORTED_FAILURE`, `DIAL_FAILED` oder `UNKNOWN_NO_RESPONSE` stehen Wiederholen, Fortsetzen bzw.
+  Statusabfrage zur Verfügung.
 - Während `DIALING` zeigt die Statuskarte den laufenden Vorgang; Aktivieren/Deaktivieren sind gesperrt.
 - Bei Deaktivierung mit `ASSUMED_SUCCESS`: dauerhafte Warnung „Rufumleitung im Netz nicht bestätigt“ mit
   Statusabfrage-Shortcut.
 
-## Testbarkeit
+## Testbarkeit (umgesetzt)
 
-Aktuell existieren keine Unit-Tests (nur die generierten Platzhalter). Sieben rein manuelle Abnahmekriterien machen
-die Zustandslogik nicht regressionssicher. Deshalb:
+Die Zustandslogik ist als Android-freie Klasse extrahiert und mit JVM-Unit-Tests abgedeckt. Getestet werden
+Timeouts, Verifikationsübergänge, Evidenz, Sperre, Wiederherstellung, harte Zeitgrenze und die getrennten
+ACTIVATE-/DEACTIVATE-Folgen.
 
-- Die Zustandsmaschine (Vorgang + Ergebnis + Evidenz → neuer Zustand) wird als Android-freie Klasse extrahiert und
-  mit JVM-Unit-Tests abgedeckt: beide Watchdogs mit ihren unterschiedlichen Konsequenzen, USSD-Timeout →
-  `UNKNOWN_NO_RESPONSE`, verspätetes Callback mit fremder ID, Sperre bei `DIALING`, Auflösung eines beim Neustart
-  geladenen `DIALING`-Vorgangs, harte 60-s-Grenze, ACTIVATE- und DEACTIVATE-Pfad.
-- Nur Wählweg, SIM-Auswahl und Dialer-Verhalten bleiben Gerätetests.
+Wählweg, SIM-Auswahl und Dialer-Verhalten bleiben bewusst Gerätetests.
 
-### Abnahmekriterien (Gerät)
+### Abnahmekriterien (Gerät; noch offen, soweit nicht markiert)
 
-- A1-Gerät/SIM, Aktivierungscode mit `**` am Ende: Anruf startet auf der richtigen SIM; SMS-Weiterleitung wird ohne
-  Eingabe aktiv.
-- Kein Mobilfunk / keine Berechtigung / kein Telecom-Dienst: kein Aktivieren, Status `DIAL_FAILED`.
-- Dialer kehrt nicht zurück oder Call-State bleibt aus: App hängt nicht; nach Watchdog liegt ein nachvollziehbarer
-  Status vor.
-- Laufender regulärer Anruf beim Auslösen: nach 30 s bricht der Vorgang mit `DIAL_FAILED` ab; es wird **kein**
-  MMI-Anruf in das laufende Gespräch hinein gewählt und die SMS-Weiterleitung nicht aktiviert.
-- App wird während des Dialer-Anrufs vom System beendet: Vorgang wird beim Neustart wiederhergestellt und aufgelöst,
-  kein doppeltes Aktivieren, keine dauerhaft blockierende `DIALING`-Sperre.
-- Zwei schnelle Klicks auf Aktivieren/Deaktivieren: nur ein MMI-Anruf wird ausgelöst.
-- Nutzer meldet Fehler: Status wechselt zuverlässig zu `USER_REPORTED_FAILURE`; die SMS-Weiterleitung läuft weiter.
-- USSD-Code (generische Konfiguration): Callback-Erfolg/-Fehler ändert den Status korrekt; ohne Callback greift nach
-  30 s der Watchdog mit `UNKNOWN_NO_RESPONSE` und der Fortschrittsdialog schließt.
-- Dual-SIM: ausgewählter `PhoneAccountHandle` wird auf den Zielgeräten tatsächlich genutzt.
-- Logs enthalten keine unmaskierte Zielrufnummer.
+- [x] A1-Sprach-MMI auf Samsung SM-A536B / Android 16: Aktivieren und Deaktivieren über die konfigurierte A1-SIM,
+  jeweils mit bestätigter A1-Sprachansage.
+- [x] Dual-SIM-Auswahl auf diesem Gerät: A1-SIM wurde als Standard-Sprach-SIM verwendet.
+- [x] Zwei schnelle Klicks: Produktivpfad ist durch DIALING-Sperre und JVM-Test abgesichert.
+- [x] App-Logs/Audit: zentrale Maskierung ist implementiert und geprüft.
+- [ ] Generische `#`-/USSD-Konfiguration auf der spusu-SIM: Callback-Erfolg, Callback-Fehler und 30-s-Timeout.
+- [ ] Kein Mobilfunk / keine Berechtigung / kein Telecom-Dienst: `DIAL_FAILED`, keine Aktivierung.
+- [ ] Laufendes reguläres Gespräch: nach 30 s kein MMI-Anruf, `DIAL_FAILED`, keine Aktivierung.
+- [ ] App während des MMI-Anrufs beenden und neu starten: Wiederherstellung ohne dauerhafte Sperre.
+- [ ] Nutzer meldet Fehler: `USER_REPORTED_FAILURE`, SMS-Weiterleitung läuft weiter.
+- [ ] Audit-Bereinigung nach 30 Tagen auf einem Gerät bzw. mit kontrollierter Zeitbasis prüfen.
 
-## Umsetzungsreihenfolge
+## Umsetzungsreihenfolge (abgeschlossen)
 
-1. `MmiCodeConfig` mit `MmiExecutionMode`; die drei `endsWith("#")`-Stellen entfernen.
-2. `MmiOperation` mit ID, Zustand und Persistenz; `resolvePendingForwardingResult` auf ID-Abgleich umstellen;
-   `DIALING`-Sperre inklusive garantiertem Ausgang.
-3. Beide Watchdogs mit ihren unterschiedlichen Konsequenzen; alle `first { IDLE }` kapseln und den Rückgabewert
-   auswerten.
-4. Sofort-Aktivierung nach `placeCall`; `MmiConfirmationDialog` und `MMI_TIMEOUT_SUCCESS` entfernen;
-   USSD-Timeout auf `UNKNOWN_NO_RESPONSE`.
-5. Statuskarte mit Nachweisgrad und „Fehler melden“.
-6. `maskMmiCode` und Umstellung der Logaufrufe.
-7. Unit-Tests der Zustandsmaschine.
+1. [x] `MmiExecutionMode` aus der Konfiguration ableiten.
+2. [x] Persistierter Vorgang, ID-Abgleich und DIALING-Sperre.
+3. [x] Watchdogs und garantierte Ausgänge.
+4. [x] Sofort-Aktivierung, Entfernung der alten Bestätigungslogik und USSD-Timeout.
+5. [x] Statuskarte mit „Fehler melden“.
+6. [x] Zentrale MMI-/Nummernmaskierung und maskierter Audit-Ringpuffer.
+7. [x] JVM-Tests der Zustandslogik.
 
 Schritte 1–4 sind die funktionale Korrektur und ergeben für sich genommen eine auslieferbare Version. Schritte 5–7
 sind Transparenz, Datenschutz und Absicherung.
