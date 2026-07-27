@@ -200,7 +200,7 @@
     <string name="mmi_sim_unknown_carrier">Unbekannter Anbieter</string>
 
     <!-- ==================== CALL STATUS CARD ==================== -->
-    <string name="status_mmi_code_executing">MMI-Code wird ausgeführt…</string>
+    <string name="status_mmi_code_executing">Telefonat aktiv…</string>
     <string name="status_incoming_call">Eingehender Anruf…</string>
 
     <!-- ==================== DIALOGS ==================== -->
@@ -412,18 +412,18 @@
     <string name="help_step1_body">Tippen Sie auf der Hauptseite auf die Schaltfläche &lt;code&gt;%1$s&lt;/code&gt;. Wählen Sie einen Kontakt aus Ihren Kontakten aus. Dies ist die Nummer, an die Ihre Anrufe und SMS weitergeleitet werden.</string>
     <string name="help_step2_title">Aktivieren:</string>
     <string name="help_step2_body">Nachdem Sie eine Nummer ausgewählt haben, wird die Weiterleitung automatisch aktiviert. Die App wählt den Code, um die Rufumleitung beim Provider einzurichten. Gleichzeitig startet der interne Dienst für die SMS-Weiterleitung.</string>
-    <string name="help_step2_warning">Warten Sie den automatischen Wählvorgang vollständig ab. Während des Wählvorgangs erhalten Sie eine kurze akustische Rückmeldung über den Erfolg der Rufumleitung. Die App kehrt danach automatisch zum Hauptbildschirm zurück.</string>
+    <string name="help_step2_warning">Warten Sie den automatischen Wählvorgang vollständig ab. Bei A1 hören Sie die Netzansage; bei Standard-`#`-Codes verarbeitet die App die USSD-Antwort. Die App setzt den Ablauf automatisch fort. Nur wenn die Ansage oder Antwort auf einen Fehler hinweist, tippen Sie auf „Fehler melden“.</string>
     <string name="help_step3_title">Deaktivieren:</string>
     <string name="help_step3_body">Um alle Weiterleitungen zu beenden, tippen Sie auf die rote &lt;code&gt;%1$s&lt;/code&gt; Schaltfläche auf dem Hauptbildschirm.</string>
     <string name="help_note_title">Wichtiger Hinweis zur Rufumleitung:</string>
-    <string name="help_note_body">Die App leitet Anrufe nicht selbst um. Sie sendet nur einen Standard-Steuercode (MMI-Code) an Ihren Mobilfunkanbieter. Die eigentliche Umleitung findet im Netz des Anbieters statt.</string>
+    <string name="help_note_body">Die App leitet Anrufe nicht selbst um. Sie übergibt den konfigurierten MMI-/USSD-Code an den Mobilfunkanbieter; bei A1 wird dieser als Sprachanruf ausgeführt. Die eigentliche Umleitung findet ausschließlich im Netz des Anbieters statt. Eine A1-Sprachansage kann Android nicht maschinell auswerten; ohne Fehlermeldung bleibt das Ergebnis daher „angenommen“.</string>
     <string name="help_buttons_heading">Weitere Schaltflächen</string>
     <string name="help_btn_change_contact_title">Kontakt ändern</string>
     <string name="help_btn_change_contact_desc">Neue Telefonnummer für die Weiterleitung wählen, ohne zuvor zu deaktivieren.</string>
     <string name="help_btn_test_sms_title">Test-SMS</string>
     <string name="help_btn_test_sms_desc">Sendet eine Test-Nachricht an die Zielnummer, um die SMS-Weiterleitung zu prüfen.</string>
     <string name="help_btn_status_title">Status</string>
-    <string name="help_btn_status_desc">Fragt den aktuellen Status der Rufumleitung beim Netzbetreiber ab und gibt akustisches Feedback.</string>
+    <string name="help_btn_status_desc">Fragt den Status beim Netzbetreiber ab, ohne die Einstellung zu ändern. Je nach Anbieter kommt eine USSD-Antwort oder eine hörbare Netzansage.</string>
     <string name="help_btn_reset_title">Reset</string>
     <string name="help_btn_reset_desc">Setzt alle Einstellungen auf Standard (deaktiviert) zurück, falls sich die App unerwartet verhält.</string>
 
@@ -545,8 +545,8 @@
     <!-- Phone Permission -->
     <string name="privacy_perm_phone_de">Telefon</string>
     <string name="privacy_perm_phone_en">Phone</string>
-    <string name="privacy_perm_phone_body_de">Benötigt für Anrufweiterleitung (MMI-Codes) und SIM-Kartenverwaltung.</string>
-    <string name="privacy_perm_phone_body_en">Required for call forwarding (MMI codes) and SIM card management.</string>
+    <string name="privacy_perm_phone_body_de">Benötigt, um konfigurierte MMI-/USSD-Codes für die Rufumleitung über die ausgewählte SIM zu übergeben sowie den Telefonstatus zu beobachten. A1-Codes werden dabei als Sprachanruf ausgeführt.</string>
+    <string name="privacy_perm_phone_body_en">Required to send configured MMI/USSD codes through the selected SIM and observe call state. A1 codes are executed as voice calls.</string>
 
     <!-- Battery Permission -->
     <string name="privacy_perm_battery_de">Akku-Optimierung</string>
@@ -563,8 +563,8 @@
     <!-- Security Section -->
     <string name="privacy_section_security_title_de">Datensicherheit</string>
     <string name="privacy_section_security_title_en">Data Security</string>
-    <string name="privacy_section_security_body_de">Alle Einstellungen und sensiblen Daten werden verschlüsselt auf Ihrem Gerät gespeichert. Es werden keine Daten an externe Server übertragen.</string>
-    <string name="privacy_section_security_body_en">All settings and sensitive data are stored encrypted on your device. No data is transmitted to external servers.</string>
+    <string name="privacy_section_security_body_de">Alle Einstellungen und sensiblen Daten werden verschlüsselt auf Ihrem Gerät gespeichert. Das lokale MMI-Audit enthält höchstens 200 Einträge für maximal 30 Tage und nur maskierte Codes, Nummern und Netzantworten. Vollständige Zielnummern und rohe Netzantworten werden dort nicht gespeichert. Es werden keine Daten an externe Server übertragen.</string>
+    <string name="privacy_section_security_body_en">All settings and sensitive data are stored encrypted on your device. The local MMI audit keeps at most 200 entries for up to 30 days and contains only masked codes, numbers, and carrier responses. Full destination numbers and raw carrier responses are not stored there. No data is transmitted to external servers.</string>
 
     <!-- Email Section -->
     <string name="privacy_section_email_title_de">E-Mail-Weiterleitung</string>
@@ -593,6 +593,7 @@
     <!-- ==================== ADDITIONAL SNACKBARS ==================== -->
     <!-- Call & Phone -->
     <string name="snackbar_call_permission_missing">Anrufberechtigung für diese Funktion erforderlich</string>
+    <string name="snackbar_airplane_mode_active">Flugmodus ausschalten, bevor ein Rufumleitungs-Code gesendet wird</string>
     <string name="snackbar_dial_error">Fehler beim Wählen der Nummer</string>
     <string name="snackbar_phone_service_unavailable">Telefondienst nicht verfügbar</string>
     <string name="snackbar_read_phone_error">Fehler beim Lesen der Telefonnummer</string>
@@ -689,7 +690,7 @@
     <string name="open_source_feature_2">Kein verstecktes Tracking oder Datensammlung</string>
     <string name="open_source_feature_3">Community-getriebene Entwicklung</string>
     <string name="open_source_feature_4">Kostenlos nutzbar, änderbar und teilbar</string>
-    <string name="btn_view_source">Quellcode ansehen</string>
+    <string name="btn_view_source">Code ansehen</string>
     <string name="btn_report_issue">Fehler melden</string>
 
     <!-- ==================== HELP SCREEN - TECHNICAL DETAILS ==================== -->

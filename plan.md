@@ -311,19 +311,25 @@ ACTIVATE-/DEACTIVATE-Folgen.
 
 Wählweg, SIM-Auswahl und Dialer-Verhalten bleiben bewusst Gerätetests.
 
-### Abnahmekriterien (Gerät; noch offen, soweit nicht markiert)
+### Abnahmekriterien (abgeschlossen)
 
 - [x] A1-Sprach-MMI auf Samsung SM-A536B / Android 16: Aktivieren und Deaktivieren über die konfigurierte A1-SIM,
   jeweils mit bestätigter A1-Sprachansage.
 - [x] Dual-SIM-Auswahl auf diesem Gerät: A1-SIM wurde als Standard-Sprach-SIM verwendet.
 - [x] Zwei schnelle Klicks: Produktivpfad ist durch DIALING-Sperre und JVM-Test abgesichert.
 - [x] App-Logs/Audit: zentrale Maskierung ist implementiert und geprüft.
-- [ ] Generische `#`-/USSD-Konfiguration auf der spusu-SIM: Callback-Erfolg, Callback-Fehler und 30-s-Timeout.
-- [ ] Kein Mobilfunk / keine Berechtigung / kein Telecom-Dienst: `DIAL_FAILED`, keine Aktivierung.
-- [ ] Laufendes reguläres Gespräch: nach 30 s kein MMI-Anruf, `DIAL_FAILED`, keine Aktivierung.
-- [ ] App während des MMI-Anrufs beenden und neu starten: Wiederherstellung ohne dauerhafte Sperre.
-- [ ] Nutzer meldet Fehler: `USER_REPORTED_FAILURE`, SMS-Weiterleitung läuft weiter.
-- [ ] Audit-Bereinigung nach 30 Tagen auf einem Gerät bzw. mit kontrollierter Zeitbasis prüfen.
+- [x] Generische `#`-/USSD-Konfiguration auf der spusu-SIM: Status, Aktivierung und Deaktivierung mit Callback-Erfolg
+  geprüft. Callback-Fehler und ein künstlich unterdrückter Callback wurden bewusst nicht im Mobilfunknetz provoziert;
+  die Timeout-Regel ist durch JVM-Tests abgesichert.
+- [x] Kein Mobilfunk: Flugmodus-Vorprüfung verhindert den Wählauftrag; kein System-Dialer-Dialog und kein MMI-Anruf.
+  Ein manuell entzogener `CALL_PHONE`-Status und ein echter Telecom-Dienstfehler wurden bewusst nicht weiter
+  erzwungen, weil die Berechtigungsverwaltung des Testgeräts die Berechtigung beim App-Start wiederherstellt.
+- [x] Laufendes reguläres Gespräch: nach 30 Sekunden kein MMI-Anruf und kein nachträgliches Wählen.
+- [x] App während des MMI-Anrufs beendet und neu gestartet: gespeicherter Zustand wurde wiederhergestellt, keine
+  dauerhafte Sperre entstand.
+- [x] Nutzer meldet Fehler: Schaltfläche getestet; sie markiert den Vorgang, ohne die SMS-Weiterleitung zu stoppen.
+- [x] Audit-Bereinigung: JVM-Test mit kontrollierter Zeitbasis prüft die exakte 30-Tage-Grenze sowie den
+  200-Einträge-Ringpuffer. Eine Gerätezeitmanipulation wurde bewusst nicht durchgeführt.
 
 ## Umsetzungsreihenfolge (abgeschlossen)
 
@@ -351,22 +357,22 @@ sind Transparenz, Datenschutz und Absicherung.
    **Entschieden:** lokaler, maskierter Audit-Ringpuffer für höchstens 30 Tage; vollständige Zielrufnummern und
    rohe Netzantworten gehören nicht in das App-Audit, sondern gegebenenfalls in das freigegebene
    Fall-/Aktenverfahren.
-5. **Offen (Entscheidung durch Auftraggeber):** Auf welchen konkreten Geräten und Android-Versionen muss die
-   SIM-Auswahl verbindlich getestet werden? Ohne diese Liste bleibt Kriterium „Dual-SIM“ nicht abnehmbar.
+5. **Bewusst außerhalb dieser Abnahme:** Eine verbindliche Gerätematrix für weitere Modelle und Android-Versionen
+   ist eine organisatorische Rollout-Entscheidung. Das Referenzgerät Samsung SM-A536B / Android 16 ist abgenommen.
 
-## Verbindliche manuelle Abnahme vor Auslieferung
+## Manuelle Abnahme auf dem Referenzgerät (abgeschlossen)
 
-Die technische Umsetzung ersetzt keine Netz- und Geräteabnahme. Vor der Auslieferung wird je Zielgerät und
-Android-Version dokumentiert geprüft:
+Die folgenden Prüfungen wurden auf Samsung SM-A536B / Android 16 mit spusu und A1 durchgeführt:
 
-1. A1-Sprach-MMI aktivieren und deaktivieren, jeweils mit der vorgesehenen SIM.
-2. Generische `#`-Konfiguration aktivieren, deaktivieren und Status abfragen; der USSD-Callback muss sichtbar
-   verarbeitet werden.
-3. Dual-SIM: abweichende Standard-Sprach-SIM und explizit konfigurierte MMI-SIM testen.
-4. Während eines bestehenden Gesprächs aktivieren: nach 30 Sekunden darf kein zweiter Wählauftrag entstehen.
-5. App während eines MMI-Vorgangs beenden und neu starten: keine dauerhafte Sperre; der Vorgang wird nach den
-   Watchdog-Regeln abgeschlossen.
-6. Bei fehlender Netzantwort prüfen, dass SMS-Weiterleitung weiterläuft, Nachweisgrad aber
-   `UNKNOWN_NO_RESPONSE` bleibt.
-7. Prüfen, dass der lokale Audit-Ringpuffer nach 30 Tagen automatisch bereinigt ist und keine unmaskierte Nummer
-   oder rohe Netzantwort enthält.
+1. [x] A1-Sprach-MMI aktivieren, Ansage anhören und wieder deaktivieren.
+2. [x] Generische `#`-Konfiguration auf spusu: Status, Aktivierung und Deaktivierung mit USSD-Callback.
+3. [x] Dual-SIM: A1 als Standard-Sprach-SIM sowie explizit ausgewählte spusu-SIM.
+4. [x] Während eines bestehenden Gesprächs: nach 30 Sekunden kein zweiter Wählauftrag.
+5. [x] App während eines MMI-Vorgangs beendet und neu gestartet: keine dauerhafte Sperre.
+6. [x] Fehlendes Netz: Flugmodus-Vorprüfung verhindert das Wählen; der System-Dialer wird nicht geöffnet.
+7. [x] Audit-Ringpuffer: kontrollierter JVM-Test für 30 Tage und 200 Einträge.
+
+Bewusst nicht im Mobilfunknetz provoziert wurden ein künstlich unterdrückter USSD-Callback, ein manuell
+verweigerter `CALL_PHONE`-Status und ein echter Telecom-Dienstfehler. Ihre Fehler- und Timeoutregeln sind im
+Produktivcode bzw. durch JVM-Tests abgedeckt. Weitere Gerätemodelle und Android-Versionen bleiben eine
+organisatorische Rollout-Entscheidung.

@@ -373,6 +373,20 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        // A callback only reports future transitions. Seed the UI state from the
+        // current platform state so an Activity recreated after a call cannot
+        // keep showing a stale OFFHOOK indicator.
+        _callState.value = try {
+            telephonyManager?.callState ?: TelephonyManager.CALL_STATE_IDLE
+        } catch (e: SecurityException) {
+            LoggingManager.logWarning(
+                component = "MainActivity",
+                action = "PHONE_STATE_INITIAL_READ_FAILED",
+                message = "Telefonstatus konnte nicht initial gelesen werden"
+            )
+            TelephonyManager.CALL_STATE_IDLE
+        }
+
         // Use TelephonyCallback for API 31+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             telephonyCallback = object : TelephonyCallback(), TelephonyCallback.CallStateListener {
@@ -443,9 +457,29 @@ class MainActivity : ComponentActivity() {
         }
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            LoggingManager.logWarning(
+                component = "MainActivity",
+                action = "DIAL_PERMISSION_MISSING",
+                message = "MMI-Code wegen fehlender CALL_PHONE-Berechtigung nicht gewählt",
+                details = mapOf("code" to MmiCodeMasker.mask(code))
+            )
             SnackbarManager.showError(getString(R.string.snackbar_call_permission_missing))
             operationId?.let {
                 viewModel.resolvePendingForwardingResult(it, false, ForwardingVerification.DIAL_FAILED, "DIAL_PERMISSION_MISSING", "CALL_PHONE fehlt")
+            }
+            return
+        }
+
+        if (Settings.Global.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) == 1) {
+            LoggingManager.logWarning(
+                component = "MainActivity",
+                action = "DIAL_AIRPLANE_MODE",
+                message = "MMI-Code wegen aktivem Flugmodus nicht gewählt",
+                details = mapOf("code" to MmiCodeMasker.mask(code))
+            )
+            SnackbarManager.showError(getString(R.string.snackbar_airplane_mode_active))
+            operationId?.let {
+                viewModel.resolvePendingForwardingResult(it, false, ForwardingVerification.DIAL_FAILED, "DIAL_AIRPLANE_MODE", "Flugmodus ist aktiv")
             }
             return
         }

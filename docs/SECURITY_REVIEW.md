@@ -1,7 +1,7 @@
 # Security Code Review - SMS Forwarder Neo
 
 **Review Date:** 2025-12-08
-**Version:** 4 "Barracuda"
+**Version:** 4.1.0 "Barracuda"
 **Reviewer:** Claude (Automated Security Analysis)
 
 ---
@@ -47,6 +47,7 @@ EncryptedSharedPreferences.create(
 - SMTP Passwörter verschlüsselt gespeichert
 - Telefonnummern verschlüsselt gespeichert
 - Keine Klartext-Speicherung sensibler Daten
+- MMI-Audit nur mit maskierten MMI-Codes, Zielnummern und Netzantworten; höchstens 200 Einträge für maximal 30 Tage
 
 **Status:** ✅ SECURE
 
@@ -185,7 +186,8 @@ Log.e("MainActivity", "Error during initialization", e)         // ⚠️ Bleibt
 - ✅ Keine Passwörter in Logs
 - ✅ Keine Email-Adressen in Logs
 - ✅ SMS-Inhalte nur über LoggingManager (File-basiert)
-- ⚠️ Telefonnummern könnten in Error-Logs erscheinen
+- ✅ MMI-Codes, Zielnummern und USSD-Netzantworten werden vor dem Logging zentral maskiert
+- ✅ Das lokale MMI-Audit enthält keine vollständigen Zielnummern oder rohen Netzantworten
 
 **Empfehlung:**
 ```proguard

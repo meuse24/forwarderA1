@@ -13,6 +13,7 @@ import info.meuse24.smsforwarderneoA1.domain.model.MmiExecutionMode
 import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
 import info.meuse24.smsforwarderneoA1.domain.model.DialPath
 import info.meuse24.smsforwarderneoA1.domain.model.MmiAuditEntry
+import info.meuse24.smsforwarderneoA1.domain.model.MmiAuditRetentionPolicy
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import java.io.File
@@ -264,7 +265,7 @@ class SharedPreferencesManager(private val context: Context) {
     fun clearPendingMmiRequest() = setPreference(KEY_PENDING_MMI_OPERATION, "")
 
     fun appendMmiAudit(entry: MmiAuditEntry) {
-        val cutoff = System.currentTimeMillis() - AUDIT_RETENTION_MS
+        val now = System.currentTimeMillis()
         val entries = runCatching {
             val raw = getPreference(KEY_MMI_AUDIT, "")
             if (raw.isBlank()) emptyList() else JSONArray(raw).let { array ->
@@ -274,7 +275,7 @@ class SharedPreferencesManager(private val context: Context) {
                 }.getOrNull() }
             }
         }.getOrDefault(emptyList())
-        val retained = (entries + entry).filter { it.timestampMillis >= cutoff }.takeLast(MAX_AUDIT_ENTRIES)
+        val retained = MmiAuditRetentionPolicy.retain(entries + entry, now)
         val serialized = JSONArray().apply { retained.forEach { item -> put(JSONObject().apply {
             put("timestamp", item.timestampMillis); put("id", item.operationId); put("action", item.action); put("mode", item.executionMode.name); put("subscription_id", item.targetSubscriptionId); put("dial_path", item.dialPath.name); put("verification", item.verification.name); put("call_observed", item.evidence.callObserved); put("call_duration", item.evidence.callDurationMs); put("watchdog_expired", item.evidence.watchdogExpired); put("ussd_response", item.evidence.ussdResponse); put("message", item.message)
         }) } }
@@ -285,12 +286,12 @@ class SharedPreferencesManager(private val context: Context) {
         runCatching {
             val raw = getPreference(KEY_MMI_AUDIT, "")
             if (raw.isBlank()) return
-            val cutoff = System.currentTimeMillis() - AUDIT_RETENTION_MS
+            val now = System.currentTimeMillis()
             val retained = JSONArray().apply {
                 val entries = JSONArray(raw)
                 for (index in 0 until entries.length()) {
                     val entry = entries.optJSONObject(index) ?: continue
-                    if (entry.optLong("timestamp") >= cutoff) put(entry)
+                    if (MmiAuditRetentionPolicy.shouldRetain(entry.optLong("timestamp"), now)) put(entry)
                 }
             }
             setPreference(KEY_MMI_AUDIT, retained.toString())
@@ -750,8 +751,6 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_FORWARDING_VERIFICATION = "forwarding_verification"
         private const val KEY_PENDING_MMI_OPERATION = "pending_mmi_operation"
         private const val KEY_MMI_AUDIT = "mmi_audit"
-        private const val AUDIT_RETENTION_MS = 30L * 24 * 60 * 60 * 1000
-        private const val MAX_AUDIT_ENTRIES = 200
         private const val KEY_MAX_LOG_SIZE_MB = "max_log_size_mb"
         private const val KEY_PRIVACY_POLICY_ACCEPTED = "privacy_policy_accepted"
         private const val KEY_APP_LANGUAGE = "app_language"

@@ -352,7 +352,7 @@
     <div class="container">
         <header class="header">
             <h1>SMS/TEL Forwarder Neo</h1>
-            <p>Version: Barracuda (v4)</p>
+            <p>Version: Barracuda 4.1.0 (v4.1.0)</p>
         </header>
 
         <main class="content">
@@ -382,17 +382,18 @@
                 <article class="feature-item">
                     <h3>📞 Anrufweiterleitung</h3>
                     <ul>
-                        <li><strong>Anpassbare MMI-Codes:</strong> Wählbar zwischen BMI/A1-Codes (Standard) und Generic-Codes
+                        <li><strong>Anpassbare MMI-/USSD-Codes:</strong> Wählbar zwischen A1-Codes (Standard) und generischen Codes
                             <ul style="margin-top: 8px; font-size: 0.95em;">
-                                <li>BMI/A1 Österreich (Standard): <code>*21*Nummer**</code> (Aktivieren), <code>*021**</code> (Status), <code>**21**</code> (Deaktivieren)</li>
-                                <li>Generic Standard: <code>*21*Nummer#</code> (Aktivieren), <code>*#21#</code> (Status), <code>##21#</code> (Deaktivieren)</li>
+                                <li>A1 Österreich (Standard): <code>*21*Nummer**</code> (Aktivieren), <code>*021**</code> (Status), <code>**21**</code> (Deaktivieren)</li>
+                                <li>Generischer Standard: <code>*21*Nummer#</code> (Aktivieren), <code>*#21#</code> (Status), <code>##21#</code> (Deaktivieren)</li>
                             </ul>
                         </li>
                         <li><strong>Carrier-native Weiterleitung:</strong> Nutzt die Rufumleitung des Mobilfunkanbieters</li>
-                        <li><strong>Statusabfrage:</strong> Echtzeit-Überprüfung aktiver Weiterleitungen</li>
+                        <li><strong>Statusabfrage:</strong> Fragt den Status beim Mobilfunkanbieter ab, ohne eine Einstellung zu ändern</li>
                         <li><strong>Reset-Funktion:</strong> Ein-Klick-Deaktivierung aller Weiterleitungen</li>
                         <li><strong>Internationale Vorwahl:</strong> Konfigurierbare Dial-Präfixe (Standard: "00" für Österreich)</li>
-                        <li><strong>Benutzerführung:</strong> 4-Sekunden-Warnung vor jedem MMI-Code-Wählvorgang mit klaren Anweisungen</li>
+                        <li><strong>Passender Wählweg:</strong> A1-Sprach-MMI wird als Telefonat ausgeführt; generische <code>#</code>-Codes werden per USSD mit Netzantwort verarbeitet</li>
+                        <li><strong>Fehlermeldung ohne Blockade:</strong> Nach einem A1-Sprach-MMI läuft der Ablauf automatisch weiter; nur bei einem Fehler muss der Benutzer eingreifen</li>
                     </ul>
                 </article>
 
@@ -435,6 +436,7 @@
                     <ul>
                         <li><strong>Verschlüsselte Präferenzen:</strong> Alle Einstellungen werden verschlüsselt gespeichert</li>
                         <li><strong>Keine Cloud-Synchronisation:</strong> Alle Daten bleiben lokal auf dem Gerät</li>
+                        <li><strong>Maskiertes MMI-Audit:</strong> Höchstens 200 Einträge für maximal 30 Tage; keine vollständigen Zielnummern oder rohen Netzantworten</li>
                         <li><strong>Open Source (MIT):</strong> Vollständig transparenter Quellcode auf GitHub</li>
                         <li><strong>Keine Tracking-Dienste:</strong> Keinerlei Datensammlung oder Analytics</li>
                         <li><strong>Minimale Berechtigungen:</strong> Nur notwendige Berechtigungen werden angefordert</li>

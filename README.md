@@ -27,6 +27,7 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 - **SMTP-Unterstützung**: Flexible E-Mail-Konfiguration mit verschiedenen Anbietern
 - **Test-Utilities**: Integrierte Tools zum Testen der SMS-Funktionalität
 - **Heartbeat-Monitoring**: Automatische Überwachung der Dienstverfügbarkeit
+- **Rufumleitung per MMI/USSD**: Wählweg passend zur konfigurierten SIM; A1-Sprach-MMI und generische `#`-USSD-Codes werden getrennt behandelt
 
 ## Technologie-Stack
 
@@ -162,6 +163,14 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 - **WakeLock**: Verhindert Sleep während der Nachrichtenverarbeitung
 - **Service-Neustart**: Nutzt `START_STICKY` für automatischen Neustart
 
+### Rufumleitung per MMI/USSD
+
+- Wählen Sie zuerst die SIM-Karte und die dazu passende MMI-/USSD-Konfiguration.
+- A1-Codes mit `**` werden als Sprach-MMI über Androids Telefoniefunktion gewählt. Die Netzansage ist hörbar, aber nicht maschinell auswertbar; der Ablauf wird deshalb als angenommen ausgeführt und nur bei einem gemeldeten Fehler korrigiert.
+- Generische Codes mit `#` werden als USSD-Anfrage ausgeführt und liefern eine Netzantwort zurück.
+- Eine Statusabfrage ändert keine Weiterleitung. Im Flugmodus wird kein Wählvorgang gestartet.
+- Das lokale MMI-Audit enthält ausschließlich maskierte Informationen und wird auf 200 Einträge beziehungsweise 30 Tage begrenzt.
+
 ## Architektur
 
 ### Package-Struktur
@@ -277,7 +286,8 @@ info.meuse24.smsforwarderneoA1/
 - Verschlüsselte SharedPreferences mit AES256-GCM
 
 ### Datenschutz
-- Telefonnummern werden nur lokal verarbeitet
+- Zielnummern und Einstellungen werden nur lokal und verschlüsselt verarbeitet
+- Das lokale MMI-Audit enthält höchstens 200 maskierte Einträge für maximal 30 Tage; vollständige Zielnummern und rohe Netzantworten werden darin nicht gespeichert
 - Logs können exportiert und gelöscht werden
 - Keine Cloud-Synchronisation oder Datenübertragung an Dritte
 - App ist für privaten Gebrauch konzipiert
@@ -514,7 +524,7 @@ SOFTWARE.
 
 ---
 
-**Version**: Barracuda
+**Version**: Barracuda 4.1.0
 **Build**: Debug/Release
 **Letzte Aktualisierung**: 2026-01-23
 

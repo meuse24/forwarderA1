@@ -179,7 +179,7 @@
                         <strong>Aktivieren:</strong><br>
                         Nachdem Sie eine Nummer ausgew&auml;hlt haben, wird die Weiterleitung automatisch aktiviert. Die App w&auml;hlt den Code, um die <strong>Rufumleitung</strong> beim Provider einzurichten. Gleichzeitig startet der interne Dienst f&uuml;r die <strong>SMS-Weiterleitung</strong>.
                         <div class="highlight-red">
-                            Warten Sie den automatischen W&auml;hlvorgang vollst&auml;ndig ab. W&auml;hrend des W&auml;hlvorgangs erhalten Sie eine kurze akustische R&uuml;ckmeldung &uuml;ber den Erfolg der Rufumleitung. Die App kehrt danach automatisch zum Hauptbildschirm zur&uuml;ck.
+                            Warten Sie den automatischen W&auml;hlvorgang vollst&auml;ndig ab. Bei A1 h&ouml;ren Sie die Netzansage; bei generischen <code>#</code>-Codes verarbeitet die App die USSD-Netzantwort. Der Ablauf wird danach automatisch fortgesetzt. Tippen Sie nur auf <strong>Fehler melden</strong>, wenn die Netzansage oder Antwort einen Fehler meldet.
                         </div>
                     </div>
                 </div>
@@ -191,7 +191,7 @@
                     </div>
                 </div>
                 <div class="note">
-                    <strong>Wichtiger Hinweis zur Rufumleitung:</strong> Die App leitet Anrufe nicht selbst um. Sie sendet nur einen Standard-Steuercode (MMI-Code) an Ihren Mobilfunkanbieter. Die eigentliche Umleitung findet im Netz des Anbieters statt.
+                    <strong>Wichtiger Hinweis zur Rufumleitung:</strong> Die App leitet Anrufe nicht selbst um. Sie übergibt einen konfigurierten MMI-/USSD-Code an Ihren Mobilfunkanbieter. Bei A1 wird dieser als Sprach-MMI-Telefonat ausgeführt; die Ansage kann Android nicht maschinell auswerten. Die eigentliche Umleitung findet ausschließlich im Netz des Anbieters statt.
                 </div>
             </section>
 
@@ -208,7 +208,7 @@
                     </tr>
                     <tr>
                         <td><h3><img src="btn_Status.png" class="button-icon" alt="Info Button">Status</h3></td>
-                        <td>Fragt den aktuellen Status der Rufumleitung beim Netzbetreiber ab und gibt akustisches Feedback.</td>
+                        <td>Fragt den aktuellen Status der Rufumleitung beim Netzbetreiber ab, ohne etwas zu ändern. Je nach Anbieter kommt eine USSD-Antwort oder eine hörbare Netzansage.</td>
                     </tr>
                     <tr>
                         <td><h3><img src="btn_Reset.png" class="button-icon" alt="Reset Button">Reset</h3></td>

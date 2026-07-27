@@ -71,7 +71,7 @@ SMS & Anruf Weiterleitung mit Datenschutz-Transparenz. Open Source.
 
 #### Vollständige Beschreibung
 ```
-SMS Forwarder Neo leitet eingehende SMS-Nachrichten und Anrufe automatisch weiter.
+SMS Forwarder Neo leitet eingehende SMS-Nachrichten weiter und kann die Rufumleitung beim Mobilfunkanbieter per MMI/USSD konfigurieren.
 
 🔒 DATENSCHUTZ ZUERST
 • Datenschutzerklärung VOR Berechtigungsabfrage
@@ -82,7 +82,7 @@ SMS Forwarder Neo leitet eingehende SMS-Nachrichten und Anrufe automatisch weite
 ✨ HAUPTFUNKTIONEN
 • SMS-zu-SMS Weiterleitung an beliebige Nummer
 • SMS-zu-Email Weiterleitung an mehrere Adressen
-• Anrufweiterleitung via MMI-Codes
+• Rufumleitung via MMI/USSD (inklusive A1-Sprach-MMI)
 • Dual-SIM Unterstützung
 • Vordergrund-Service für zuverlässige Verarbeitung
 
@@ -120,11 +120,12 @@ Oder erstelle eine auf GitHub Pages basierend auf der in-app Policy.
 - ❌ Keine Daten werden gesammelt oder geteilt
 - ✅ Alle Daten bleiben lokal auf dem Gerät
 - ✅ Verschlüsselte Speicherung
+- ✅ Lokales MMI-Audit ist maskiert und auf 200 Einträge bzw. 30 Tage begrenzt
 
 **Berechtigungen Begründung:**
 - `RECEIVE_SMS` / `SEND_SMS`: SMS-Weiterleitung (Kernfunktion)
 - `READ_CONTACTS`: Kontaktauswahl für Weiterleitungsziel
-- `CALL_PHONE`: MMI-Codes für Anrufweiterleitung
+- `CALL_PHONE`: MMI-/USSD-Ausführung über die gewählte SIM, insbesondere A1-Sprach-MMI
 - `READ_PHONE_STATE`: SIM-Karten Erkennung (Dual-SIM)
 - `FOREGROUND_SERVICE`: Zuverlässige Hintergrundverarbeitung
 - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: Service-Kontinuität
@@ -242,8 +243,8 @@ Vor dem Upload:
 - [ ] App auf echtem Gerät getestet
 - [ ] Alle Berechtigungen funktionieren
 - [ ] Logs überprüft (keine Errors)
-- [ ] Version Code erhöht (aktuell: 4)
-- [ ] Version Name aussagekräftig (aktuell: "Barracuda")
+- [x] Version Code erhöht (aktuell: 5)
+- [x] Version Name aussagekräftig (aktuell: "Barracuda 4.1.0")
 
 ## 📊 Nach dem Release
 

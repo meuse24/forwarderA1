@@ -331,33 +331,14 @@ ui/theme/
 
 ---
 
-## 🆕 Neueste Änderungen (2025-01-30)
+## 🆕 Aktueller MMI-/USSD-Ablauf
 
-### Verbesserte MMI-Code-Benutzerführung
-- ✅ **4-Sekunden-Warnung** vor jedem MMI-Code-Wählvorgang
-- ✅ **Zentrierte Formatierung** mit visuellen Trennlinien
-- ✅ **Deutliche Warnung**: "⚠️ BITTE WARTEN ⚠️ - NICHT BEDIENEN!"
-- ✅ Gilt für: Aktivieren, Deaktivieren, Status abfragen, Reset
-
-```kotlin
-// MainActivity.kt - Zeilen 648-673
-SnackbarManager.showInfo(
-    message = """
-    ⏳ Wählvorgang wird gestartet...
-
-        ═════════════
-      ⚠️  BITTE WARTEN  ⚠️
-         NICHT BEDIENEN!
-        ═════════════
-
-    ► Den Wählvorgang abwarten
-    ► Nichts antippen
-    ► App kehrt automatisch zurück
-    """.trimIndent(),
-    duration = SnackbarManager.Duration.LONG
-)
-delay(4000)  // 4 Sekunden Warnung
-```
+### Rufumleitung über die ausgewählte SIM
+- ✅ **Konfigurationsabhängiger Wählweg:** A1-Codes mit `**` laufen als Sprach-MMI über die Android-Telefonie; generische `#`-Codes als USSD-Anfrage mit Callback.
+- ✅ **Ehrlicher Nachweisgrad:** Eine USSD-Antwort kann bestätigen; eine A1-Netzansage ist nicht maschinell auswertbar und wird deshalb als angenommener Erfolg geführt.
+- ✅ **Nicht blockierende Fehlerkorrektur:** Nach einem A1-Sprach-MMI wird der Ablauf automatisch fortgesetzt. Der Benutzer kann innerhalb des Hinweisfensters nur einen Fehler melden.
+- ✅ **Watchdogs und Sperre:** Zeitüberschreitungen lösen Vorgänge kontrolliert auf; während eines laufenden Vorgangs verhindert die Sperre parallele MMI-/USSD-Aufträge.
+- ✅ **Datenschutz:** MMI-Codes, Zielnummern und Netzantworten werden vor dem Logging maskiert. Das lokale MMI-Audit ist auf 200 Einträge und 30 Tage begrenzt.
 
 ### Contact Picker Integration (2025-01-20)
 - ✅ **Ersetzt Kontaktliste** durch Android Contact Picker
