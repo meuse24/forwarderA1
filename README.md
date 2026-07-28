@@ -26,7 +26,7 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 - **Verschlüsselte Einstellungen**: Sichere Speicherung von Credentials und Konfiguration
 - **SMTP-Unterstützung**: Flexible E-Mail-Konfiguration mit verschiedenen Anbietern
 - **Test-Utilities**: Integrierte Tools zum Testen der SMS-Funktionalität
-- **Heartbeat-Monitoring**: Automatische Überwachung der Dienstverfügbarkeit
+- **Persistente Sendewarteschlange**: Jede Weiterleitung hat einen gespeicherten Zustand; Fehlschläge werden wiederholt, ungeklärte Fälle sichtbar gemacht
 - **Rufumleitung per MMI/USSD**: Standard-GSM/USSD-Codes sind der Default; das A1-Sonderprofil wird nur bei ausdrücklicher Vertrags-/Supportvorgabe als Sprach-MMI verwendet
 - **RCS-Hinweis**: Erklärt auf der Startseite und in der Hilfe, warum RCS-Chats nicht weitergeleitet werden können, und wie man den SMS-Fallback herstellt
 
@@ -38,6 +38,38 @@ Die App leitet **SMS** weiter. Nicht weitergeleitet werden:
 - **MMS** (Bilder, Videos, Sprachnachrichten): Die App empfängt keinen `WAP_PUSH_RECEIVED`-Broadcast.
 
 Der RCS-Status selbst ist für eine normale App nicht auslesbar; die App behauptet ihn deshalb nirgends. Hintergrund, geprüfte Alternativen und die Begründung gegen einen `NotificationListenerService` stehen in [`rcs.md`](rcs.md).
+
+### Systemgrenzen des Dauerbetriebs
+
+Der Dienst läuft als Foreground Service vom Typ `specialUse`. Für diesen Typ ist kein Zeitlimit
+dokumentiert – eine Zusicherung unbegrenzter Laufzeit ist das ausdrücklich nicht:
+
+- **„Stopp erzwingen"** (App-Info) und ein **Stopp über den Task Manager** setzen die Weiterleitung
+  bis zum nächsten manuellen Start der App aus. Das ist eine Systemgrenze, kein Fehler; kein
+  Wächter innerhalb der App kann das umgehen, denn er wäre selbst mit beendet.
+- Nach einem Prozesskill unter Speicherdruck greifen `START_STICKY`, der `BootReceiver` nach einem
+  Geräteneustart und **jeder eingehende SMS-Broadcast**, der einen Neustartversuch auslöst. Ob
+  dieser Versuch aus dem Hintergrund gelingt, sichert die Plattform nicht allgemein zu – die App
+  behauptet deshalb keine Selbstheilung.
+- Aggressive Energieverwaltung mancher Hersteller kann den Dienst beenden. Die App weist auf eine
+  aktive Batterieoptimierung hin.
+
+Zustände, die die Weiterleitung beeinträchtigen, stoppen sie **nicht**, sondern erscheinen beim
+nächsten Öffnen als Hinweis auf der Startseite: unterdrückte Statusanzeige (fehlende
+Benachrichtigungsberechtigung), verlorene Warteschlangeneinträge, ein Zeitlimit des Systems sowie
+fehlgeschlagene oder ungeklärte Weiterleitungen.
+
+### Zustellsemantik
+
+Weitergeleitete SMS haben einen persistierten Zustand. Wiederholt wird **nur, wo ein Fehlschlag
+belegt ist** (negative Rückmeldung des Netzes: kein Dienst, Funk aus, allgemeiner Sendefehler) –
+maximal drei Wiederholungen mit 30 s / 2 min / 10 min Abstand. Wo jede Aussage fehlt – etwa wenn der
+Prozess im Sendefenster stirbt oder eine Rückmeldung 15 Minuten ausbleibt –, wird **nicht** erneut
+gesendet; der Vorgang wird als ungeklärt angezeigt. Diese Wahl bevorzugt den selteneren Verlust
+gegenüber dem häufigeren Doppelversand. Bei mehrteiligen Nachrichten mit Teilerfolg wird der ganze
+Vorgang neu versandt; bereits zugestellte Teile können dann doppelt ankommen – eine unvollständige
+mehrteilige SMS wird vom Empfängergerät sonst nie zusammengesetzt. `Gesendet` heißt „vom Netz
+angenommen", nicht „beim Empfänger angekommen".
 
 ## Technologie-Stack
 
@@ -207,7 +239,8 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 4. **Dienst starten**
    - Der Vordergrund-Dienst startet automatisch
    - Status wird in der Benachrichtigungsleiste angezeigt
-   - Heartbeat-Monitoring läuft im Hintergrund
+   - Ohne Benachrichtigungsberechtigung läuft die Weiterleitung weiter, der Dienst ist dann nur
+     im Task Manager sichtbar
 
 5. **Logs überwachen**
    - Navigiere zu "Logs" Tab
@@ -217,7 +250,8 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 ### Wichtige Hinweise
 
 - **Multi-Teil SMS**: Werden automatisch gruppiert und rekonstruiert
-- **Parallele Verarbeitung**: SMS und E-Mail werden gleichzeitig gesendet
+- **Unabhängige Kanäle**: SMS und E-Mail laufen parallel; ein SMTP-Ausfall bricht den SMS-Versand
+  nicht ab und löst keine zusätzliche SMS aus
 - **WakeLock**: Verhindert Sleep während der Nachrichtenverarbeitung
 - **Service-Neustart**: Nutzt `START_STICKY` für automatischen Neustart
 
@@ -296,10 +330,10 @@ info.meuse24.smsforwarderneoA1/
 
 #### SmsForegroundService.kt
 - Multi-Teil SMS-Rekonstruktion
-- Parallele SMS/E-Mail-Weiterleitung
+- Entkoppelte SMS-/E-Mail-Weiterleitung
 - WakeLock-Management
-- Heartbeat-Monitoring
-- Service-Lifecycle
+- Persistente Sendewarteschlange samt Ablauf-Scan
+- Service-Lifecycle inklusive `onTimeout()`
 
 #### SmsReceiver.kt
 - Empfängt `SMS_RECEIVED_ACTION`
