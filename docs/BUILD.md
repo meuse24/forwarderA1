@@ -228,18 +228,28 @@ sha256sum app/build/outputs/apk/release/app-release.apk
 gh release create V4.x.y app/build/outputs/apk/release/app-release.apk --title "..." --notes "..."
 ```
 
-**5. Versionsangabe auf der Projektseite aktualisieren**
+**5. Projektseite — passiert automatisch**
 
 `index.html` (Quelle von https://meuse24.github.io/forwarderA1/) nennt die Version im Kopfbereich.
-Diese Zeile ist der einzige Ort, der pro Release von Hand angepasst werden muss:
+Der Workflow `.github/workflows/update-site-version.yml` trägt sie nach, sobald ein Release
+veröffentlicht wird, und committet die Änderung nach `main`. Es ist also nichts zu tun.
 
-```html
-<p>Version: Barracuda 4.1.0 (v4.1.0)</p>
+Falls doch manuell nötig — etwa weil ein Release ohne Workflow angelegt wurde:
+
+```bash
+# Version aus build.gradle.kts + Tag in index.html eintragen
+python scripts/update_site_version.py --tag V4.x.y
+
+# Nur pruefen, ohne zu schreiben (Exit 1 = veraltet)
+python scripts/update_site_version.py --check --tag V4.x.y
 ```
 
-Der Download-Button zeigt bewusst auf `/releases/latest/download/app-release.apk` und leitet damit
-immer auf das neueste Release um — er darf **nicht** auf ein festes Tag umgestellt werden. Genau das
-war zuvor der Fall: Die Seite nannte 4.1.0, verlinkte aber die APK des Tags `v4` von Januar 2026.
+Alternativ lässt sich der Workflow auf GitHub unter *Actions → Projektseite aktualisieren →
+Run workflow* mit dem Tag als Eingabe nachträglich auslösen.
+
+Der Download-Button zeigt auf `/releases/latest/download/app-release.apk` und leitet damit immer auf
+das neueste Release um — er darf **nicht** auf ein festes Tag umgestellt werden. Genau das war zuvor
+der Fall: Die Seite nannte 4.1.0, verlinkte aber die APK des Tags `v4` von Januar 2026.
 
 **Was pro Release neu ist und was nicht:**
 
