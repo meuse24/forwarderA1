@@ -24,6 +24,7 @@ dringend empfohlen.**
 - **Die SIM-Angabe im weitergeleiteten Text war falsch.** Ausgegeben wurde die interne Subscription-ID als „Slot".
 - **Eine weggeklickte Benachrichtigungsberechtigung legte die Weiterleitung lahm.** Der Dienst beendete sich selbst, obwohl Android die Berechtigung für einen Vordergrunddienst gar nicht verlangt. Er läuft jetzt weiter; unterdrückt ist lediglich die Statusanzeige, und darauf weist die App hin.
 - **Rückmeldungen des Mobilfunknetzes konnten nach einem Neustart falsch zugeordnet werden.** Die Zuordnung hing an Daten, die nicht zur Identität einer Rückmeldung zählen, und an einem Zähler, der nach jedem Neustart wieder bei null begann.
+- **Eine unlesbare Weiterleitungsliste verschwand stillschweigend.** War die verschlüsselte Datei beschädigt, startete die App mit leerer Liste und ohne jeden Hinweis — alle darin vermerkten Weiterleitungen waren verloren. Der Fall wird jetzt erkannt, dauerhaft vermerkt und auf der Startseite angezeigt; der Betrieb läuft dabei weiter. Am Gerät durch gezielte Beschädigung der Datei nachgestellt.
 - **Ein Absturz im Empfang blieb folgenlos protokolliert.** Der Empfänger ist jetzt vollständig abgesichert, einzelne unbrauchbare Teile verwerfen nicht mehr die ganze Nachricht, und die SIM-Abfrage erfolgt nur noch einmal je Nachricht.
 
 ### Hinzugefügt

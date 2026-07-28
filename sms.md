@@ -490,7 +490,18 @@ allen Korrekturen (MD5 der APK auf dem Gerät identisch mit dem lokalen Artefakt
 | Loop-Protection | ✅ bestanden | Absender `+436644440286` vs. Ziel `+43 6644440286`: trotz abweichender Schreibweise erkannt, Weiterleitung gestoppt. |
 | Dual-SIM | ✅ bestanden | Empfang auf Subscription 1 erkannt, Versand über dieselbe SIM (`SAME_AS_INCOMING`). |
 | `POST_NOTIFICATIONS` entzogen | ✅ bestanden | Nach `pm revoke` und erzwungenem Prozesstod startet der Dienst weiter: `notifications_suppressed: true`, „Statusanzeige unterdrueckt - Weiterleitung laeuft weiter", `isForeground=true`. **Der alte Code hätte hier `stopSelf()` gerufen.** |
-| Fehlerfreiheit über den gesamten Lauf | ✅ | Kein einziger `ERROR`-Eintrag, kein `QUEUE_FULL`, keine `QUEUE_CORRUPTION`, kein `ATTEMPTING_COMMIT_FAILED`, kein `DISPATCH_SKIPPED`. |
+| Queue-Dokument unlesbar | ✅ bestanden — **nach einer Korrektur** | Verschlüsselter Wert im Dateisystem verfälscht. **Erster Durchlauf deckte einen Fehler auf:** Die App startete mit leerer Queue und ohne jede Meldung — der Totalverlust ging stillschweigend durch. Ursache: Eine fehlgeschlagene Entschlüsselung wirft aus `getString()`, und das auf `null` abzubilden macht sie von „nie geschrieben" ununterscheidbar. Nach der Korrektur (`contains()` beantwortet die Frage ohne Entschlüsselung): `QUEUE_CORRUPTION {cause: document_undecryptable, warning_persisted: true}`, Warnkarte auf der Startseite sichtbar, Quittierung übersteht einen Prozessneustart. |
+| Fehlschlagendes `commit()` | ✅ bestanden | `shared_prefs` per `chmod 500` unbeschreibbar gemacht, dann SMS empfangen: `QUEUE_WRITE_FAILED — kein Sendeversuch`. Kein `DISPATCH_FORWARD_SMS`, beim Empfänger kam nichts an. Nach Wiederherstellung der Rechte arbeitet die App unbeschädigt weiter. |
+| Force-Stop | ✅ bestanden | Nach `am force-stop` läuft auch 60 Sekunden später nichts (`stopped=true`); erst der Start der App bringt den Dienst zurück. Deckt sich mit der README-Aussage — Systemgrenze, kein Fehler. |
+| Fehlerfreiheit über den gesamten Lauf | ✅ | Ausser den absichtlich erzeugten Fehlern kein `ERROR`-Eintrag, kein `QUEUE_FULL`, kein `ATTEMPTING_COMMIT_FAILED`, kein `DISPATCH_SKIPPED`. |
+
+**Nicht durchführbar auf diesem Gerät:**
+
+- **Vorbedingung verletzt → `FAILED` ohne `ATTEMPTING`.** Der Versuch, `SEND_SMS` per `pm revoke` zu entziehen,
+  scheiterte am Gerät: Der zugehörige App-Op blieb auf `allow`, die SMS ging durch, und beim nächsten Start stand die
+  Berechtigung wieder auf `granted=true` — ohne `USER_SET`, das System hatte sie selbst zurückgegeben. Die Prüfung im
+  Code nutzt die richtige API (`checkSelfPermission`) und hat korrekt entschieden; der Zustand liess sich nur nicht
+  herstellen. Der Pfad bleibt durch JVM-Tests gedeckt.
 
 **Weiterhin offen — mit vertretbarem Aufwand nicht am Gerät herstellbar:**
 
