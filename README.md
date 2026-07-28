@@ -78,7 +78,55 @@ Der RCS-Status selbst ist für eine normale App nicht auslesbar; die App behaupt
 - **Telefonie-Feature**: Empfohlen für volle Funktionalität
 - **Dual-SIM**: Optional, aber unterstützt
 
-## Installation
+## Installation der signierten App
+
+Die App wird **nicht über Google Play** vertrieben, sondern als signierte APK unter [Releases](https://github.com/meuse24/forwarderA1/releases). Der vollständige Quellcode dieses Repositorys entspricht der veröffentlichten App.
+
+### 1. APK herunterladen
+
+Laden Sie `app-release.apk` aus dem aktuellen Release herunter.
+
+### 2. Echtheit prüfen (empfohlen)
+
+Ohne Google Play bürgt kein Store für die Herkunft der Datei. Prüfen Sie sie deshalb selbst — besonders wichtig, weil die App Zugriff auf Ihre SMS hat.
+
+**a) Prüfsumme der Datei** – schützt vor einem manipulierten oder unvollständigen Download. Der erwartete Wert steht in der jeweiligen Release-Beschreibung.
+
+```bash
+# Windows (PowerShell oder Eingabeaufforderung)
+certutil -hashfile app-release.apk SHA256
+
+# Linux / macOS
+sha256sum app-release.apk
+```
+
+**b) Signatur des Herausgebers** – belegt, dass die APK mit dem Schlüssel dieses Projekts signiert wurde. Dieser Fingerprint ist **für alle Releases identisch** und ändert sich nicht:
+
+```
+Herausgeber:  CN=Günther Meusburger
+SHA-256:      DF:F4:45:88:48:D9:8F:DB:C0:05:E4:71:59:D1:50:7C:
+              F2:2C:58:B4:76:00:EF:09:4A:B3:E0:8B:99:F1:C7:2C
+```
+
+Prüfen lässt er sich mit `apksigner` aus den Android SDK Build-Tools:
+
+```bash
+apksigner verify --print-certs app-release.apk
+```
+
+Stimmt der ausgegebene Wert für „Signer #1 certificate SHA-256 digest" nicht mit dem obigen überein, stammt die Datei **nicht** aus diesem Projekt — dann bitte nicht installieren.
+
+### 3. Installieren
+
+Android blockiert die Installation aus dem Browser oder Dateimanager zunächst. Erlauben Sie die Installation für die jeweilige App, wenn Sie danach gefragt werden (*Einstellungen → Apps → Spezieller App-Zugriff → Unbekannte Apps installieren*).
+
+Google Play Protect kann beim Installieren eine Warnung anzeigen, weil die App nicht über Play verteilt wird und SMS-Berechtigungen anfordert. Das ist bei Sideload einer SMS-App erwartbar und kein Hinweis auf Schadsoftware — die Prüfung in Schritt 2 ist der belastbare Nachweis.
+
+### 4. Updates
+
+Automatische Updates gibt es außerhalb von Play nicht. Um über neue Versionen informiert zu werden, können Sie das Repository auf GitHub beobachten (*Watch → Custom → Releases*). Neue Versionen lassen sich direkt über die alte installieren; Ihre Einstellungen bleiben erhalten, solange die Signatur unverändert ist.
+
+## Aus dem Quellcode bauen
 
 ### 1. Repository klonen
 ```bash

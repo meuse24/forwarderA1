@@ -1,5 +1,13 @@
 # Google Play Release Checklist
 
+> **Status: nicht der aktuelle Vertriebsweg.**
+>
+> Die App wird als signierte APK über [GitHub Releases](https://github.com/meuse24/forwarderA1/releases) verteilt, nicht über Google Play. Grund sind die SMS-Berechtigungen: Play lässt `RECEIVE_SMS`/`SEND_SMS` im Wesentlichen nur für Apps zu, die als Standard-SMS-App fungieren – das würde eine vollwertige Nachrichten-App voraussetzen (eigener Telephony-Provider-Zugriff, MMS-Behandlung, Konversations-UI) und liegt außerhalb des Zwecks dieser App.
+>
+> Für den tatsächlichen Weg – Download, Prüfung von Signatur-Fingerprint und Prüfsumme, Installation, Updates – siehe den Abschnitt „Installation der signierten App" in der `README.md`.
+>
+> Dieses Dokument bleibt als Referenz erhalten, falls eine Play-Veröffentlichung später doch relevant wird. Die Angaben zu Data Safety, Berechtigungen und Store-Listing sind dann weiterhin gültig.
+
 ## ✅ Bereits implementiert (Build-Verbesserungen)
 
 ### 1. **Sicherheit & Trust Signale**

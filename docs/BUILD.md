@@ -209,5 +209,35 @@ Bei Problemen mit dem Build-Prozess:
 
 ---
 
-**Letzte Aktualisierung:** 2026-01-23
+## Release veröffentlichen
+
+Die App wird als signierte APK über GitHub Releases verteilt (nicht über Google Play, siehe `GOOGLE_PLAY_CHECKLIST.md`).
+
+```bash
+# 1. Release-APK bauen
+./build.sh assembleRelease
+
+# 2. Signatur kontrollieren - der Fingerprint muss dem im README entsprechen
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+
+# 3. Pruefsumme fuer die Release-Beschreibung berechnen
+sha256sum app/build/outputs/apk/release/app-release.apk
+# Windows: certutil -hashfile ...\app-release.apk SHA256
+
+# 4. Release anlegen und APK anhaengen
+gh release create V4.x.y app/build/outputs/apk/release/app-release.apk --title "..." --notes "..."
+```
+
+**Was pro Release neu ist und was nicht:**
+
+| Wert | Gilt für | Ort |
+|---|---|---|
+| Zertifikats-Fingerprint (SHA-256) | **alle** Releases, unveränderlich | einmalig im `README.md` |
+| APK-Prüfsumme (SHA-256) | genau ein Release | Release-Beschreibung |
+
+Der Zertifikats-Fingerprint ändert sich nur bei einem Schlüsselwechsel. Ein solcher Wechsel würde alle bestehenden Installationen von Updates ausschließen, da Android nur Updates mit identischer Signatur zulässt — der Keystore (`keyandroid.jks`) und sein Passwort sind entsprechend zu sichern.
+
+---
+
+**Letzte Aktualisierung:** 2026-07-28
 **Getestet mit:** Git Bash (MINGW64), Android Studio, Windows 11
