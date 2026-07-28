@@ -1,6 +1,9 @@
 package info.meuse24.smsforwarderneoA1.presentation.ui.screens.home
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -70,6 +73,27 @@ class RcsHintCardTest {
         composeTestRule.onNodeWithText(dismissLabel).performClick()
 
         assertEquals(1, dismissCount)
+    }
+
+    @Test
+    fun dismissHidesTheCard() {
+        composeTestRule.setContent {
+            var visible by mutableStateOf(true)
+            MaterialTheme {
+                if (visible) {
+                    RcsHintCard(
+                        state = GoogleMessagesState.DEFAULT_SMS_APP,
+                        onLearnMore = {},
+                        onDismiss = { visible = false }
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText(dismissLabel).performClick()
+
+        composeTestRule.onNodeWithText(defaultAppText).assertDoesNotExist()
+        composeTestRule.onNodeWithText(dismissLabel).assertDoesNotExist()
     }
 
     @Test

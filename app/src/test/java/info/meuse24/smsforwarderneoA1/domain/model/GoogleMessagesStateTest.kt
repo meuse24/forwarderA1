@@ -1,5 +1,6 @@
 package info.meuse24.smsforwarderneoA1.domain.model
 
+import info.meuse24.smsforwarderneoA1.util.GoogleMessagesDetector
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -54,5 +55,23 @@ class GoogleMessagesStateTest {
         )
 
         assertEquals(GoogleMessagesState.DEFAULT_SMS_APP, state)
+    }
+
+    @Test fun `package lookup failure suppresses the hint`() {
+        val state = GoogleMessagesDetector.detect(
+            isInstalled = { throw SecurityException("Package visibility unavailable") },
+            defaultSmsPackage = { GOOGLE_MESSAGES_PACKAGE }
+        )
+
+        assertEquals(GoogleMessagesState.NOT_INSTALLED, state)
+    }
+
+    @Test fun `telephony lookup failure suppresses the hint`() {
+        val state = GoogleMessagesDetector.detect(
+            isInstalled = { true },
+            defaultSmsPackage = { throw IllegalStateException("Telephony unavailable") }
+        )
+
+        assertEquals(GoogleMessagesState.NOT_INSTALLED, state)
     }
 }

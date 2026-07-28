@@ -25,9 +25,27 @@ object GoogleMessagesDetector {
      * unerwartetes Systemverhalten nie einen irrefuehrenden Hinweis erzeugt.
      */
     fun detect(context: Context): GoogleMessagesState = try {
+        detect(
+            isInstalled = { isGoogleMessagesInstalled(context) },
+            defaultSmsPackage = { Telephony.Sms.getDefaultSmsPackage(context) }
+        )
+    } catch (e: Exception) {
+        GoogleMessagesState.NOT_INSTALLED
+    }
+
+    /**
+     * Schmale, Android-freie Kapselung der beiden Systemabfragen.
+     *
+     * Sie erlaubt JVM-Tests fuer Fehler aus dem PackageManager bzw. der Telephony-API,
+     * ohne einen Emulator oder ein reales Fremdpaket zu benoetigen.
+     */
+    internal fun detect(
+        isInstalled: () -> Boolean,
+        defaultSmsPackage: () -> String?
+    ): GoogleMessagesState = try {
         resolveGoogleMessagesState(
-            isInstalled = isGoogleMessagesInstalled(context),
-            defaultSmsPackage = Telephony.Sms.getDefaultSmsPackage(context)
+            isInstalled = isInstalled(),
+            defaultSmsPackage = defaultSmsPackage()
         )
     } catch (e: Exception) {
         GoogleMessagesState.NOT_INSTALLED
