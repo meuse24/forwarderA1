@@ -3,10 +3,12 @@ package info.meuse24.smsforwarderneoA1.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.provider.Telephony
 import android.util.Log
+import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.LoggingManager
+import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
+import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 
 class SmsReceiver : BroadcastReceiver() {
 
@@ -15,52 +17,58 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     /**
-     * Diese Methode wird aufgerufen, wenn eine Broadcast-Nachricht empfangen wird.
-     * Sie verarbeitet eingehende SMS und gesendete SMS-Bestätigungen.
+     * Einstieg fuer eingehende SMS.
+     *
+     * Vollstaendig in try/catch: Eine Exception hier bedeutete bisher stillen Verlust der SMS,
+     * und im 10-Sekunden-Fenster eines Broadcasts zusaetzlich ANR-Risiko.
      */
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG, "onReceive: ${intent.action}")
-        when (intent.action) {
-            Telephony.Sms.Intents.SMS_RECEIVED_ACTION -> {
-                if (isSmsIntentValid(intent)) {
-                    handleSmsReceived(context, intent)
-                } else {
-                    LoggingManager.logWarning(
-                        component = "SmsReceiver",
-                        action = "INVALID_SMS",
-                        message = "Ungültige SMS empfangen"
-                    )
-                }
+        try {
+            if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
+                Log.d(TAG, "Unbekannte Aktion empfangen: ${intent.action}")
+                return
             }
 
-            "SMS_SENT" -> handleSmsSent()
-            else -> Log.d(TAG, "Unbekannte Aktion empfangen: ${intent.action}")
+            if (!hasUsableMessage(intent)) {
+                LoggingManager.logWarning(
+                    component = "SmsReceiver",
+                    action = "INVALID_SMS",
+                    message = "SMS ohne verwertbaren Inhalt empfangen"
+                )
+                return
+            }
+
+            handleSmsReceived(context, intent)
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "SmsReceiver",
+                action = "RECEIVE_ERROR",
+                message = "Fehler bei der Broadcast-Verarbeitung",
+                error = e
+            )
         }
     }
 
-    private fun isSmsIntentValid(intent: Intent): Boolean {
+    /**
+     * Genuegt ein einziger verwertbarer Teil, wird der Intent angenommen.
+     *
+     * Frueher verwarf ein einzelner leerer Teil den gesamten Intent - bei einer mehrteiligen
+     * Nachricht ging damit alles verloren. Die leeren Teile filtert die Verarbeitung selbst.
+     */
+    private fun hasUsableMessage(intent: Intent): Boolean {
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
         if (messages.isNullOrEmpty()) {
             Log.w(TAG, "Received SMS intent with no messages")
             return false
         }
-
-        for (smsMessage in messages) {
-            val sender = smsMessage.originatingAddress
-            val messageBody = smsMessage.messageBody
-
-            if (sender.isNullOrEmpty() || messageBody.isNullOrEmpty()) {
-                Log.w(TAG, "Received SMS with empty sender or body")
-                return false
-            }
+        return messages.any { message ->
+            !message?.originatingAddress.isNullOrEmpty() && !message?.messageBody.isNullOrEmpty()
         }
-        return true
     }
 
     /**
      * Extrahiert die Subscription ID aus dem SMS-Intent.
      * Verschiedene Android-Geräte und OEMs verwenden unterschiedliche Extra-Keys.
-     * @param intent Der eingehende SMS-Intent
      * @return Die Subscription ID oder -1 wenn nicht ermittelbar
      */
     private fun getSubscriptionIdFromIntent(intent: Intent): Int {
@@ -101,22 +109,19 @@ class SmsReceiver : BroadcastReceiver() {
 
     /**
      * Prüft, ob SMS von der angegebenen SIM-Karte weitergeleitet werden sollen.
-     * @param context Android Context
-     * @param subscriptionId Die Subscription ID der empfangenden SIM-Karte
-     * @return true wenn Weiterleitung erlaubt, false wenn gefiltert
+     * @param allSims bereits ermittelte SIM-Liste - im Broadcast zaehlt jeder Binder-Call
      */
-    private fun shouldForwardFromSubscription(context: Context, subscriptionId: Int): Boolean {
-        val prefsManager = info.meuse24.smsforwarderneoA1.AppContainer.requirePrefsManager()
-
-        // Ermittle alle SIM-Karten und finde die Slot-Nummer für diese Subscription
-        val allSims = info.meuse24.smsforwarderneoA1.PhoneSmsUtils.getAllSimInfo(context)
+    private fun shouldForwardFromSubscription(
+        subscriptionId: Int,
+        allSims: List<SimInfo>
+    ): Boolean {
+        val prefsManager = AppContainer.requirePrefsManager()
         val sim = allSims.find { it.subscriptionId == subscriptionId }
 
-        // Prüfe ob diese SIM-Karte für Empfang aktiviert ist
         val sim1Enabled = prefsManager.isSim1ReceiveEnabled()
         val sim2Enabled = prefsManager.isSim2ReceiveEnabled()
 
-        val shouldForward = when (sim?.slotIndex) {
+        return when (sim?.slotIndex) {
             0 -> sim1Enabled  // SIM 1 (slot 0)
             1 -> sim2Enabled  // SIM 2 (slot 1)
             else -> {
@@ -144,68 +149,53 @@ class SmsReceiver : BroadcastReceiver() {
                 smartFailOpen
             }
         }
-
-        return shouldForward
     }
 
     /**
-     * Verarbeitet eingehende SMS-Nachrichten.
-     * Wenn die Weiterleitung aktiviert ist, werden die Nachrichten zusammengeführt und weitergeleitet.
+     * Uebergibt die Nachricht an den Dienst.
+     *
+     * Der Startversuch kann aus dem Hintergrund scheitern; das wird protokolliert, aber nicht
+     * als Selbstheilung ausgegeben - eine Zusicherung gibt die Plattform hier nicht.
      */
     private fun handleSmsReceived(context: Context, intent: Intent) {
-        // Extrahiere Subscription ID (Multi-SIM-Support)
-        // Nutzt mehrere mögliche Keys, da verschiedene Geräte/OEMs unterschiedliche verwenden
         val subscriptionId = getSubscriptionIdFromIntent(intent)
+        // Einmal je Broadcast: getAllSimInfo() ist ein synchroner Binder-Call.
+        val allSims = PhoneSmsUtils.getAllSimInfo(context)
 
-        // Prüfe SIM-Filter: Soll SMS von dieser SIM-Karte weitergeleitet werden?
-        if (!shouldForwardFromSubscription(context, subscriptionId)) {
-            val prefsManager = info.meuse24.smsforwarderneoA1.AppContainer.requirePrefsManager()
+        if (!shouldForwardFromSubscription(subscriptionId, allSims)) {
             LoggingManager.logWarning(
                 component = "SmsReceiver",
                 action = "SIM_FILTER_BLOCKED",
                 message = "SMS von gefilterter SIM-Karte nicht weitergeleitet",
-                details = mapOf(
-                    "subscription_id" to subscriptionId,
-                    "sim1_enabled" to prefsManager.isSim1ReceiveEnabled(),
-                    "sim2_enabled" to prefsManager.isSim2ReceiveEnabled()
-                )
+                details = mapOf("subscription_id" to subscriptionId)
             )
-            return  // SMS wird nicht weitergeleitet - Service wird nicht gestartet
+            return
         }
 
         val serviceIntent = Intent(context, SmsForegroundService::class.java).apply {
-            action = "PROCESS_SMS"
-            // Kopiere alle SMS-relevanten Extras
-            intent.extras?.let { extras ->
-                putExtras(extras)
-            }
-            // Füge die Original-Action hinzu
+            action = SmsForegroundService.ACTION_PROCESS_SMS
+            intent.extras?.let { extras -> putExtras(extras) }
             putExtra("original_action", intent.action)
-            // WICHTIG: Subscription ID explizit weitergeben
+            // Explizit weitergeben: Der Dienst kann den Intent nicht erneut auswerten.
             putExtra("subscription", subscriptionId)
             flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
         }
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
-            
+            context.startForegroundService(serviceIntent)
+
             LoggingManager.logInfo(
                 component = "SmsReceiver",
                 action = "FORWARD_TO_SERVICE",
                 message = "SMS-Daten an Service übergeben",
                 details = mapOf(
-                    "has_extras" to (intent.extras != null),
                     "extras_count" to (intent.extras?.size() ?: 0),
                     "subscription_id" to subscriptionId
                 )
             )
         } catch (e: Exception) {
-            // Abfangen von ForegroundServiceStartNotAllowedException (Android 14+)
-            // und IllegalStateException (Android 8+ Background Limits)
+            // ForegroundServiceStartNotAllowedException (Android 12+) oder
+            // IllegalStateException aus den Hintergrundbeschraenkungen.
             LoggingManager.logError(
                 component = "SmsReceiver",
                 action = "START_SERVICE_ERROR",
@@ -213,14 +203,5 @@ class SmsReceiver : BroadcastReceiver() {
                 error = e
             )
         }
-    }
-
-    /**
-     * Verarbeitet Bestätigungen für gesendete SMS.
-     */
-    private fun handleSmsSent() {
-        // Note: resultCode is only available in ordered broadcasts
-        // This method is kept for backward compatibility but may not function as expected
-        Log.d(TAG, "SMS_SENT action received")
     }
 }

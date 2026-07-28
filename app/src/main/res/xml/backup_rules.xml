@@ -8,6 +8,9 @@
     <!-- Exclude encrypted SharedPreferences (contains sensitive data) -->
     <exclude domain="sharedpref" path="sms_forwarder_secure_prefs.xml"/>
 
+    <!-- Weiterleitungs-Queue: enthaelt SMS-Volltexte und darf nicht ins Cloud-Backup -->
+    <exclude domain="sharedpref" path="sms_forwarder_queue.xml"/>
+
     <!-- Exclude all logs (may contain sensitive SMS content) -->
     <exclude domain="file" path="logs"/>
 

@@ -1058,7 +1058,7 @@ class ContactsViewModel(
     private fun updateNotification(message: String) {
         viewModelScope.launch {
             val intent = Intent(AppContainer.getApplication(), SmsForegroundService::class.java)
-            intent.action = "UPDATE_NOTIFICATION"
+            intent.action = SmsForegroundService.ACTION_UPDATE_NOTIFICATION
             intent.putExtra("contentText", message)
             AppContainer.getApplication().startService(intent)
         }
@@ -1587,7 +1587,7 @@ class ContactsViewModel(
         viewModelScope.launch {
             try {
                 val intent = Intent(AppContainer.getApplication(), SmsForegroundService::class.java)
-                intent.action = "UPDATE_NOTIFICATION"
+                intent.action = SmsForegroundService.ACTION_UPDATE_NOTIFICATION
                 intent.putExtra("contentText", status)
                 AppContainer.getApplication().startService(intent)
             } catch (e: Exception) {

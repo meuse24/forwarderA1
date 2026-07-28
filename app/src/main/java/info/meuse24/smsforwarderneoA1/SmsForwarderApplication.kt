@@ -14,6 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.data.local.FileLoggingTree
+import info.meuse24.smsforwarderneoA1.data.local.ForwardingQueueStore
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import timber.log.Timber
@@ -43,12 +44,17 @@ object AppContainer {
     lateinit var permissionHandler: PermissionHandler
         private set
 
+    /** Persistente Weiterleitungs-Queue. Wird von Service und Sende-Callback geteilt. */
+    lateinit var forwardingQueue: ForwardingQueueStore
+        private set
+
     private lateinit var phoneUtils: PhoneSmsUtils.Companion
 
     fun initializeCritical(app: SmsForwarderApplication) {
         Log.d("AppContainer", "Starting critical initialization")
         application = app
         prefsManager = SharedPreferencesManager(app)
+        forwardingQueue = ForwardingQueueStore(app, prefsManager)
         PhoneSmsUtils.initialize()
         phoneUtils = PhoneSmsUtils
         _isBasicInitialized.value = true
@@ -87,6 +93,16 @@ object AppContainer {
         }
         return prefsManager
     }
+
+    fun requireForwardingQueue(): ForwardingQueueStore {
+        if (!::forwardingQueue.isInitialized) {
+            throw IllegalStateException("ForwardingQueue not initialized. Call initializeCritical() first.")
+        }
+        return forwardingQueue
+    }
+
+    fun getForwardingQueueSafe(): ForwardingQueueStore? =
+        if (::forwardingQueue.isInitialized) forwardingQueue else null
 
     fun requirePermissionHandler(): PermissionHandler {
         if (!::permissionHandler.isInitialized) {

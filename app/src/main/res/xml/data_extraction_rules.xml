@@ -8,6 +8,9 @@
         <!-- Exclude encrypted SharedPreferences (contains sensitive data) -->
         <exclude domain="sharedpref" path="sms_forwarder_secure_prefs.xml"/>
 
+        <!-- Weiterleitungs-Queue: enthaelt SMS-Volltexte -->
+        <exclude domain="sharedpref" path="sms_forwarder_queue.xml"/>
+
         <!-- Exclude all logs (may contain sensitive SMS content) -->
         <exclude domain="file" path="logs"/>
 
@@ -18,6 +21,7 @@
     <device-transfer>
         <!-- Same exclusions for device-to-device transfer -->
         <exclude domain="sharedpref" path="sms_forwarder_secure_prefs.xml"/>
+        <exclude domain="sharedpref" path="sms_forwarder_queue.xml"/>
         <exclude domain="file" path="logs"/>
         <include domain="sharedpref" path="."/>
     </device-transfer>

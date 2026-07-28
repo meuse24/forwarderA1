@@ -15,7 +15,13 @@
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!--
+        specialUse statt dataSync: Fuer dataSync ist ein Zeitlimit von 6 Stunden je 24 Stunden
+        dokumentiert, nach dem der Dienst beendet wird; ausserdem darf ein BOOT_COMPLETED-Receiver
+        ab targetSdk 35 keinen dataSync-Dienst mehr starten. Fuer specialUse gilt beides nicht.
+        Die Typwahl ist auch inhaltlich richtig: Es wird nichts synchronisiert.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- Declare required hardware features -->
     <uses-feature android:name="android.hardware.telephony" android:required="true"/>
@@ -46,8 +52,7 @@
         android:usesCleartextTraffic="false"
         android:requestLegacyExternalStorage="false"
         android:networkSecurityConfig="@xml/network_security_config"
-        tools:targetApi="31"
-        tools:ignore="ForegroundServicePermission">
+        tools:targetApi="31">
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -62,7 +67,11 @@
         <service
             android:name=".service.SmsForegroundService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Der Dienst haelt die SMS-Weiterleitung dauerhaft empfangsbereit: Er nimmt eingehende SMS entgegen, leitet sie unmittelbar per SMS und E-Mail weiter und fuehrt die persistente Sendewarteschlange samt Zustellrueckmeldungen. Die Aufgabe ist ereignisgesteuert und muss ohne Benutzerinteraktion jederzeit laufen; keiner der uebrigen Foreground-Service-Typen beschreibt sie zutreffend." />
+        </service>
 
         <receiver
             android:name=".service.SmsReceiver"

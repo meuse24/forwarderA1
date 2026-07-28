@@ -15,6 +15,7 @@ import android.telephony.TelephonyManager
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import android.net.ConnectivityManager
 import android.telephony.ServiceState
@@ -23,13 +24,16 @@ import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
+import info.meuse24.smsforwarderneoA1.domain.model.SmsCallbackUri
+import info.meuse24.smsforwarderneoA1.service.SmsDeliveredReceiver
+import info.meuse24.smsforwarderneoA1.service.SmsSentReceiver
 import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import info.meuse24.smsforwarderneoA1.util.permission.PermissionHelper
 import info.meuse24.smsforwarderneoA1.util.phone.CarrierTrie
 import java.io.IOException
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.UUID
 
 enum class UssdRequestType {
     ACTIVATE_FORWARDING,
@@ -44,6 +48,33 @@ data class UssdRequestResult(
     val type: UssdRequestType
 )
 
+/** Broadcast-Action der Senderueckmeldung. */
+const val ACTION_SMS_SENT = "info.meuse24.smsforwarderneoA1.SMS_SENT"
+
+/** Broadcast-Action der Zustellrueckmeldung. */
+const val ACTION_SMS_DELIVERED = "info.meuse24.smsforwarderneoA1.SMS_DELIVERED"
+
+/**
+ * Ein Weiterleitungsversand, dessen Vorbedingungen geprueft sind.
+ *
+ * Traegt die bereits ermittelte Teilung, damit die erwartete Teilzahl feststeht, bevor der
+ * Zustand `ATTEMPTING` geschrieben wird.
+ */
+class PreparedForwardSms internal constructor(
+    internal val smsManager: SmsManager,
+    val normalizedNumber: String,
+    internal val parts: ArrayList<String>,
+    val subscriptionId: Int
+) {
+    val partCount: Int get() = parts.size
+}
+
+/** Ergebnis der Vorbedingungspruefung. Eine Ablehnung ist ein belegter Fehlschlag. */
+sealed interface ForwardSmsPreparation {
+    data class Ready(val prepared: PreparedForwardSms) : ForwardSmsPreparation
+    data class Rejected(val reason: String) : ForwardSmsPreparation
+}
+
 /**
  * PhoneSmsUtils ist eine Utility-Klasse für SMS- und Telefonie-bezogene Funktionen.
  * Sie bietet Methoden zum Senden von SMS, USSD-Codes und zum Abrufen von SIM-Karteninformationen.
@@ -52,13 +83,6 @@ data class UssdRequestResult(
 class PhoneSmsUtils private constructor() {
 
     companion object {
-
-        /**
-         * Thread-safe Counter für eindeutige PendingIntent requestCodes.
-         * Vermeidet Kollisionen bei schnellen aufeinanderfolgenden SMS-Sends.
-         * Int overflow ist unkritisch - Android behandelt requestCodes als opaque IDs.
-         */
-        private val pendingIntentRequestCode = AtomicInteger(0)
 
         /**
          * Anonymisiert SMS-Text für Logging-Zwecke.
@@ -242,29 +266,22 @@ class PhoneSmsUtils private constructor() {
                     val sentIntents = ArrayList<PendingIntent>()
                     val deliveredIntents = ArrayList<PendingIntent>()
 
+                    // Kein Weiterleitungsvorgang: Die Rueckmeldungen sind hier rein informativ,
+                    // brauchen aber trotzdem eine eindeutige Identitaet.
+                    val callbackId = "test-${UUID.randomUUID()}"
                     for (i in parts.indices) {
-                        val sentIntent = PendingIntent.getBroadcast(
-                            context,
-                            pendingIntentRequestCode.getAndIncrement(),
-                            Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
-                                putExtra("part_index", i)
-                                putExtra("total_parts", parts.size)
-                                putExtra("recipient", phoneNumber)
-                            },
-                            PendingIntent.FLAG_IMMUTABLE
+                        sentIntents.add(
+                            callbackIntent(
+                                context, SmsSentReceiver::class.java, ACTION_SMS_SENT,
+                                callbackId, 1, i, parts.size, phoneNumber
+                            )
                         )
-                        val deliveredIntent = PendingIntent.getBroadcast(
-                            context,
-                            pendingIntentRequestCode.getAndIncrement(),
-                            Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
-                                putExtra("part_index", i)
-                                putExtra("total_parts", parts.size)
-                                putExtra("recipient", phoneNumber)
-                            },
-                            PendingIntent.FLAG_IMMUTABLE
+                        deliveredIntents.add(
+                            callbackIntent(
+                                context, SmsDeliveredReceiver::class.java, ACTION_SMS_DELIVERED,
+                                callbackId, 1, i, parts.size, phoneNumber
+                            )
                         )
-                        sentIntents.add(sentIntent)
-                        deliveredIntents.add(deliveredIntent)
                     }
 
                     smsManager.sendMultipartTextMessage(
@@ -290,25 +307,14 @@ class PhoneSmsUtils private constructor() {
                     )
                 } else {
                     // Single SMS - direkt mit text, kein Umweg über parts[0]
-                    val sentIntent = PendingIntent.getBroadcast(
-                        context,
-                        pendingIntentRequestCode.getAndIncrement(),
-                        Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
-                            putExtra("part_index", -1)  // Single SMS = -1
-                            putExtra("total_parts", 1)
-                            putExtra("recipient", phoneNumber)
-                        },
-                        PendingIntent.FLAG_IMMUTABLE
+                    val callbackId = "test-${UUID.randomUUID()}"
+                    val sentIntent = callbackIntent(
+                        context, SmsSentReceiver::class.java, ACTION_SMS_SENT,
+                        callbackId, 1, 0, 1, phoneNumber
                     )
-                    val deliveredIntent = PendingIntent.getBroadcast(
-                        context,
-                        pendingIntentRequestCode.getAndIncrement(),
-                        Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
-                            putExtra("part_index", -1)  // Single SMS = -1
-                            putExtra("total_parts", 1)
-                            putExtra("recipient", phoneNumber)
-                        },
-                        PendingIntent.FLAG_IMMUTABLE
+                    val deliveredIntent = callbackIntent(
+                        context, SmsDeliveredReceiver::class.java, ACTION_SMS_DELIVERED,
+                        callbackId, 1, 0, 1, phoneNumber
                     )
                     smsManager.sendTextMessage(
                         normalizedPhoneNumber,
@@ -347,186 +353,148 @@ class PhoneSmsUtils private constructor() {
         }
 
         /**
-         * Sendet eine SMS mit spezifischer SIM-Karte (Subscription ID).
-         * Diese Funktion wird für die SMS-Weiterleitung verwendet, wenn der Benutzer
-         * eine bestimmte SIM auswählt.
-         *
-         * @param context Der Anwendungskontext
-         * @param phoneNumber Die Zieltelefonnummer
-         * @param text Der zu sendende Text
-         * @param subscriptionId Die Subscription-ID der zu verwendenden SIM (-1 = Standard-SIM)
+         * Beschafft den SmsManager fuer eine bestimmte SIM.
+         * @return `null`, wenn er nicht verfuegbar ist - das ist eine Vorbedingung, kein Fehlschlag.
          */
-        fun sendSmsWithSubscription(
+        private fun obtainSmsManager(context: Context, subscriptionId: Int): SmsManager? = runCatching {
+            if (subscriptionId != -1) {
+                @Suppress("DEPRECATION")
+                SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                context.getSystemService(SmsManager::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                SmsManager.getDefault()
+            }
+        }.getOrNull()
+
+        /**
+         * Prueft **alle** Vorbedingungen des Weiterleitungsversands und bereitet ihn vor.
+         *
+         * Bewusst getrennt vom eigentlichen Senden: Der Aufrufer schreibt zwischen Vorbereitung
+         * und Versand den Zustand `ATTEMPTING`. Nur so ist eine spaetere Exception eindeutig dem
+         * Sendeaufruf zuzuordnen und nicht einer Vorbedingung.
+         */
+        fun prepareForwardSms(
             context: Context,
             phoneNumber: String,
             text: String,
             subscriptionId: Int
-        ) {
+        ): ForwardSmsPreparation {
             if (!PermissionHelper.hasPermission(context, Manifest.permission.SEND_SMS)) {
-                LoggingManager.logError(
-                    component = "PhoneSmsUtils",
-                    action = "SEND_SMS_WITH_SUBSCRIPTION",
-                    message = "SMS permission not granted"
-                )
-                throw SecurityException("SMS permission not granted")
+                return ForwardSmsPreparation.Rejected("missing_permission_send_sms")
             }
+            if (phoneNumber.isBlank()) return ForwardSmsPreparation.Rejected("empty_target_number")
+            if (text.isBlank()) return ForwardSmsPreparation.Rejected("empty_text")
 
             // Ersetze "+" durch konfigurierte Anschaltziffernfolge
-            val prefsManager = SharedPreferencesManager(context)
-            val dialPrefix = prefsManager.getInternationalDialPrefix()
+            val dialPrefix = SharedPreferencesManager(context).getInternationalDialPrefix()
             val normalizedPhoneNumber = if (phoneNumber.contains("+")) {
                 phoneNumber.replace("+", dialPrefix)
             } else {
                 phoneNumber
             }
 
-            val smsManager = if (subscriptionId != -1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                // Verwende spezifische SIM
-                @Suppress("DEPRECATION")
-                SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
-            } else {
-                // Fallback: Standard-SIM
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    context.getSystemService(SmsManager::class.java) ?: run {
-                        LoggingManager.logError(
-                            component = "PhoneSmsUtils",
-                            action = "SEND_SMS_WITH_SUBSCRIPTION",
-                            message = "SmsManager nicht verfügbar"
-                        )
-                        throw SecurityException("SmsManager nicht verfügbar")
-                    }
-                } else {
-                    @Suppress("DEPRECATION")
-                    SmsManager.getDefault()
-                }
-            }
+            val smsManager = obtainSmsManager(context, subscriptionId)
+                ?: return ForwardSmsPreparation.Rejected("sms_manager_unavailable")
 
-            // Encoding-Detection EINMALIG für Logging (verhindert doppelte Berechnung)
-            val lengthInfo = android.telephony.SmsMessage.calculateLength(text, false)
-            val encoding = when (lengthInfo[3]) {
-                android.telephony.SmsMessage.ENCODING_7BIT -> "GSM-7"
-                android.telephony.SmsMessage.ENCODING_16BIT -> "UCS-2"
-                else -> "Unknown"
-            }
+            // Android waehlt selbst zwischen GSM-7 und UCS-2; divideMessage liefert die Teilung,
+            // die spaeter auch gesendet wird. Die Teilzahl steht damit vor dem Versand fest.
+            val parts = runCatching { smsManager.divideMessage(text) }.getOrNull()
+                ?.takeIf { it.isNotEmpty() }
+                ?: return ForwardSmsPreparation.Rejected("divide_message_failed")
 
-            // Android macht automatisch GSM-7 oder UCS-2 Kodierung
-            val parts = smsManager.divideMessage(text)
+            return ForwardSmsPreparation.Ready(
+                PreparedForwardSms(smsManager, normalizedPhoneNumber, parts, subscriptionId)
+            )
+        }
 
-            try {
-                if (parts.size > 1) {
-                    // Multi-part SMS
-                    val sentIntents = ArrayList<PendingIntent>()
-                    val deliveredIntents = ArrayList<PendingIntent>()
-
-                    for (i in parts.indices) {
-                        val sentIntent = PendingIntent.getBroadcast(
-                            context,
-                            pendingIntentRequestCode.getAndIncrement(),
-                            Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
-                                putExtra("part_index", i)
-                                putExtra("total_parts", parts.size)
-                                putExtra("recipient", phoneNumber)
-                                putExtra("subscription_id", subscriptionId)
-                            },
-                            PendingIntent.FLAG_IMMUTABLE
-                        )
-                        sentIntents.add(sentIntent)
-
-                        val deliveredIntent = PendingIntent.getBroadcast(
-                            context,
-                            pendingIntentRequestCode.getAndIncrement(),
-                            Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
-                                putExtra("part_index", i)
-                                putExtra("total_parts", parts.size)
-                                putExtra("recipient", phoneNumber)
-                                putExtra("subscription_id", subscriptionId)
-                            },
-                            PendingIntent.FLAG_IMMUTABLE
-                        )
-                        deliveredIntents.add(deliveredIntent)
-                    }
-
-                    smsManager.sendMultipartTextMessage(
-                        normalizedPhoneNumber,
-                        null,
-                        parts,
-                        sentIntents,
-                        deliveredIntents
-                    )
-
-                    LoggingManager.logInfo(
-                        component = "PhoneSmsUtils",
-                        action = "SEND_SMS_WITH_SUBSCRIPTION",
-                        message = "Multi-part SMS sent",
-                        details = mapOf(
-                            "recipient" to normalizedPhoneNumber,
-                            "original_recipient" to phoneNumber,
-                            "parts" to parts.size,
-                            "subscription_id" to subscriptionId,
-                            "encoding" to encoding,
-                            "sms_length" to lengthInfo[1]
-                        )
-                    )
-                } else {
-                    // Single SMS - direkt mit text, kein Umweg über parts[0]
-                    val sentIntent = PendingIntent.getBroadcast(
-                        context,
-                        pendingIntentRequestCode.getAndIncrement(),
-                        Intent("info.meuse24.smsforwarderneoA1.SMS_SENT").apply {
-                            putExtra("part_index", -1)
-                            putExtra("total_parts", 1)
-                            putExtra("recipient", phoneNumber)
-                            putExtra("subscription_id", subscriptionId)
-                        },
-                        PendingIntent.FLAG_IMMUTABLE
-                    )
-
-                    val deliveredIntent = PendingIntent.getBroadcast(
-                        context,
-                        pendingIntentRequestCode.getAndIncrement(),
-                        Intent("info.meuse24.smsforwarderneoA1.SMS_DELIVERED").apply {
-                            putExtra("part_index", -1)
-                            putExtra("total_parts", 1)
-                            putExtra("recipient", phoneNumber)
-                            putExtra("subscription_id", subscriptionId)
-                        },
-                        PendingIntent.FLAG_IMMUTABLE
-                    )
-
-                    smsManager.sendTextMessage(
-                        normalizedPhoneNumber,
-                        null,
-                        text,  // Direkter Text statt parts[0]
-                        sentIntent,
-                        deliveredIntent
-                    )
-
-                    LoggingManager.logInfo(
-                        component = "PhoneSmsUtils",
-                        action = "SEND_SMS_WITH_SUBSCRIPTION",
-                        message = "Single SMS sent",
-                        details = mapOf(
-                            "recipient" to normalizedPhoneNumber,
-                            "original_recipient" to phoneNumber,
-                            "subscription_id" to subscriptionId,
-                            "encoding" to encoding,
-                            "sms_length" to lengthInfo[1]
-                        )
-                    )
-                }
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "PhoneSmsUtils",
-                    action = "SEND_SMS_WITH_SUBSCRIPTION",
-                    message = "Failed to send SMS",
-                    details = mapOf(
-                        "recipient" to phoneNumber,
-                        "subscription_id" to subscriptionId,
-                        "error" to e.message.toString()
+        /**
+         * Fuehrt den vorbereiteten Versand aus.
+         *
+         * Wirft weiter, was der Binder-Aufruf wirft: Ob eine Exception einen Fehlschlag belegt,
+         * entscheidet allein SmsDeliveryReducer.onDispatchException.
+         */
+        fun dispatchForwardSms(
+            context: Context,
+            prepared: PreparedForwardSms,
+            operationId: String,
+            attempt: Int
+        ) {
+            val parts = prepared.parts
+            val sentIntents = ArrayList<PendingIntent>(parts.size)
+            val deliveredIntents = ArrayList<PendingIntent>(parts.size)
+            for (index in parts.indices) {
+                sentIntents.add(
+                    callbackIntent(
+                        context, SmsSentReceiver::class.java, ACTION_SMS_SENT,
+                        operationId, attempt, index, parts.size, prepared.normalizedNumber
                     )
                 )
-                throw e
+                deliveredIntents.add(
+                    callbackIntent(
+                        context, SmsDeliveredReceiver::class.java, ACTION_SMS_DELIVERED,
+                        operationId, attempt, index, parts.size, prepared.normalizedNumber
+                    )
+                )
             }
+
+            if (parts.size > 1) {
+                prepared.smsManager.sendMultipartTextMessage(
+                    prepared.normalizedNumber, null, parts, sentIntents, deliveredIntents
+                )
+            } else {
+                prepared.smsManager.sendTextMessage(
+                    prepared.normalizedNumber, null, parts[0], sentIntents[0], deliveredIntents[0]
+                )
+            }
+
+            LoggingManager.logInfo(
+                component = "PhoneSmsUtils",
+                action = "DISPATCH_FORWARD_SMS",
+                message = "Weiterleitung an Telefonie-Framework uebergeben",
+                details = mapOf(
+                    "operation_id" to operationId,
+                    "attempt" to attempt,
+                    "parts" to parts.size,
+                    "subscription_id" to prepared.subscriptionId
+                )
+            )
+        }
+
+        /**
+         * Baut einen Rueckmelde-PendingIntent.
+         *
+         * Vorgang, Versuch und Teilindex stehen in der Daten-URI, weil nur sie zur Identitaet
+         * eines PendingIntent zaehlt - Extras tun das nicht. `setClass` haelt die Zustellung
+         * innerhalb der App. Kein `FLAG_UPDATE_CURRENT`: ausstehende Callbacks duerfen nicht
+         * ueberschrieben werden.
+         */
+        private fun callbackIntent(
+            context: Context,
+            receiver: Class<*>,
+            action: String,
+            operationId: String,
+            attempt: Int,
+            partIndex: Int,
+            totalParts: Int,
+            recipient: String
+        ): PendingIntent {
+            val uri = SmsCallbackUri.build(operationId, attempt, partIndex)
+            val intent = Intent(action).apply {
+                setClass(context, receiver)
+                data = uri.toUri()
+                // Rein informativ fuer Protokoll und Anzeige.
+                putExtra("part_index", partIndex)
+                putExtra("total_parts", totalParts)
+                putExtra("recipient", recipient)
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                SmsCallbackUri.requestCode(uri),
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         /**

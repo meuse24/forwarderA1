@@ -20,6 +20,8 @@ import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeProfiles
 import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeSet
 import info.meuse24.smsforwarderneoA1.domain.model.ForwardingCodeSnapshot
 import info.meuse24.smsforwarderneoA1.domain.model.MmiProfileMigration
+import info.meuse24.smsforwarderneoA1.domain.model.DroppedForwardingWarning
+import info.meuse24.smsforwarderneoA1.domain.model.QueueCorruptionWarning
 import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import java.io.File
 import org.json.JSONObject
@@ -842,6 +844,127 @@ class SharedPreferencesManager(private val context: Context) {
         return plainPrefs.getString(KEY_APP_LANGUAGE, null)
     }
 
+    // --- Betriebswarnungen ------------------------------------------------------------------
+    // Zustaende, die die Weiterleitung beeintraechtigen, ohne sie zu stoppen. Sie liegen hier
+    // und nicht in der Queue-Datei: Im Korruptionsfall ist gerade jene Datei die unlesbare.
+    //
+    // Diese Werte werden - anders als die uebrige Konfiguration - unter einer Sperre und mit
+    // commit() geschrieben. Begruendung: Eine Einstellung kann der Nutzer jederzeit erneut
+    // setzen; die Meldung ueber einen Verlust ist dagegen der einzige Beleg dafuer, dass etwas
+    // verschwunden ist. Ginge sie bei einem Prozesskill verloren, waere der Verlust selbst
+    // wieder kommentarlos - genau das, was Ziel 2 ausschliesst. Die Sperre macht ausserdem das
+    // Read-modify-write der Zaehler atomar; zwei gleichzeitige Vorfaelle wuerden sonst denselben
+    // Ausgangswert lesen und der Zaehler untererfasste den Schaden.
+
+    private val warningLock = Any()
+
+    /**
+     * Haltbares, serialisiertes Read-modify-write eines Warnzustands.
+     * @return `false`, wenn der Wert nicht synchron geschrieben werden konnte
+     */
+    private fun updateWarning(key: String, transform: (String) -> String): Boolean =
+        synchronized(warningLock) {
+            runCatching {
+                val current = prefs.getString(key, "") ?: ""
+                prefs.edit().putString(key, transform(current)).commit()
+            }.getOrElse { error ->
+                LoggingManager.logError(
+                    component = "SharedPreferencesManager",
+                    action = "WARNING_WRITE_FAILED",
+                    message = "Warnzustand konnte nicht haltbar geschrieben werden: $key",
+                    error = error
+                )
+                false
+            }
+        }
+
+    /**
+     * Vermerkt verlorene Queue-Eintraege. Mehrfache Vorfaelle werden aufsummiert, solange der
+     * Nutzer sie nicht quittiert hat - sonst wuerde ein zweiter Vorfall den ersten verdecken.
+     *
+     * @param lostEntries Anzahl, oder [QueueCorruptionWarning.UNKNOWN_COUNT] bei unbekannter Menge
+     * @return `false`, wenn die Meldung nicht haltbar geschrieben werden konnte
+     */
+    fun recordQueueCorruption(lostEntries: Int): Boolean =
+        updateWarning(KEY_QUEUE_CORRUPTION) { current ->
+            val existing = parseQueueCorruption(current)
+            val total = when {
+                existing == null -> lostEntries
+                existing.lostEntries == QueueCorruptionWarning.UNKNOWN_COUNT ||
+                    lostEntries == QueueCorruptionWarning.UNKNOWN_COUNT -> QueueCorruptionWarning.UNKNOWN_COUNT
+                else -> existing.lostEntries + lostEntries
+            }
+            JSONObject().apply {
+                put("timestamp", System.currentTimeMillis())
+                put("lost_entries", total)
+            }.toString()
+        }
+
+    fun getQueueCorruptionWarning(): QueueCorruptionWarning? =
+        parseQueueCorruption(getPreference(KEY_QUEUE_CORRUPTION, ""))
+
+    fun acknowledgeQueueCorruption(): Boolean = updateWarning(KEY_QUEUE_CORRUPTION) { "" }
+
+    private fun parseQueueCorruption(raw: String): QueueCorruptionWarning? = runCatching {
+        if (raw.isBlank()) return null
+        val json = JSONObject(raw)
+        QueueCorruptionWarning(json.getLong("timestamp"), json.getInt("lost_entries"))
+    }.getOrNull()
+
+    /**
+     * Vermerkt eine Weiterleitung, die wegen voller Warteschlange nicht versucht wurde.
+     *
+     * Dies ist der **einzige** Beleg fuer diesen Verlust - in der Queue selbst kann er nicht
+     * stehen, weil die Aufbewahrungsregel den Vermerk bei voller Queue sofort wieder verdraengen
+     * wuerde. Entsprechend haltbar wird er geschrieben.
+     *
+     * @return `false`, wenn die Meldung nicht haltbar geschrieben werden konnte
+     */
+    fun recordDroppedForwarding(): Boolean =
+        updateWarning(KEY_DROPPED_FORWARDINGS) { current ->
+            JSONObject().apply {
+                put("timestamp", System.currentTimeMillis())
+                put("count", (parseDroppedForwarding(current)?.count ?: 0) + 1)
+            }.toString()
+        }
+
+    fun getDroppedForwardingWarning(): DroppedForwardingWarning? =
+        parseDroppedForwarding(getPreference(KEY_DROPPED_FORWARDINGS, ""))
+
+    fun acknowledgeDroppedForwardings(): Boolean = updateWarning(KEY_DROPPED_FORWARDINGS) { "" }
+
+    private fun parseDroppedForwarding(raw: String): DroppedForwardingWarning? = runCatching {
+        if (raw.isBlank()) return null
+        val json = JSONObject(raw)
+        DroppedForwardingWarning(json.getLong("timestamp"), json.getInt("count"))
+    }.getOrNull()
+
+    /**
+     * Merkt, dass die Statusanzeige mangels `POST_NOTIFICATIONS` unterdrueckt ist. Die
+     * Weiterleitung laeuft dabei weiter - die Plattform verlangt die Berechtigung fuer einen
+     * Foreground Service nicht.
+     *
+     * Kein Verlustbeleg, sondern eine Spiegelung des aktuellen Berechtigungsstands: Sie wird bei
+     * jedem Dienststart und beim Oeffnen der App neu ermittelt und darf deshalb mit `apply()`
+     * geschrieben werden.
+     */
+    fun setNotificationsSuppressed(suppressed: Boolean) =
+        setPreference(KEY_NOTIFICATIONS_SUPPRESSED, suppressed)
+
+    fun areNotificationsSuppressed(): Boolean = getPreference(KEY_NOTIFICATIONS_SUPPRESSED, false)
+
+    /**
+     * Vermerkt ein `Service.onTimeout()` des Foreground Service. Ein einmaliges Ereignis, das
+     * sich nicht wiederholt - deshalb ebenfalls haltbar geschrieben.
+     */
+    fun recordServiceTimeout(timestampMillis: Long): Boolean =
+        updateWarning(KEY_SERVICE_TIMEOUT_AT) { timestampMillis.toString() }
+
+    fun getServiceTimeoutAt(): Long? =
+        getPreference(KEY_SERVICE_TIMEOUT_AT, "").toLongOrNull()
+
+    fun acknowledgeServiceTimeout(): Boolean = updateWarning(KEY_SERVICE_TIMEOUT_AT) { "" }
+
     companion object {
         private const val KEY_TEST_EMAIL_TEXT = "test_email_text"
         private const val KEY_FORWARD_SMS_TO_EMAIL = "forward_sms_to_email"
@@ -887,6 +1010,10 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_SIM1_RECEIVE_ENABLED = "sim1_receive_enabled"
         private const val KEY_SIM2_RECEIVE_ENABLED = "sim2_receive_enabled"
         private const val KEY_RCS_HINT_DISMISSED = "rcs_hint_dismissed"
+        private const val KEY_QUEUE_CORRUPTION = "forwarding_queue_corruption"
+        private const val KEY_DROPPED_FORWARDINGS = "forwarding_dropped_queue_full"
+        private const val KEY_NOTIFICATIONS_SUPPRESSED = "notifications_suppressed"
+        private const val KEY_SERVICE_TIMEOUT_AT = "service_timeout_at"
 
         private const val MMI_PROFILE_MIGRATION_VERSION = 1
         private const val DEFAULT_MMI_ACTIVATE_PREFIX = "**21*"

@@ -763,4 +763,18 @@
     <string name="privacy_section_loop_protection_body_de">Die App enthält einen automatischen Loop-Schutz, um Endlosweiterleitungen zu verhindern:\n\n• SMS werden nicht weitergeleitet, wenn der Absender der Zielnummer entspricht\n• SMS werden nicht an Ihre eigenen SIM-Kartennummern weitergeleitet\n• Alle blockierten Weiterleitungsversuche werden zur Transparenz protokolliert\n\nDies gewährleistet einen sicheren Betrieb auch bei komplexen Multi-SIM-Konfigurationen.</string>
     <string name="privacy_section_loop_protection_title_en">5. Loop Protection</string>
     <string name="privacy_section_loop_protection_body_en">The app includes automatic loop protection to prevent endless forwarding loops:\n\n• SMS will not be forwarded if the sender matches the target number\n• SMS will not be forwarded to your own SIM card numbers\n• All blocked forwarding attempts are logged for transparency\n\nThis ensures safe operation even with complex multi-SIM configurations.</string>
+
+    <!-- ==================== BETRIEBSWARNUNGEN ==================== -->
+    <string name="warning_card_title">Hinweise zum Betrieb</string>
+    <string name="warning_notifications_suppressed">Statusanzeige unterdrückt – die Weiterleitung läuft, ist aber nur im Task Manager sichtbar. Mit der Benachrichtigungsberechtigung wird der Status wieder angezeigt.</string>
+    <string name="warning_queue_corruption">%1$d Einträge der Weiterleitungsliste sind am %2$s verloren gegangen.</string>
+    <string name="warning_queue_corruption_unknown">Die Weiterleitungsliste war am %1$s unlesbar und wurde neu angelegt. Wie viele Einträge betroffen waren, ist nicht feststellbar.</string>
+    <string name="warning_service_timeout">Der Dienst wurde am %1$s durch ein Zeitlimit des Systems beendet.</string>
+    <string name="warning_failed_operations">%1$d Weiterleitungen sind fehlgeschlagen oder ungeklärt.</string>
+    <string name="warning_acknowledge">Verstanden</string>
+    <string name="warning_queue_write_failed">Weiterleitung konnte nicht gespeichert werden – es wurde nicht gesendet.</string>
+    <string name="warning_queue_full">Warteschlange voll – die Nachricht wurde nicht gesendet.</string>
+    <string name="warning_dropped_forwardings">%1$d Nachrichten wurden nicht weitergeleitet, weil die Warteschlange voll war (zuletzt am %2$s).</string>
+    <string name="warning_battery_optimization">Batterieoptimierung ist aktiv – das System kann den Weiterleitungsdienst beenden.</string>
+    <string name="snackbar_email_retry_failed">E-Mail zur SMS von %1$s nach %2$d Versuchen fehlgeschlagen</string>
 </resources>

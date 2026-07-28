@@ -327,6 +327,7 @@ fun LandscapeLayout(
         PendingForwardingCard(viewModel)
         ForwardingVerificationCard(viewModel)
         RcsHintCardHost(onNavigateToHelp = onNavigateToRcsHelp)
+        ForwardingWarningsCardHost()
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -435,6 +436,7 @@ fun PortraitLayout(
         PendingForwardingCard(viewModel)
         ForwardingVerificationCard(viewModel)
         RcsHintCardHost(onNavigateToHelp = onNavigateToRcsHelp)
+        ForwardingWarningsCardHost()
 
         Spacer(modifier = Modifier.weight(1f))
 

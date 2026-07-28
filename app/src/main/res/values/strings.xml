@@ -706,4 +706,18 @@
     <string name="toggle_show_rcs_hint">RCS notice on the home screen</string>
     <string name="desc_show_rcs_hint">Reminds you that RCS chats from Google Messages cannot be forwarded. The full explanation is always available in the help section.</string>
     <string name="msg_rcs_hint_not_applicable">Google Messages is not installed on this device – the notice is not relevant.</string>
+
+    <!-- ==================== OPERATIONAL WARNINGS ==================== -->
+    <string name="warning_card_title">Operational notices</string>
+    <string name="warning_notifications_suppressed">Status display suppressed – forwarding is running, but is only visible in the task manager. Grant the notification permission to see the status again.</string>
+    <string name="warning_queue_corruption">%1$d entries of the forwarding list were lost on %2$s.</string>
+    <string name="warning_queue_corruption_unknown">The forwarding list was unreadable on %1$s and has been recreated. How many entries were affected cannot be determined.</string>
+    <string name="warning_service_timeout">The service was stopped by a system time limit on %1$s.</string>
+    <string name="warning_failed_operations">%1$d forwardings failed or remain unresolved.</string>
+    <string name="warning_acknowledge">Got it</string>
+    <string name="warning_queue_write_failed">Forwarding could not be stored – no send attempt was made.</string>
+    <string name="warning_queue_full">Forwarding queue is full – the message was not sent.</string>
+    <string name="warning_dropped_forwardings">%1$d messages were not forwarded because the queue was full (most recently on %2$s).</string>
+    <string name="warning_battery_optimization">Battery optimization is active – the system may stop the forwarding service.</string>
+    <string name="snackbar_email_retry_failed">Email for the SMS from %1$s failed after %2$d attempts</string>
 </resources>
