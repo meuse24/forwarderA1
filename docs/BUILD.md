@@ -228,6 +228,19 @@ sha256sum app/build/outputs/apk/release/app-release.apk
 gh release create V4.x.y app/build/outputs/apk/release/app-release.apk --title "..." --notes "..."
 ```
 
+**5. Versionsangabe auf der Projektseite aktualisieren**
+
+`index.html` (Quelle von https://meuse24.github.io/forwarderA1/) nennt die Version im Kopfbereich.
+Diese Zeile ist der einzige Ort, der pro Release von Hand angepasst werden muss:
+
+```html
+<p>Version: Barracuda 4.1.0 (v4.1.0)</p>
+```
+
+Der Download-Button zeigt bewusst auf `/releases/latest/download/app-release.apk` und leitet damit
+immer auf das neueste Release um — er darf **nicht** auf ein festes Tag umgestellt werden. Genau das
+war zuvor der Fall: Die Seite nannte 4.1.0, verlinkte aber die APK des Tags `v4` von Januar 2026.
+
 **Was pro Release neu ist und was nicht:**
 
 | Wert | Gilt für | Ort |

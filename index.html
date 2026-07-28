@@ -357,7 +357,9 @@
 
         <main class="content">
             <div class="actions">
-                <a href="https://github.com/meuse24/forwarderA1/releases/download/v4/app-release.apk" class="btn btn-download" target="_blank" rel="noopener noreferrer" aria-label="APK herunterladen">
+                <!-- /releases/latest/download/ leitet immer auf das neueste Release um.
+                     Der Link muss deshalb bei einem neuen Release nicht angepasst werden. -->
+                <a href="https://github.com/meuse24/forwarderA1/releases/latest/download/app-release.apk" class="btn btn-download" target="_blank" rel="noopener noreferrer" aria-label="Aktuelle APK herunterladen">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
                     </svg>
@@ -462,7 +464,7 @@
                         <li><strong>Kotlin Coroutines:</strong> Asynchrone Verarbeitung ohne Blocking</li>
                         <li><strong>ViewModel Pattern:</strong> Zustandsverwaltung mit Factory Pattern</li>
                         <li><strong>SharedPreferences + Encryption:</strong> Sichere Datenspeicherung</li>
-                        <li><strong>Android 10+ Support:</strong> Target SDK 35, Min SDK 29, Kotlin 2.1</li>
+                        <li><strong>Android 10+ Support:</strong> Target SDK 36, Min SDK 29, Kotlin 2.1</li>
                     </ul>
                 </article>
 
@@ -490,9 +492,36 @@
             </div>
 
             <div class="warning-box" role="alert">
+                <strong>RCS-Chats und MMS werden nicht weitergeleitet:</strong>
+                Google Messages versendet Nachrichten zwischen Android-Geräten als RCS-Chat statt als SMS.
+                Android liefert RCS-Nachrichten aus technischen Gründen nicht an andere Apps aus – unabhängig von
+                erteilten Berechtigungen. Diese App kann sie deshalb nicht weiterleiten; Gleiches gilt für MMS
+                (Bilder, Videos, Sprachnachrichten). Wenn Sie alle Textnachrichten weiterleiten möchten, deaktivieren
+                Sie RCS auf dem weiterleitenden Gerät: <em>Google Messages → Profilbild → Nachrichteneinstellungen →
+                RCS-Chats</em>. Ihre Kontakte senden dann automatisch wieder klassische SMS. Bei zwei SIM-Karten ist
+                RCS für jede Rufnummer einzeln zu deaktivieren. Die App erklärt die Schritte auch in ihrer Hilfe.
+            </div>
+
+            <div class="warning-box" role="alert">
                 <strong>Hinweis zur Installation:</strong>
                 Da diese App tiefgreifende Systemrechte (SMS/Anrufe) benötigt, ist sie nicht im Play Store verfügbar.
                 Bitte aktivieren Sie "Installation aus unbekannten Quellen" in Ihren Android-Einstellungen.
+                Google Play Protect kann dabei eine Warnung anzeigen – das ist bei einer außerhalb des Play Stores
+                installierten SMS-App erwartbar.
+            </div>
+
+            <div class="info-box">
+                <strong>Echtheit der APK prüfen:</strong>
+                Ohne Play Store bürgt kein Anbieter für die Herkunft der Datei. Da die App Zugriff auf Ihre SMS hat,
+                lohnt sich die Prüfung. Die Signatur des Herausgebers ist für alle Versionen identisch:
+                <br>
+                <code style="word-break: break-all;">CN=Günther Meusburger · SHA-256:
+                DF:F4:45:88:48:D9:8F:DB:C0:05:E4:71:59:D1:50:7C:F2:2C:58:B4:76:00:EF:09:4A:B3:E0:8B:99:F1:C7:2C</code>
+                <br>
+                Die Prüfsumme der jeweiligen Datei steht in der
+                <a href="https://github.com/meuse24/forwarderA1/releases/latest" target="_blank" rel="noopener noreferrer">Release-Beschreibung</a>,
+                eine Schritt-für-Schritt-Anleitung in der
+                <a href="https://github.com/meuse24/forwarderA1#installation-der-signierten-app" target="_blank" rel="noopener noreferrer">README</a>.
             </div>
 
             <div class="info-box">
