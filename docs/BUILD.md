@@ -228,24 +228,37 @@ sha256sum app/build/outputs/apk/release/app-release.apk
 gh release create V4.x.y app/build/outputs/apk/release/app-release.apk --title "..." --notes "..."
 ```
 
-**5. Projektseite — passiert automatisch**
+**Schritte 3 und 5 passieren automatisch**
 
-`index.html` (Quelle von https://meuse24.github.io/forwarderA1/) nennt die Version im Kopfbereich.
-Der Workflow `.github/workflows/update-site-version.yml` trägt sie nach, sobald ein Release
-veröffentlicht wird, und committet die Änderung nach `main`. Es ist also nichts zu tun.
+Der Workflow `.github/workflows/release-followup.yml` läuft, sobald ein Release veröffentlicht ist,
+und erledigt zwei Dinge:
 
-Falls doch manuell nötig — etwa weil ein Release ohne Workflow angelegt wurde:
+1. Er trägt die Version in `index.html` (GitHub Pages) nach und committet nach `main`.
+2. Er lädt die `app-release.apk` des Releases, berechnet den SHA-256 und schreibt den Abschnitt
+   „Echtheit der APK prüfen" in die Release-Beschreibung. Der bestehende Text bleibt erhalten;
+   der Abschnitt liegt zwischen Markern und wird bei erneutem Lauf ersetzt statt angehängt.
+
+Es bleibt damit **nichts** von Hand zu tun. Beide Schritte sind idempotent.
+
+Falls doch manuell nötig — etwa weil ein Release ohne Workflow entstanden ist:
 
 ```bash
 # Version aus build.gradle.kts + Tag in index.html eintragen
 python scripts/update_site_version.py --tag V4.x.y
+python scripts/update_site_version.py --check --tag V4.x.y   # nur pruefen, Exit 1 = veraltet
 
-# Nur pruefen, ohne zu schreiben (Exit 1 = veraltet)
-python scripts/update_site_version.py --check --tag V4.x.y
+# Pruefabschnitt fuer die Release-Beschreibung erzeugen
+gh release view V4.x.y --json body -q .body > notes.md
+python scripts/update_release_notes.py --tag V4.x.y --apk app-release.apk \
+    --notes-in notes.md --notes-out notes.new.md
+gh release edit V4.x.y --notes-file notes.new.md
 ```
 
-Alternativ lässt sich der Workflow auf GitHub unter *Actions → Projektseite aktualisieren →
+Alternativ lässt sich der Workflow auf GitHub unter *Actions → Release nachbereiten →
 Run workflow* mit dem Tag als Eingabe nachträglich auslösen.
+
+Hängt am Release keine `app-release.apk`, überspringt der Workflow die Prüfsumme mit einer Warnung,
+statt fehlzuschlagen.
 
 Der Download-Button zeigt auf `/releases/latest/download/app-release.apk` und leitet damit immer auf
 das neueste Release um — er darf **nicht** auf ein festes Tag umgestellt werden. Genau das war zuvor

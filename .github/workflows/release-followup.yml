@@ -1,0 +1,86 @@
+name: Release nachbereiten
+
+# Zwei Aufgaben nach dem Veroeffentlichen eines Releases:
+#   1. Version in index.html (GitHub Pages) nachtragen.
+#   2. SHA-256 der Release-APK in die Release-Beschreibung eintragen.
+#
+# Der Download-Button auf der Seite bleibt unangetastet - er zeigt auf
+# /releases/latest/download/ und ist dadurch immer aktuell.
+#
+# Der Trigger ist "release: published", nicht "push". Der Commit dieses Workflows
+# loest deshalb keinen weiteren Lauf aus. Beide Schritte sind idempotent: Ein
+# erneuter Lauf ueber workflow_dispatch aendert nichts, wenn bereits alles stimmt.
+
+on:
+  release:
+    types: [published]
+  # Manuell nachziehbar, falls ein Release ohne Workflow angelegt wurde.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release-Tag, z. B. V4.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+        with:
+          # Immer main aktualisieren - Pages wird von dort ausgeliefert.
+          ref: main
+
+      - name: Version in index.html eintragen
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: python3 scripts/update_site_version.py --tag "$TAG"
+
+      - name: Aenderung committen
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "index.html war bereits aktuell - kein Commit noetig."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "docs: Projektseite auf $TAG aktualisiert"
+          git push
+
+      - name: APK des Releases holen
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p _release
+          if gh release download "$TAG" -p "app-release.apk" -D _release --clobber; then
+            echo "APK_VORHANDEN=1" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Am Release $TAG haengt keine app-release.apk - die Pruefsumme wird uebersprungen."
+            echo "APK_VORHANDEN=0" >> "$GITHUB_ENV"
+          fi
+
+      - name: Pruefsumme in die Release-Beschreibung eintragen
+        if: env.APK_VORHANDEN == '1'
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$TAG" --json body -q .body > _release/notes.md
+          python3 scripts/update_release_notes.py \
+            --tag "$TAG" \
+            --apk _release/app-release.apk \
+            --notes-in _release/notes.md \
+            --notes-out _release/notes.new.md
+          if cmp -s _release/notes.md _release/notes.new.md; then
+            echo "Release-Beschreibung war bereits aktuell - keine Aenderung."
+          else
+            gh release edit "$TAG" --notes-file _release/notes.new.md
+            echo "Pruefabschnitt in Release $TAG aktualisiert."
+          fi
