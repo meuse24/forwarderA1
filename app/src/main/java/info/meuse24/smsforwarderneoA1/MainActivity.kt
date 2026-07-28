@@ -499,8 +499,9 @@ class MainActivity : ComponentActivity() {
         } else {
             code
         }
-        // The configured carrier mode is authoritative; do not infer it in multiple places.
-        val isUssdCode = prefsManager.getMmiExecutionMode(code) == MmiExecutionMode.USSD_CALLBACK
+        // A pending deactivation can be bound to the profile used at activation.
+        // Its mode must not be recomputed from settings changed in the meantime.
+        val isUssdCode = viewModel.executionModeForOperation(operationId, code) == MmiExecutionMode.USSD_CALLBACK
 
         // Launch coroutine to wait if call is active
         lifecycleScope.launch {
@@ -545,10 +546,11 @@ class MainActivity : ComponentActivity() {
         try {
             // Determine which SIM to use for MMI code
             val mmiSimMode = prefsManager.getMmiSimSelectionMode()
-            val targetSubscriptionId = PhoneSmsUtils.determineTargetSubscriptionIdForMmi(
+            val selectedSubscriptionId = PhoneSmsUtils.determineTargetSubscriptionIdForMmi(
                 this,
                 mmiSimMode
             )
+            val targetSubscriptionId = viewModel.targetSubscriptionForOperation(operationId, selectedSubscriptionId)
 
             if (isUssdCode) {
                 // USSD-Code (z.B. ##21#, *#21#): Direkt senden, kein Dialer

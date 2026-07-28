@@ -15,6 +15,11 @@ import info.meuse24.smsforwarderneoA1.domain.model.DialPath
 import info.meuse24.smsforwarderneoA1.domain.model.MmiAuditEntry
 import info.meuse24.smsforwarderneoA1.domain.model.MmiAuditRetentionPolicy
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeProfile
+import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeProfiles
+import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeSet
+import info.meuse24.smsforwarderneoA1.domain.model.ForwardingCodeSnapshot
+import info.meuse24.smsforwarderneoA1.domain.model.MmiProfileMigration
 import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import java.io.File
 import org.json.JSONObject
@@ -130,10 +135,71 @@ class SharedPreferencesManager(private val context: Context) {
     }
 
     init {
+        migrateMmiCodeProfile()
         validateForwardingState()
         migrateOldPreferences()
         removeLegacyMmiWarningPreference()
         pruneMmiAudit()
+    }
+
+    /**
+     * Materializes legacy implicit defaults before their value is changed. Without this,
+     * an update would silently alter installations which never opened the code settings.
+     */
+    private fun migrateMmiCodeProfile() {
+        try {
+        if (prefs.getInt(KEY_MMI_PROFILE_MIGRATION_VERSION, 0) >= MMI_PROFILE_MIGRATION_VERSION) return
+        val mmiKeys = listOf(KEY_MMI_ACTIVATE_PREFIX, KEY_MMI_ACTIVATE_SUFFIX, KEY_MMI_DEACTIVATE_CODE, KEY_MMI_STATUS_CODE)
+        val isUpdate = runCatching {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0).let { it.firstInstallTime < it.lastUpdateTime }
+        }.getOrDefault(false)
+        val fallback = MmiProfileMigration.defaultsFor(
+            hasAnyMmiKey = mmiKeys.any(prefs::contains),
+            isUpdate = isUpdate,
+            forwardingActive = prefs.getBoolean(KEY_FORWARDING_ACTIVE, false),
+        )
+        val codes = MmiProfileMigration.materialize(MmiCodeSet(
+            prefs.getString(KEY_MMI_ACTIVATE_PREFIX, fallback.activatePrefix) ?: fallback.activatePrefix,
+            prefs.getString(KEY_MMI_ACTIVATE_SUFFIX, fallback.activateSuffix) ?: fallback.activateSuffix,
+            prefs.getString(KEY_MMI_DEACTIVATE_CODE, fallback.deactivateCode) ?: fallback.deactivateCode,
+            prefs.getString(KEY_MMI_STATUS_CODE, fallback.statusCode) ?: fallback.statusCode,
+        ), fallback)
+        prefs.edit()
+            .putString(KEY_MMI_ACTIVATE_PREFIX, codes.activatePrefix)
+            .putString(KEY_MMI_ACTIVATE_SUFFIX, codes.activateSuffix)
+            .putString(KEY_MMI_DEACTIVATE_CODE, codes.deactivateCode)
+            .putString(KEY_MMI_STATUS_CODE, codes.statusCode)
+            .putString(KEY_MMI_CODE_PROFILE, MmiCodeProfiles.detect(codes).name)
+            .putInt(KEY_MMI_PROFILE_MIGRATION_VERSION, MMI_PROFILE_MIGRATION_VERSION)
+            .apply()
+        LoggingManager.logInfo(
+            component = "SharedPreferencesManager",
+            action = "MIGRATE_MMI_PROFILE",
+            message = "MMI-Profil materialisiert",
+            details = mapOf("profile" to MmiCodeProfiles.detect(codes).name, "is_update" to isUpdate)
+        )
+        if (prefs.getBoolean(KEY_FORWARDING_ACTIVE, false) && getForwardingCodeSnapshot() == null) {
+            saveForwardingCodeSnapshot(
+                ForwardingCodeSnapshot(
+                    deactivateCode = codes.deactivateCode,
+                    executionMode = when (MmiCodeProfiles.detect(codes)) {
+                        MmiCodeProfile.STANDARD_GSM -> MmiExecutionMode.USSD_CALLBACK
+                        MmiCodeProfile.A1_SPECIAL -> MmiExecutionMode.VOICE_MMI_CALL
+                        MmiCodeProfile.CUSTOM -> getMmiExecutionMode(codes.deactivateCode)
+                    },
+                    subscriptionId = null,
+                )
+            )
+        }
+        } catch (e: Exception) {
+            LoggingManager.logError(
+                component = "SharedPreferencesManager",
+                action = "MIGRATE_MMI_PROFILE_FAILED",
+                message = "MMI-Profil-Migration fehlgeschlagen; bestehende Werte bleiben unverändert",
+                error = e
+            )
+        }
     }
 
     /** Removes the no-longer-used pre-dial warning setting from existing installs. */
@@ -227,7 +293,8 @@ class SharedPreferencesManager(private val context: Context) {
         val configuredEnding = when {
             code == getMmiDeactivateCode() -> getMmiDeactivateCode().takeLast(1)
             code == getMmiStatusCode() -> getMmiStatusCode().takeLast(1)
-            code.startsWith(getMmiActivatePrefix()) && code.endsWith(getMmiActivateSuffix()) -> getMmiActivateSuffix().takeLast(1)
+            getMmiActivatePrefix().isNotBlank() && getMmiActivateSuffix().isNotBlank() &&
+                code.startsWith(getMmiActivatePrefix()) && code.endsWith(getMmiActivateSuffix()) -> getMmiActivateSuffix().takeLast(1)
             else -> null
         }
         return if (configuredEnding == "#") MmiExecutionMode.USSD_CALLBACK else MmiExecutionMode.VOICE_MMI_CALL
@@ -239,6 +306,28 @@ class SharedPreferencesManager(private val context: Context) {
     fun getForwardingVerification(): ForwardingVerification =
         getPreference(KEY_FORWARDING_VERIFICATION, ForwardingVerification.NOT_CHECKED.name)
             .let { runCatching { ForwardingVerification.valueOf(it) }.getOrDefault(ForwardingVerification.NOT_CHECKED) }
+
+    fun saveForwardingCodeSnapshot(snapshot: ForwardingCodeSnapshot) {
+        setPreference(KEY_FORWARDING_CODE_SNAPSHOT, JSONObject().apply {
+            put("deactivate_code", snapshot.deactivateCode)
+            put("mode", snapshot.executionMode.name)
+            put("subscription_id", snapshot.subscriptionId ?: -1)
+        }.toString())
+    }
+
+    fun getForwardingCodeSnapshot(): ForwardingCodeSnapshot? = runCatching {
+        val raw = getPreference(KEY_FORWARDING_CODE_SNAPSHOT, "")
+        if (raw.isBlank()) return null
+        JSONObject(raw).let { json ->
+            ForwardingCodeSnapshot(
+                json.getString("deactivate_code"),
+                MmiExecutionMode.valueOf(json.getString("mode")),
+                json.optInt("subscription_id", -1).takeIf { it >= 0 },
+            )
+        }
+    }.getOrNull()
+
+    fun clearForwardingCodeSnapshot() = setPreference(KEY_FORWARDING_CODE_SNAPSHOT, "")
 
     fun savePendingMmiRequest(request: PersistedMmiOperation) {
         val json = JSONObject().apply {
@@ -521,43 +610,65 @@ class SharedPreferencesManager(private val context: Context) {
         getPreference(KEY_MAIL_SCREEN_VISIBLE, false) // standardmäßig ausgeblendet
 
     // MMI Code Funktionen
-    fun setMmiActivatePrefix(prefix: String) =
-        setPreference(KEY_MMI_ACTIVATE_PREFIX, prefix)
+    fun setMmiActivatePrefix(prefix: String) = setMmiCodes(currentMmiCodes().copy(activatePrefix = sanitizeMmiInput(prefix)))
 
     fun getMmiActivatePrefix(): String =
         getPreference(KEY_MMI_ACTIVATE_PREFIX, DEFAULT_MMI_ACTIVATE_PREFIX)
 
-    fun setMmiActivateSuffix(suffix: String) =
-        setPreference(KEY_MMI_ACTIVATE_SUFFIX, suffix)
+    fun setMmiActivateSuffix(suffix: String) = setMmiCodes(currentMmiCodes().copy(activateSuffix = sanitizeMmiInput(suffix)))
 
     fun getMmiActivateSuffix(): String =
         getPreference(KEY_MMI_ACTIVATE_SUFFIX, DEFAULT_MMI_ACTIVATE_SUFFIX)
 
-    fun setMmiDeactivateCode(code: String) =
-        setPreference(KEY_MMI_DEACTIVATE_CODE, code)
+    fun setMmiDeactivateCode(code: String) = setMmiCodes(currentMmiCodes().copy(deactivateCode = sanitizeMmiInput(code)))
 
     fun getMmiDeactivateCode(): String =
         getPreference(KEY_MMI_DEACTIVATE_CODE, DEFAULT_MMI_DEACTIVATE_CODE)
 
-    fun setMmiStatusCode(code: String) =
-        setPreference(KEY_MMI_STATUS_CODE, code)
+    fun setMmiStatusCode(code: String) = setMmiCodes(currentMmiCodes().copy(statusCode = sanitizeMmiInput(code)))
 
     fun getMmiStatusCode(): String =
         getPreference(KEY_MMI_STATUS_CODE, DEFAULT_MMI_STATUS_CODE)
 
-    fun resetMmiCodesToDefault() {
-        setMmiActivatePrefix(DEFAULT_MMI_ACTIVATE_PREFIX)
-        setMmiActivateSuffix(DEFAULT_MMI_ACTIVATE_SUFFIX)
-        setMmiDeactivateCode(DEFAULT_MMI_DEACTIVATE_CODE)
-        setMmiStatusCode(DEFAULT_MMI_STATUS_CODE)
+    fun resetMmiCodesToDefault() = applyMmiProfile(MmiCodeProfile.A1_SPECIAL)
+
+    fun resetMmiCodesToGeneric() = applyMmiProfile(MmiCodeProfile.STANDARD_GSM)
+
+    fun getMmiCodeProfile(): MmiCodeProfile = MmiCodeProfiles.detect(currentMmiCodes())
+
+    fun isMmiConfigurationValid(): Boolean = currentMmiCodes().isValid()
+
+    fun hasMmiProfileUserDecision(): Boolean = getPreference(KEY_MMI_PROFILE_USER_DECIDED, false)
+
+    fun getA1HintShownScope(): String = getPreference(KEY_MMI_A1_HINT_SHOWN_SCOPE, "")
+    fun setA1HintShownScope(scope: String) = setPreference(KEY_MMI_A1_HINT_SHOWN_SCOPE, scope)
+
+    fun applyMmiProfile(profile: MmiCodeProfile) {
+        require(profile != MmiCodeProfile.CUSTOM) { "CUSTOM hat keine vordefinierten Codes" }
+        val codes = requireNotNull(MmiCodeProfiles.codesFor(profile))
+        require(codes.isValid())
+        setMmiCodes(codes)
+        setPreference(KEY_MMI_PROFILE_USER_DECIDED, true)
     }
 
-    fun resetMmiCodesToGeneric() {
-        setMmiActivatePrefix(GENERIC_MMI_ACTIVATE_PREFIX)
-        setMmiActivateSuffix(GENERIC_MMI_ACTIVATE_SUFFIX)
-        setMmiDeactivateCode(GENERIC_MMI_DEACTIVATE_CODE)
-        setMmiStatusCode(GENERIC_MMI_STATUS_CODE)
+    private fun currentMmiCodes() = MmiCodeSet(
+        getPreference(KEY_MMI_ACTIVATE_PREFIX, MmiCodeProfiles.standardGsm.activatePrefix),
+        getPreference(KEY_MMI_ACTIVATE_SUFFIX, MmiCodeProfiles.standardGsm.activateSuffix),
+        getPreference(KEY_MMI_DEACTIVATE_CODE, MmiCodeProfiles.standardGsm.deactivateCode),
+        getPreference(KEY_MMI_STATUS_CODE, MmiCodeProfiles.standardGsm.statusCode),
+    )
+
+    private fun setMmiCodes(codes: MmiCodeSet) {
+        prefs.edit()
+            .putString(KEY_MMI_ACTIVATE_PREFIX, codes.activatePrefix)
+            .putString(KEY_MMI_ACTIVATE_SUFFIX, codes.activateSuffix)
+            .putString(KEY_MMI_DEACTIVATE_CODE, codes.deactivateCode)
+            .putString(KEY_MMI_STATUS_CODE, codes.statusCode)
+            .putString(KEY_MMI_CODE_PROFILE, MmiCodeProfiles.detect(codes).name)
+            .apply()
     }
+
+    private fun sanitizeMmiInput(value: String): String = value.filter { it in "*#0123456789" }
 
     /**
      * Speichert den SIM-Auswahl-Modus für SMS-Weiterleitung.
@@ -759,10 +870,15 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_MMI_ACTIVATE_SUFFIX = "mmi_activate_suffix"
         private const val KEY_MMI_DEACTIVATE_CODE = "mmi_deactivate_code"
         private const val KEY_MMI_STATUS_CODE = "mmi_status_code"
+        private const val KEY_MMI_CODE_PROFILE = "mmi_code_profile"
+        private const val KEY_MMI_PROFILE_MIGRATION_VERSION = "mmi_profile_migration_version"
+        private const val KEY_MMI_PROFILE_USER_DECIDED = "mmi_profile_user_decided"
+        private const val KEY_MMI_A1_HINT_SHOWN_SCOPE = "mmi_a1_hint_shown_scope"
         private const val KEY_SIM_SELECTION_MODE = "sim_selection_mode"
         private const val KEY_MMI_SIM_SELECTION_MODE = "mmi_sim_selection_mode"
         private const val KEY_INTERNATIONAL_DIAL_PREFIX = "international_dial_prefix"
         private const val KEY_FORWARDING_VERIFICATION = "forwarding_verification"
+        private const val KEY_FORWARDING_CODE_SNAPSHOT = "forwarding_code_snapshot"
         private const val KEY_PENDING_MMI_OPERATION = "pending_mmi_operation"
         private const val KEY_MMI_AUDIT = "mmi_audit"
         private const val KEY_MAX_LOG_SIZE_MB = "max_log_size_mb"
@@ -772,17 +888,11 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_SIM2_RECEIVE_ENABLED = "sim2_receive_enabled"
         private const val KEY_RCS_HINT_DISMISSED = "rcs_hint_dismissed"
 
-        // BMI/A1 Codes (New Defaults)
-        private const val DEFAULT_MMI_ACTIVATE_PREFIX = "*21*"
-        private const val DEFAULT_MMI_ACTIVATE_SUFFIX = "**"
-        private const val DEFAULT_MMI_DEACTIVATE_CODE = "**21**"
-        private const val DEFAULT_MMI_STATUS_CODE = "*021**"
-
-        // Generic Standard Codes (Old Defaults)
-        private const val GENERIC_MMI_ACTIVATE_PREFIX = "*21*"
-        private const val GENERIC_MMI_ACTIVATE_SUFFIX = "#"
-        private const val GENERIC_MMI_DEACTIVATE_CODE = "##21#"
-        private const val GENERIC_MMI_STATUS_CODE = "*#21#"
+        private const val MMI_PROFILE_MIGRATION_VERSION = 1
+        private const val DEFAULT_MMI_ACTIVATE_PREFIX = "**21*"
+        private const val DEFAULT_MMI_ACTIVATE_SUFFIX = "#"
+        private const val DEFAULT_MMI_DEACTIVATE_CODE = "##21#"
+        private const val DEFAULT_MMI_STATUS_CODE = "*#21#"
 
         // International Dial Prefix (Default für Österreich)
         private const val DEFAULT_INTERNATIONAL_DIAL_PREFIX = "00"

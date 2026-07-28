@@ -27,7 +27,7 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 - **SMTP-Unterstützung**: Flexible E-Mail-Konfiguration mit verschiedenen Anbietern
 - **Test-Utilities**: Integrierte Tools zum Testen der SMS-Funktionalität
 - **Heartbeat-Monitoring**: Automatische Überwachung der Dienstverfügbarkeit
-- **Rufumleitung per MMI/USSD**: Wählweg passend zur konfigurierten SIM; A1-Sprach-MMI und generische `#`-USSD-Codes werden getrennt behandelt
+- **Rufumleitung per MMI/USSD**: Standard-GSM/USSD-Codes sind der Default; das A1-Sonderprofil wird nur bei ausdrücklicher Vertrags-/Supportvorgabe als Sprach-MMI verwendet
 - **RCS-Hinweis**: Erklärt auf der Startseite und in der Hilfe, warum RCS-Chats nicht weitergeleitet werden können, und wie man den SMS-Fallback herstellt
 
 ### Bekannte Grenzen
@@ -224,8 +224,8 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 ### Rufumleitung per MMI/USSD
 
 - Wählen Sie zuerst die SIM-Karte und die dazu passende MMI-/USSD-Konfiguration.
-- A1-Codes mit `**` werden als Sprach-MMI über Androids Telefoniefunktion gewählt. Die Netzansage ist hörbar, aber nicht maschinell auswertbar; der Ablauf wird deshalb als angenommen ausgeführt und nur bei einem gemeldeten Fehler korrigiert.
-- Generische Codes mit `#` werden als USSD-Anfrage ausgeführt und liefern eine Netzantwort zurück.
+- Standard-GSM-Codes (`**21*Nummer#`, `##21#`, `*#21#`) werden als USSD-Anfrage ausgeführt und liefern eine Netzantwort zurück.
+- Nur das optionale A1-Sonderprofil wird als Sprach-MMI über Androids Telefoniefunktion gewählt. Eine Netzansage ist hörbar, aber nicht maschinell auswertbar.
 - Eine Statusabfrage ändert keine Weiterleitung. Im Flugmodus wird kein Wählvorgang gestartet.
 - Das lokale MMI-Audit enthält ausschließlich maskierte Informationen und wird auf 200 Einträge beziehungsweise 30 Tage begrenzt.
 

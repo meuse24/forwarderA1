@@ -26,6 +26,11 @@ import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import java.util.UUID
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeProfile
+import info.meuse24.smsforwarderneoA1.domain.model.ForwardingCodeSnapshot
+import info.meuse24.smsforwarderneoA1.domain.model.A1Detection
+import info.meuse24.smsforwarderneoA1.domain.model.A1Detector
+import info.meuse24.smsforwarderneoA1.domain.model.MmiExecutionModeResolver
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 import info.meuse24.smsforwarderneoA1.service.SmsForegroundService
 import info.meuse24.smsforwarderneoA1.R
@@ -95,6 +100,9 @@ class ContactsViewModel(
     private val _mmiStatusCode = MutableStateFlow(prefsManager.getMmiStatusCode())
     val mmiStatusCode: StateFlow<String> = _mmiStatusCode.asStateFlow()
 
+    private val _mmiCodeProfile = MutableStateFlow(prefsManager.getMmiCodeProfile())
+    val mmiCodeProfile: StateFlow<MmiCodeProfile> = _mmiCodeProfile.asStateFlow()
+
     private val _internationalDialPrefix = MutableStateFlow(prefsManager.getInternationalDialPrefix())
     val internationalDialPrefix: StateFlow<String> = _internationalDialPrefix.asStateFlow()
 
@@ -127,6 +135,13 @@ class ContactsViewModel(
 
     private val _defaultVoiceSubscriptionId = MutableStateFlow(-1)
     val defaultVoiceSubscriptionId: StateFlow<Int> = _defaultVoiceSubscriptionId.asStateFlow()
+
+    private val _mmiSimA1Detection = MutableStateFlow(A1Detection.UNKNOWN)
+    val mmiSimA1Detection: StateFlow<A1Detection> = _mmiSimA1Detection.asStateFlow()
+
+    private val _showA1ProfileChoice = MutableStateFlow(false)
+    val showA1ProfileChoice: StateFlow<Boolean> = _showA1ProfileChoice.asStateFlow()
+    private var currentA1HintScope: String? = null
 
     // SMS Receive Filter StateFlows
     private val _sim1ReceiveEnabled = MutableStateFlow(true)
@@ -354,6 +369,20 @@ class ContactsViewModel(
         _pendingForwardingRequest.value = updated
         prefsManager.savePendingMmiRequest(updated.toPersistedOperation())
     }
+
+    fun targetSubscriptionForOperation(operationId: String?, fallback: Int): Int {
+        val pending = _pendingForwardingRequest.value?.takeIf { it.id == operationId }
+        return if (pending?.action == ForwardingAction.DEACTIVATE) {
+            prefsManager.getForwardingCodeSnapshot()?.subscriptionId ?: fallback
+        } else fallback
+    }
+
+    /** The pending operation is authoritative: its mode may originate from an active-forwarding snapshot. */
+    fun executionModeForOperation(operationId: String?, code: String): MmiExecutionMode =
+        MmiExecutionModeResolver.resolve(
+            _pendingForwardingRequest.value?.takeIf { it.id == operationId }?.executionMode,
+            prefsManager.getMmiExecutionMode(code),
+        )
 
     fun recordVoiceMmiEvidence(offHookAtMillis: Long?, idleAtMillis: Long) {
         val current = _pendingForwardingRequest.value?.takeIf { !it.isUssd }
@@ -681,6 +710,13 @@ class ContactsViewModel(
                         }
                     }
                     prefsManager.saveForwardingStatus(resolution.forwardingActive)
+                    prefsManager.saveForwardingCodeSnapshot(
+                        ForwardingCodeSnapshot(
+                            deactivateCode = prefsManager.getMmiDeactivateCode(),
+                            executionMode = prefsManager.getMmiExecutionMode(prefsManager.getMmiDeactivateCode()),
+                            subscriptionId = pending.targetSubscriptionId,
+                        )
+                    )
                     val notificationMessage = if (contact != null) {
                         "Weiterleitung aktiviert zu ${contact.name} (${contact.phoneNumber})"
                     } else {
@@ -729,6 +765,7 @@ class ContactsViewModel(
                         prefsManager.clearSelection()
                     }
                     prefsManager.saveForwardingStatus(resolution.forwardingActive)
+                    prefsManager.clearForwardingCodeSnapshot()
                     updateNotification("Weiterleitung deaktiviert")
 
                     LoggingManager.logInfo(
@@ -901,6 +938,9 @@ class ContactsViewModel(
     }
 
     private suspend fun activateForwardingInternal(contact: Contact): ForwardingResult {
+        if (!prefsManager.isMmiConfigurationValid()) {
+            return ForwardingResult.Error(application.getString(R.string.mmi_configuration_invalid))
+        }
         // Loop Protection: Check if target number matches any known SIM number (manual OR auto-detected)
         val storedNumbers = prefsManager.getSimPhoneNumbers().values.toSet()
         val autoDetectedNumbers = PhoneSmsUtils.getAllSimInfo(application).mapNotNull { it.phoneNumber }.toSet()
@@ -966,14 +1006,18 @@ class ContactsViewModel(
     }
 
     private suspend fun deactivateForwardingInternal(): ForwardingResult {
+        if (!prefsManager.isMmiConfigurationValid() && prefsManager.getForwardingCodeSnapshot() == null) {
+            return ForwardingResult.Error(application.getString(R.string.mmi_configuration_invalid))
+        }
         val prevContact = _selectedContact.value
-        val deactivateCode = prefsManager.getMmiDeactivateCode()
+        val snapshot = prefsManager.getForwardingCodeSnapshot()
+        val deactivateCode = snapshot?.deactivateCode ?: prefsManager.getMmiDeactivateCode()
 
         val pendingRequest = PendingForwardingRequest(
             action = ForwardingAction.DEACTIVATE,
             contact = prevContact,
             code = deactivateCode,
-            executionMode = prefsManager.getMmiExecutionMode(deactivateCode)
+            executionMode = snapshot?.executionMode ?: prefsManager.getMmiExecutionMode(deactivateCode)
         )
         _pendingForwardingRequest.value = pendingRequest
         schedulePendingMmiWatchdog(pendingRequest)
@@ -1164,8 +1208,9 @@ class ContactsViewModel(
     }
 
     fun updateMmiActivatePrefix(prefix: String) {
-        _mmiActivatePrefix.value = prefix
         prefsManager.setMmiActivatePrefix(prefix)
+        _mmiActivatePrefix.value = prefsManager.getMmiActivatePrefix()
+        _mmiCodeProfile.value = prefsManager.getMmiCodeProfile()
 
         LoggingManager.logInfo(
             component = "ContactsViewModel",
@@ -1178,8 +1223,9 @@ class ContactsViewModel(
     }
 
     fun updateMmiActivateSuffix(suffix: String) {
-        _mmiActivateSuffix.value = suffix
         prefsManager.setMmiActivateSuffix(suffix)
+        _mmiActivateSuffix.value = prefsManager.getMmiActivateSuffix()
+        _mmiCodeProfile.value = prefsManager.getMmiCodeProfile()
 
         LoggingManager.logInfo(
             component = "ContactsViewModel",
@@ -1192,8 +1238,9 @@ class ContactsViewModel(
     }
 
     fun updateMmiDeactivateCode(code: String) {
-        _mmiDeactivateCode.value = code
         prefsManager.setMmiDeactivateCode(code)
+        _mmiDeactivateCode.value = prefsManager.getMmiDeactivateCode()
+        _mmiCodeProfile.value = prefsManager.getMmiCodeProfile()
 
         LoggingManager.logInfo(
             component = "ContactsViewModel",
@@ -1206,8 +1253,9 @@ class ContactsViewModel(
     }
 
     fun updateMmiStatusCode(code: String) {
-        _mmiStatusCode.value = code
         prefsManager.setMmiStatusCode(code)
+        _mmiStatusCode.value = prefsManager.getMmiStatusCode()
+        _mmiCodeProfile.value = prefsManager.getMmiCodeProfile()
 
         LoggingManager.logInfo(
             component = "ContactsViewModel",
@@ -1288,6 +1336,7 @@ class ContactsViewModel(
         _mmiActivateSuffix.value = prefsManager.getMmiActivateSuffix()
         _mmiDeactivateCode.value = prefsManager.getMmiDeactivateCode()
         _mmiStatusCode.value = prefsManager.getMmiStatusCode()
+        _mmiCodeProfile.value = prefsManager.getMmiCodeProfile()
 
         LoggingManager.logInfo(
             component = "ContactsViewModel",
@@ -1309,6 +1358,7 @@ class ContactsViewModel(
         _mmiActivateSuffix.value = prefsManager.getMmiActivateSuffix()
         _mmiDeactivateCode.value = prefsManager.getMmiDeactivateCode()
         _mmiStatusCode.value = prefsManager.getMmiStatusCode()
+        _mmiCodeProfile.value = prefsManager.getMmiCodeProfile()
 
         LoggingManager.logInfo(
             component = "ContactsViewModel",
@@ -1344,6 +1394,7 @@ class ContactsViewModel(
                 val defaultSims = PhoneSmsUtils.getDefaultSimIds(application)
                 _defaultSmsSubscriptionId.value = defaultSims?.first ?: -1
                 _defaultVoiceSubscriptionId.value = defaultSims?.second ?: -1
+                updateMmiSimA1Detection(sims)
 
                 // Lade SMS-Empfangsfilter-Einstellungen
                 _sim1ReceiveEnabled.value = prefsManager.isSim1ReceiveEnabled()
@@ -1374,6 +1425,30 @@ class ContactsViewModel(
         }
     }
 
+    fun dismissA1ProfileChoice() {
+        currentA1HintScope?.let(prefsManager::setA1HintShownScope)
+        _showA1ProfileChoice.value = false
+    }
+
+    private fun updateMmiSimA1Detection(sims: List<SimInfo>) {
+        val targetId = when (_mmiSimSelectionMode.value) {
+            MmiSimSelectionMode.DEFAULT_VOICE_SIM -> _defaultVoiceSubscriptionId.value
+            MmiSimSelectionMode.ALWAYS_SIM_1 -> sims.firstOrNull { it.slotIndex == 0 }?.subscriptionId ?: -1
+            MmiSimSelectionMode.ALWAYS_SIM_2 -> sims.firstOrNull { it.slotIndex == 1 }?.subscriptionId ?: -1
+        }
+        val sim = sims.firstOrNull { it.subscriptionId == targetId }
+        _mmiSimA1Detection.value = sim?.let {
+            A1Detector.detect(it.carrierId, it.mccMnc, it.carrierName, it.displayName)
+        } ?: A1Detection.UNKNOWN
+        currentA1HintScope = sim?.let {
+            listOf(it.mccMnc ?: it.carrierId?.toString() ?: "unknown", _mmiSimSelectionMode.value.name, it.slotIndex)
+                .joinToString(":")
+        }
+        _showA1ProfileChoice.value = _mmiSimA1Detection.value == A1Detection.A1_CONFIRMED &&
+            !prefsManager.hasMmiProfileUserDecision() && !_forwardingActive.value &&
+            _pendingForwardingRequest.value == null && currentA1HintScope != prefsManager.getA1HintShownScope()
+    }
+
     /**
      * Setzt den SIM-Auswahl-Modus und speichert ihn persistent.
      */
@@ -1398,6 +1473,7 @@ class ContactsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             prefsManager.setMmiSimSelectionMode(mode)
             _mmiSimSelectionMode.value = mode
+            updateMmiSimA1Detection(_availableSimCards.value)
 
             LoggingManager.logInfo(
                 component = "ContactsViewModel",

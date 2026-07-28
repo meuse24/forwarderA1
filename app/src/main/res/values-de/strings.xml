@@ -127,14 +127,31 @@
 
     <!-- ==================== MMI CODE SETTINGS SECTION ==================== -->
     <string name="section_mmi_ussd_codes">MMI/USSD Codes</string>
-    <string name="label_mmi_activate_prefix">Aktivierung Prefix (z.B. *21*)</string>
-    <string name="placeholder_mmi_prefix">*21*</string>
-    <string name="label_mmi_activate_suffix">Aktivierung Suffix (z.B. **)</string>
-    <string name="placeholder_mmi_suffix">**</string>
-    <string name="label_mmi_deactivate_code">Deaktivierung (z.B. **21**)</string>
-    <string name="placeholder_mmi_deactivate">**21**</string>
-    <string name="label_mmi_status_code">Status (z.B. *021**)</string>
-    <string name="placeholder_mmi_status">*021**</string>
+    <string name="label_mmi_activate_prefix">Aktivierung Prefix (z.B. **21*)</string>
+    <string name="placeholder_mmi_prefix">**21*</string>
+    <string name="label_mmi_activate_suffix">Aktivierung Suffix (z.B. #)</string>
+    <string name="placeholder_mmi_suffix">#</string>
+    <string name="label_mmi_deactivate_code">Deaktivierung (z.B. ##21#)</string>
+    <string name="placeholder_mmi_deactivate">##21#</string>
+    <string name="label_mmi_status_code">Status (z.B. *#21#)</string>
+    <string name="placeholder_mmi_status">*#21#</string>
+    <string name="mmi_profile_standard">Profil: Standard (GSM/USSD)</string>
+    <string name="mmi_profile_a1_special">Profil: A1-Sonderprofil</string>
+    <string name="mmi_profile_custom">Profil: Eigene Codes</string>
+    <string name="btn_preset_a1_special">A1-Sonderprofil</string>
+    <string name="mmi_standard_confirm_title">Standard-GSM-Profil verwenden?</string>
+    <string name="mmi_standard_confirm_body">Die aktuellen Code-Einstellungen werden ersetzt. Eine aktive Weiterleitung verwendet weiterhin ihren gespeicherten Deaktivierungscode.</string>
+    <string name="mmi_standard_confirm_apply">Standardprofil verwenden</string>
+    <string name="mmi_a1_detected_hint">A1-SIM erkannt. Verwenden Sie das A1-Sonderprofil nur, wenn A1 oder Ihr Business-Vertrag es ausdrücklich vorgibt.</string>
+    <string name="mmi_a1_choice_title">A1-SIM erkannt</string>
+    <string name="mmi_a1_choice_body">Für normale A1-Mobilverträge verwenden Sie die Standard-GSM-Codes. Wählen Sie das A1-Sonderprofil nur, wenn A1 oder Ihr Business-Vertrag es ausdrücklich vorgibt.</string>
+    <string name="mmi_a1_choice_standard">Standard verwenden</string>
+    <string name="mmi_a1_choice_special">A1-Sonderprofil verwenden</string>
+    <string name="mmi_a1_choice_later">Später entscheiden</string>
+    <string name="mmi_a1_special_confirm_title">A1-Sonderprofil verwenden?</string>
+    <string name="mmi_a1_special_confirm_body">Verwenden Sie es nur, wenn A1 oder Ihr Business-Vertrag es ausdrücklich vorgibt. Die aktuellen Code-Einstellungen werden ersetzt.</string>
+    <string name="mmi_a1_special_confirm_apply">Sonderprofil verwenden</string>
+    <string name="mmi_configuration_invalid">Vervollständigen Sie die MMI-Code-Einstellungen, bevor Sie die Rufumleitung starten.</string>
     <string name="btn_preset_a1_austria">A1</string>
     <string name="btn_preset_standard">Standard</string>
 
@@ -412,11 +429,11 @@
     <string name="help_step1_body">Tippen Sie auf der Hauptseite auf die Schaltfläche &lt;code&gt;%1$s&lt;/code&gt;. Wählen Sie einen Kontakt aus Ihren Kontakten aus. Dies ist die Nummer, an die Ihre Anrufe und SMS weitergeleitet werden.</string>
     <string name="help_step2_title">Aktivieren:</string>
     <string name="help_step2_body">Nachdem Sie eine Nummer ausgewählt haben, wird die Weiterleitung automatisch aktiviert. Die App wählt den Code, um die Rufumleitung beim Provider einzurichten. Gleichzeitig startet der interne Dienst für die SMS-Weiterleitung.</string>
-    <string name="help_step2_warning">Warten Sie den automatischen Wählvorgang vollständig ab. Bei A1 hören Sie die Netzansage; bei Standard-`#`-Codes verarbeitet die App die USSD-Antwort. Die App setzt den Ablauf automatisch fort. Nur wenn die Ansage oder Antwort auf einen Fehler hinweist, tippen Sie auf „Fehler melden“.</string>
+    <string name="help_step2_warning">Warten Sie den automatischen Wählvorgang vollständig ab. Beim Standardprofil verarbeitet die App die USSD-Antwort. Das A1-Sonderprofil kann eine Netzansage ausgeben, die Android nicht maschinell auswerten kann. Die App setzt den Ablauf automatisch fort.</string>
     <string name="help_step3_title">Deaktivieren:</string>
     <string name="help_step3_body">Um alle Weiterleitungen zu beenden, tippen Sie auf die rote &lt;code&gt;%1$s&lt;/code&gt; Schaltfläche auf dem Hauptbildschirm.</string>
     <string name="help_note_title">Wichtiger Hinweis zur Rufumleitung:</string>
-    <string name="help_note_body">Die App leitet Anrufe nicht selbst um. Sie übergibt den konfigurierten MMI-/USSD-Code an den Mobilfunkanbieter; bei A1 wird dieser als Sprachanruf ausgeführt. Die eigentliche Umleitung findet ausschließlich im Netz des Anbieters statt. Eine A1-Sprachansage kann Android nicht maschinell auswerten; ohne Fehlermeldung bleibt das Ergebnis daher „angenommen“.</string>
+    <string name="help_note_body">Die App leitet Anrufe nicht selbst um. Sie übergibt den konfigurierten MMI-/USSD-Code an den Mobilfunkanbieter. Das optionale A1-Sonderprofil wird als Sprachanruf ausgeführt; die eigentliche Umleitung findet ausschließlich im Netz des Anbieters statt. Eine Netzansage kann Android nicht maschinell auswerten.</string>
     <string name="help_buttons_heading">Weitere Schaltflächen</string>
     <string name="help_btn_change_contact_title">Kontakt ändern</string>
     <string name="help_btn_change_contact_desc">Neue Telefonnummer für die Weiterleitung wählen, ohne zuvor zu deaktivieren.</string>
@@ -545,8 +562,8 @@
     <!-- Phone Permission -->
     <string name="privacy_perm_phone_de">Telefon</string>
     <string name="privacy_perm_phone_en">Phone</string>
-    <string name="privacy_perm_phone_body_de">Benötigt, um konfigurierte MMI-/USSD-Codes für die Rufumleitung über die ausgewählte SIM zu übergeben sowie den Telefonstatus zu beobachten. A1-Codes werden dabei als Sprachanruf ausgeführt.</string>
-    <string name="privacy_perm_phone_body_en">Required to send configured MMI/USSD codes through the selected SIM and observe call state. A1 codes are executed as voice calls.</string>
+    <string name="privacy_perm_phone_body_de">Benötigt, um konfigurierte MMI-/USSD-Codes für die Rufumleitung über die ausgewählte SIM zu übergeben sowie den Telefonstatus zu beobachten. Das optionale A1-Sonderprofil wird als Sprachanruf ausgeführt.</string>
+    <string name="privacy_perm_phone_body_en">Required to send configured MMI/USSD codes through the selected SIM and observe call state. The optional A1 special profile is executed as a voice call.</string>
 
     <!-- Battery Permission -->
     <string name="privacy_perm_battery_de">Akku-Optimierung</string>

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -225,6 +226,7 @@ fun HomeScreen(
     val selectedContact by viewModel.selectedContact.collectAsState()
     val forwardingActive by viewModel.forwardingActive.collectAsState()
     val pendingOperation by viewModel.pendingForwardingRequest.collectAsState()
+    val showA1ProfileChoice by viewModel.showA1ProfileChoice.collectAsState()
     val currentCallState by callState
 
     // Check if call is active (for button disabling)
@@ -239,6 +241,30 @@ fun HomeScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        if (showA1ProfileChoice) {
+            AlertDialog(
+                onDismissRequest = viewModel::dismissA1ProfileChoice,
+                title = { Text(stringResource(R.string.mmi_a1_choice_title)) },
+                text = { Text(stringResource(R.string.mmi_a1_choice_body)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.resetMmiCodesToGeneric()
+                        viewModel.dismissA1ProfileChoice()
+                    }) { Text(stringResource(R.string.mmi_a1_choice_standard)) }
+                },
+                dismissButton = {
+                    Row {
+                        TextButton(onClick = viewModel::dismissA1ProfileChoice) {
+                            Text(stringResource(R.string.mmi_a1_choice_later))
+                        }
+                        TextButton(onClick = {
+                            viewModel.resetMmiCodesToDefault()
+                            viewModel.dismissA1ProfileChoice()
+                        }) { Text(stringResource(R.string.mmi_a1_choice_special)) }
+                    }
+                },
+            )
+        }
         // Wallpaper background
         AsyncImage(
             model = R.drawable.wallpaper,

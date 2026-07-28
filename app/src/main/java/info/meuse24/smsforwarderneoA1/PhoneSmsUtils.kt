@@ -741,18 +741,13 @@ class PhoneSmsUtils private constructor() {
          */
 
         fun getAllSimInfo(context: Context): List<SimInfo> {
-            val requiredPermissions = arrayOf(
-                Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.READ_PHONE_NUMBERS
-            )
-
-            if (!requiredPermissions.all { PermissionHelper.hasPermission(context, it) }) {
+            if (!PermissionHelper.hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
                 // DEBUG: Permissions noch nicht erteilt (normal bei App-Initialisierung)
                 LoggingManager.logDebug(
                     component = "PhoneSmsUtils",
                     action = "GET_ALL_SIM_INFO",
                     message = "Permissions not granted at initialization - returning empty list",
-                    details = mapOf("missing_permissions" to requiredPermissions.joinToString())
+                    details = mapOf("missing_permission" to Manifest.permission.READ_PHONE_STATE)
                 )
                 return emptyList()
             }
@@ -766,14 +761,18 @@ class PhoneSmsUtils private constructor() {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
                     subscriptionManager.activeSubscriptionInfoList?.map { subInfo ->
-                        val autoNumber = tryGetPhoneNumberForSubscription(telephonyManager, subInfo)
+                        val autoNumber = if (PermissionHelper.hasPermission(context, Manifest.permission.READ_PHONE_NUMBERS)) {
+                            tryGetPhoneNumberForSubscription(telephonyManager, subInfo)
+                        } else null
                         SimInfo(
                             subscriptionId = subInfo.subscriptionId,
                             slotIndex = subInfo.simSlotIndex,
                             displayName = subInfo.displayName?.toString(),
                             carrierName = subInfo.carrierName?.toString(),
                             phoneNumber = autoNumber,
-                            isAutoDetected = autoNumber != null
+                            isAutoDetected = autoNumber != null,
+                            carrierId = subInfo.carrierId.takeIf { it != TelephonyManager.UNKNOWN_CARRIER_ID },
+                            mccMnc = "${subInfo.mccString.orEmpty()}${subInfo.mncString.orEmpty()}".takeIf { it.length >= 5 },
                         )
                     } ?: emptyList()
                 } else {

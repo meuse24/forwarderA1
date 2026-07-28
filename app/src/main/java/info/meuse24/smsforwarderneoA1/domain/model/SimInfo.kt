@@ -11,5 +11,7 @@ data class SimInfo(
     val displayName: String?,
     val carrierName: String?,
     val phoneNumber: String? = null, // Auto-erkannt oder aus Preferences
-    val isAutoDetected: Boolean = false
+    val isAutoDetected: Boolean = false,
+    val carrierId: Int? = null,
+    val mccMnc: String? = null,
 )

@@ -126,14 +126,31 @@
 
     <!-- ==================== MMI CODE SETTINGS SECTION ==================== -->
     <string name="section_mmi_ussd_codes">MMI/USSD Codes</string>
-    <string name="label_mmi_activate_prefix">Activation Prefix (e.g., *21*)</string>
-    <string name="placeholder_mmi_prefix">*21*</string>
-    <string name="label_mmi_activate_suffix">Activation Suffix (e.g., **)</string>
-    <string name="placeholder_mmi_suffix">**</string>
-    <string name="label_mmi_deactivate_code">Deactivation (e.g., **21**)</string>
-    <string name="placeholder_mmi_deactivate">**21**</string>
-    <string name="label_mmi_status_code">Status (e.g., *021**)</string>
-    <string name="placeholder_mmi_status">*021**</string>
+    <string name="label_mmi_activate_prefix">Activation Prefix (e.g., **21*)</string>
+    <string name="placeholder_mmi_prefix">**21*</string>
+    <string name="label_mmi_activate_suffix">Activation Suffix (e.g., #)</string>
+    <string name="placeholder_mmi_suffix">#</string>
+    <string name="label_mmi_deactivate_code">Deactivation (e.g., ##21#)</string>
+    <string name="placeholder_mmi_deactivate">##21#</string>
+    <string name="label_mmi_status_code">Status (e.g., *#21#)</string>
+    <string name="placeholder_mmi_status">*#21#</string>
+    <string name="mmi_profile_standard">Profile: Standard (GSM/USSD)</string>
+    <string name="mmi_profile_a1_special">Profile: A1 special profile</string>
+    <string name="mmi_profile_custom">Profile: Custom codes</string>
+    <string name="btn_preset_a1_special">A1 special profile</string>
+    <string name="mmi_standard_confirm_title">Use standard GSM profile?</string>
+    <string name="mmi_standard_confirm_body">This replaces the current code settings. An active forwarding continues to use its saved deactivation code.</string>
+    <string name="mmi_standard_confirm_apply">Use standard profile</string>
+    <string name="mmi_a1_detected_hint">A1 SIM detected. Use the A1 special profile only if A1 or your business contract explicitly requires it.</string>
+    <string name="mmi_a1_choice_title">A1 SIM detected</string>
+    <string name="mmi_a1_choice_body">For normal A1 mobile contracts, use the standard GSM codes. Select the A1 special profile only when A1 or your business contract explicitly requires it.</string>
+    <string name="mmi_a1_choice_standard">Use standard</string>
+    <string name="mmi_a1_choice_special">Use A1 special profile</string>
+    <string name="mmi_a1_choice_later">Decide later</string>
+    <string name="mmi_a1_special_confirm_title">Use A1 special profile?</string>
+    <string name="mmi_a1_special_confirm_body">Use this only when A1 or your business contract explicitly requires it. It replaces the current code settings.</string>
+    <string name="mmi_a1_special_confirm_apply">Use special profile</string>
+    <string name="mmi_configuration_invalid">Complete the MMI code settings before starting call forwarding.</string>
     <string name="btn_preset_a1_austria">A1</string>
     <string name="btn_preset_standard">Standard</string>
 
@@ -408,7 +425,7 @@
     <string name="privacy_perm_sms_de">SMS senden und empfangen</string>
     <string name="privacy_perm_sms_body_de">• SMS_RECEIVE: Zum Empfang eingehender SMS-Nachrichten\n• SMS_SEND: Zum Weiterleiten von SMS an die konfigurierte Zielrufnummer\n\nDies ist die Kernfunktionalität der App. Ohne diese Berechtigung kann die SMS-Weiterleitung nicht funktionieren.</string>
     <string name="privacy_perm_phone_de">Telefon / Anrufe</string>
-    <string name="privacy_perm_phone_body_de">• CALL_PHONE: Zum Ausführen konfigurierte MMI-/USSD-Codes über die gewählte SIM\n• READ_PHONE_STATE: Zum Erkennen der SIM-Karte und Beobachten des Telefonstatus\n\nBei A1 werden die hinterlegten Codes als Sprachanruf ausgeführt. Die Netzansage ist hörbar, kann von Android aber nicht maschinell ausgewertet werden.</string>
+    <string name="privacy_perm_phone_body_de">• CALL_PHONE: Zum Ausführen konfigurierte MMI-/USSD-Codes über die gewählte SIM\n• READ_PHONE_STATE: Zum Erkennen der SIM-Karte und Beobachten des Telefonstatus\n\nDas optionale A1-Sonderprofil wird als Sprachanruf ausgeführt. Die Netzansage ist hörbar, kann von Android aber nicht maschinell ausgewertet werden.</string>
     <string name="privacy_perm_contacts_de">Kontakte lesen</string>
     <string name="privacy_perm_contacts_body_de">• READ_CONTACTS: Zum Öffnen des Android-Kontaktauswahlmenüs\n\nDie App speichert nur den ausgewählten Kontakt (Name + Nummer) lokal und verschlüsselt. Es werden keine Kontaktdaten an Dritte weitergegeben.</string>
     <string name="privacy_perm_foreground_de">Vordergrund-Dienst</string>
@@ -434,7 +451,7 @@
     <string name="privacy_perm_sms_en">Send and Receive SMS</string>
     <string name="privacy_perm_sms_body_en">• SMS_RECEIVE: To receive incoming SMS messages\n• SMS_SEND: To forward SMS to the configured target number\n\nThis is the core functionality of the app. Without this permission, SMS forwarding cannot work.</string>
     <string name="privacy_perm_phone_en">Phone / Calls</string>
-    <string name="privacy_perm_phone_body_en">• CALL_PHONE: To execute configured MMI/USSD codes through the selected SIM\n• READ_PHONE_STATE: To identify the SIM and observe call state\n\nFor A1, configured codes are executed as voice calls. The carrier announcement is audible but cannot be machine-read by Android.</string>
+    <string name="privacy_perm_phone_body_en">• CALL_PHONE: To execute configured MMI/USSD codes through the selected SIM\n• READ_PHONE_STATE: To identify the SIM and observe call state\n\nThe optional A1 special profile is executed as a voice call. The carrier announcement is audible but cannot be machine-read by Android.</string>
     <string name="privacy_perm_contacts_en">Read Contacts</string>
     <string name="privacy_perm_contacts_body_en">• READ_CONTACTS: To open the Android contact picker dialog\n\nThe app only stores the selected contact (name + number) locally and encrypted. No contact data is shared with third parties.</string>
     <string name="privacy_perm_foreground_en">Foreground Service</string>
@@ -463,11 +480,11 @@
     <string name="help_step1_body">On the home screen tap the &lt;code&gt;%1$s&lt;/code&gt; button. Choose a contact from your address book. This is the number your calls and SMS will be forwarded to.</string>
     <string name="help_step2_title">Activate:</string>
     <string name="help_step2_body">After choosing a number, forwarding is activated automatically. The app dials the code to set up call forwarding with your carrier. At the same time the internal service for SMS forwarding starts.</string>
-    <string name="help_step2_warning">Wait until the automatic dialing finishes. For A1 you hear the carrier announcement; for standard `#` codes the app processes the USSD response. The workflow continues automatically. Only use “Report failure” if the announcement or response indicates an error.</string>
+    <string name="help_step2_warning">Wait until automatic dialing finishes. The standard profile processes the USSD response. The A1 special profile can play a carrier announcement which Android cannot machine-read. The workflow continues automatically.</string>
     <string name="help_step3_title">Deactivate:</string>
     <string name="help_step3_body">To stop all forwarding, tap the red &lt;code&gt;%1$s&lt;/code&gt; button on the home screen.</string>
     <string name="help_note_title">Important note about call forwarding:</string>
-    <string name="help_note_body">The app does not forward calls itself. It hands the configured MMI/USSD code to your carrier; for A1 this is executed as a voice call. The actual forwarding happens exclusively in the carrier network. Android cannot machine-read an A1 carrier announcement, so the result remains “assumed” unless a failure is reported.</string>
+    <string name="help_note_body">The app does not forward calls itself. It hands the configured MMI/USSD code to your carrier. The optional A1 special profile is executed as a voice call; forwarding happens exclusively in the carrier network. Android cannot machine-read a carrier announcement.</string>
     <string name="help_buttons_heading">Additional buttons</string>
     <string name="help_btn_change_contact_title">Change contact</string>
     <string name="help_btn_change_contact_desc">Select a new forwarding number without deactivating first.</string>

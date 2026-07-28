@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -30,6 +31,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
+import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeProfile
+import info.meuse24.smsforwarderneoA1.domain.model.A1Detection
 
 @Composable
 fun MmiCodeSettingsSection(
@@ -41,11 +44,15 @@ fun MmiCodeSettingsSection(
     val mmiActivateSuffix by viewModel.mmiActivateSuffix.collectAsState()
     val mmiDeactivateCode by viewModel.mmiDeactivateCode.collectAsState()
     val mmiStatusCode by viewModel.mmiStatusCode.collectAsState()
+    val mmiCodeProfile by viewModel.mmiCodeProfile.collectAsState()
+    val a1Detection by viewModel.mmiSimA1Detection.collectAsState()
 
     var isActivateFocused by remember { mutableStateOf(false) }
     var isActivateSuffixFocused by remember { mutableStateOf(false) }
     var isDeactivateFocused by remember { mutableStateOf(false) }
     var isStatusFocused by remember { mutableStateOf(false) }
+    var showA1ProfileConfirmation by remember { mutableStateOf(false) }
+    var showStandardProfileConfirmation by remember { mutableStateOf(false) }
 
     LaunchedEffect(isActivateFocused, isActivateSuffixFocused, isDeactivateFocused, isStatusFocused) {
         onFocusChanged(isActivateFocused || isActivateSuffixFocused || isDeactivateFocused || isStatusFocused)
@@ -60,6 +67,25 @@ fun MmiCodeSettingsSection(
             text = stringResource(R.string.section_mmi_ussd_codes),
             style = sectionTitleStyle,
             color = androidx.compose.material3.MaterialTheme.colorScheme.primary
+        )
+        if (a1Detection == A1Detection.A1_CONFIRMED) {
+            Text(
+                text = stringResource(R.string.mmi_a1_detected_hint),
+                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Text(
+            text = stringResource(
+                when (mmiCodeProfile) {
+                    MmiCodeProfile.STANDARD_GSM -> R.string.mmi_profile_standard
+                    MmiCodeProfile.A1_SPECIAL -> R.string.mmi_profile_a1_special
+                    MmiCodeProfile.CUSTOM -> R.string.mmi_profile_custom
+                }
+            ),
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -117,13 +143,13 @@ fun MmiCodeSettingsSection(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = { viewModel.resetMmiCodesToDefault() }
+                onClick = { showA1ProfileConfirmation = true }
             ) {
-                Text(stringResource(R.string.btn_preset_a1_austria))
+                Text(stringResource(R.string.btn_preset_a1_special))
             }
 
             Button(
-                onClick = { viewModel.resetMmiCodesToGeneric() }
+                onClick = { showStandardProfileConfirmation = true }
             ) {
                 Icon(
                     Icons.Filled.Refresh,
@@ -133,6 +159,41 @@ fun MmiCodeSettingsSection(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.btn_preset_standard))
             }
+        }
+
+        if (showA1ProfileConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showA1ProfileConfirmation = false },
+                title = { Text(stringResource(R.string.mmi_a1_special_confirm_title)) },
+                text = { Text(stringResource(R.string.mmi_a1_special_confirm_body)) },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.resetMmiCodesToDefault()
+                        showA1ProfileConfirmation = false
+                    }) { Text(stringResource(R.string.mmi_a1_special_confirm_apply)) }
+                },
+                dismissButton = {
+                    Button(onClick = { showA1ProfileConfirmation = false }) {
+                        Text(stringResource(R.string.btn_cancel))
+                    }
+                },
+            )
+        }
+        if (showStandardProfileConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showStandardProfileConfirmation = false },
+                title = { Text(stringResource(R.string.mmi_standard_confirm_title)) },
+                text = { Text(stringResource(R.string.mmi_standard_confirm_body)) },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.resetMmiCodesToGeneric()
+                        showStandardProfileConfirmation = false
+                    }) { Text(stringResource(R.string.mmi_standard_confirm_apply)) }
+                },
+                dismissButton = {
+                    Button(onClick = { showStandardProfileConfirmation = false }) { Text(stringResource(R.string.btn_cancel)) }
+                },
+            )
         }
 
     }

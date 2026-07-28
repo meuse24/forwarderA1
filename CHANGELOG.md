@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Rufumleitungs-Codes: Neuinstallationen verwenden das dokumentierte Standard-GSM/USSD-Profil. Bestehende Installationen behalten ihre wirksamen Codes durch eine Materialisierungs-Migration unverändert.
+- Das frühere allgemeine A1-Default ist nun als optionales „A1-Sonderprofil“ gekennzeichnet; die Auswahl wird bei erkannter A1-SIM erklärt und bestätigt.
+
 Alle nennenswerten Änderungen an SMS Forwarder Neo A1.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).

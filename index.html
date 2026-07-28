@@ -384,18 +384,18 @@
                 <article class="feature-item">
                     <h3>📞 Anrufweiterleitung</h3>
                     <ul>
-                        <li><strong>Anpassbare MMI-/USSD-Codes:</strong> Wählbar zwischen A1-Codes (Standard) und generischen Codes
+                        <li><strong>Anpassbare MMI-/USSD-Codes:</strong> Standard-GSM-Codes oder optionales A1-Sonderprofil
                             <ul style="margin-top: 8px; font-size: 0.95em;">
-                                <li>A1 Österreich (Standard): <code>*21*Nummer**</code> (Aktivieren), <code>*021**</code> (Status), <code>**21**</code> (Deaktivieren)</li>
-                                <li>Generischer Standard: <code>*21*Nummer#</code> (Aktivieren), <code>*#21#</code> (Status), <code>##21#</code> (Deaktivieren)</li>
+                                <li>Standard (GSM/USSD): <code>**21*Nummer#</code> (Aktivieren), <code>*#21#</code> (Status), <code>##21#</code> (Deaktivieren)</li>
+                                <li>A1-Sonderprofil: nur verwenden, wenn es von A1 bzw. dem Business-Vertrag ausdrücklich vorgegeben ist.</li>
                             </ul>
                         </li>
                         <li><strong>Carrier-native Weiterleitung:</strong> Nutzt die Rufumleitung des Mobilfunkanbieters</li>
                         <li><strong>Statusabfrage:</strong> Fragt den Status beim Mobilfunkanbieter ab, ohne eine Einstellung zu ändern</li>
                         <li><strong>Reset-Funktion:</strong> Ein-Klick-Deaktivierung aller Weiterleitungen</li>
                         <li><strong>Internationale Vorwahl:</strong> Konfigurierbare Dial-Präfixe (Standard: "00" für Österreich)</li>
-                        <li><strong>Passender Wählweg:</strong> A1-Sprach-MMI wird als Telefonat ausgeführt; generische <code>#</code>-Codes werden per USSD mit Netzantwort verarbeitet</li>
-                        <li><strong>Fehlermeldung ohne Blockade:</strong> Nach einem A1-Sprach-MMI läuft der Ablauf automatisch weiter; nur bei einem Fehler muss der Benutzer eingreifen</li>
+                        <li><strong>Passender Wählweg:</strong> Standard-GSM-Codes werden per USSD mit Netzantwort verarbeitet; nur das optionale A1-Sonderprofil wird als Telefonat ausgeführt</li>
+                        <li><strong>Fehlermeldung ohne Blockade:</strong> Nach einem A1-Sonderprofil-Sprachanruf läuft der Ablauf automatisch weiter</li>
                     </ul>
                 </article>
 
