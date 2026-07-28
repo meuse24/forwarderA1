@@ -141,8 +141,21 @@ class ForwardingQueueStore(
     // --- Persistenz ---------------------------------------------------------------------
 
     private fun read(): List<ForwardingOperation> {
+        // Ob der Eintrag existiert, ist ohne Entschluesselung feststellbar - die Schluessel sind
+        // deterministisch verschluesselt. Diese Unterscheidung ist wesentlich: Schlaegt die
+        // Entschluesselung des Werts fehl, wirft getString(). Ohne die Pruefung waere dieser
+        // Totalverlust von "noch nie etwas geschrieben" nicht zu unterscheiden und ginge
+        // stillschweigend als leere Queue durch.
+        val documentExists = runCatching { prefs.contains(KEY_DOCUMENT) }.getOrDefault(false)
         val raw = runCatching { prefs.getString(KEY_DOCUMENT, null) }.getOrNull()
-        if (raw.isNullOrBlank()) return emptyList()
+
+        if (raw.isNullOrBlank()) {
+            if (documentExists) {
+                reportCorruption(QueueCorruptionWarning.UNKNOWN_COUNT, "document_undecryptable")
+                runCatching { prefs.edit().remove(KEY_DOCUMENT).commit() }
+            }
+            return emptyList()
+        }
 
         val document = runCatching { JSONObject(raw) }.getOrNull()
         if (document == null || document.optInt(FIELD_SCHEMA, 0) > SCHEMA_VERSION) {
