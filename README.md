@@ -631,7 +631,7 @@ SOFTWARE.
 
 ---
 
-**Version**: Barracuda 5.0.0
+**Version**: Barracuda 5.1.0
 **Build**: Debug/Release
 **Letzte Aktualisierung**: 2026-07-29
 

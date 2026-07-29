@@ -4,7 +4,10 @@ Alle nennenswerten Änderungen an SMS Forwarder Neo A1.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
-## [5.0.0] – Barracuda
+## [5.1.0] – Barracuda
+
+> Die Version 5.0.0 wurde nie veröffentlicht: Ihr Stand war bereits getaggt, als der Umbau des
+> E-Mail-Kanals dazukam. Alles, was für 5.0.0 vorgesehen war, ist in dieser Fassung enthalten.
 
 Diese Fassung macht die Weiterleitung dauerbetriebsfest. Auf Android 15 und 16 stand die
 Weiterleitung bisher nach sechs Stunden still und startete nach einem Geräteneustart nicht mehr
