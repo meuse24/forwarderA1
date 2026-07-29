@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -36,8 +37,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.DroppedForwardingWarning
+import info.meuse24.smsforwarderneoA1.domain.model.EmailForwardingJob
 import info.meuse24.smsforwarderneoA1.domain.model.QueueCorruptionWarning
 import info.meuse24.smsforwarderneoA1.presentation.ui.components.AnimatedCard
+import info.meuse24.smsforwarderneoA1.util.messageRes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -56,16 +59,25 @@ data class ForwardingWarnings(
     val batteryOptimizationActive: Boolean = false,
     val corruption: QueueCorruptionWarning? = null,
     val dropped: DroppedForwardingWarning? = null,
+    val droppedEmails: DroppedForwardingWarning? = null,
     val serviceTimeoutAtMillis: Long? = null,
-    val problemCount: Int = 0
+    val problemCount: Int = 0,
+    val emailProblemCount: Int = 0,
+    /** Juengster gescheiterter E-Mail-Auftrag - nennt Absender, Empfangszeit und Ursache. */
+    val lastEmailProblem: EmailForwardingJob? = null,
+    /** Ein Empfaengerergebnis war nicht schreibbar; eine Doppelzustellung ist dadurch moeglich. */
+    val emailStateWriteFailedAtMillis: Long? = null
 ) {
     val hasAny: Boolean
         get() = notificationsSuppressed || batteryOptimizationActive || corruption != null ||
-            dropped != null || serviceTimeoutAtMillis != null || problemCount > 0
+            dropped != null || droppedEmails != null || serviceTimeoutAtMillis != null ||
+            problemCount > 0 || emailProblemCount > 0 || emailStateWriteFailedAtMillis != null
 
     /** Die unterdrueckte Statusanzeige verschwindet erst mit der Berechtigung, nicht per Klick. */
     val hasAcknowledgeable: Boolean
-        get() = corruption != null || dropped != null || serviceTimeoutAtMillis != null || problemCount > 0
+        get() = corruption != null || dropped != null || droppedEmails != null ||
+            serviceTimeoutAtMillis != null || problemCount > 0 || emailProblemCount > 0 ||
+            emailStateWriteFailedAtMillis != null
 }
 
 /**
@@ -107,7 +119,46 @@ fun ForwardingWarningsCard(
             add(stringResource(R.string.warning_service_timeout, formatTimestamp(it)))
         }
         if (state.problemCount > 0) {
-            add(stringResource(R.string.warning_failed_operations, state.problemCount))
+            add(
+                pluralStringResource(
+                    R.plurals.warning_failed_operations,
+                    state.problemCount,
+                    state.problemCount
+                )
+            )
+        }
+        state.droppedEmails?.let { dropped ->
+            add(
+                stringResource(
+                    R.string.warning_dropped_emails,
+                    dropped.count,
+                    formatTimestamp(dropped.timestampMillis)
+                )
+            )
+        }
+        state.emailStateWriteFailedAtMillis?.let {
+            add(stringResource(R.string.warning_email_state_write_failed_at, formatTimestamp(it)))
+        }
+        if (state.emailProblemCount > 0) {
+            add(
+                pluralStringResource(
+                    R.plurals.warning_failed_emails,
+                    state.emailProblemCount,
+                    state.emailProblemCount
+                )
+            )
+            state.lastEmailProblem?.let { job ->
+                add(
+                    stringResource(
+                        R.string.warning_email_failure_detail,
+                        job.sender,
+                        formatTimestamp(job.receivedAtMillis),
+                        stringResource(
+                            job.lastFailure?.kind?.messageRes() ?: R.string.warning_email_cause_unknown
+                        )
+                    )
+                )
+            }
         }
     }
 
@@ -170,6 +221,7 @@ fun ForwardingWarningsCardHost(modifier: Modifier = Modifier) {
             val prefs = runCatching { AppContainer.requirePrefsManager() }.getOrNull()
                 ?: return@withContext ForwardingWarnings()
             val queue = AppContainer.getForwardingQueueSafe()
+            val emailProblems = AppContainer.getEmailQueueSafe()?.unacknowledgedProblems().orEmpty()
 
             val suppressed = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ContextCompat.checkSelfPermission(
@@ -189,8 +241,12 @@ fun ForwardingWarningsCardHost(modifier: Modifier = Modifier) {
                 batteryOptimizationActive = batteryOptimizationActive,
                 corruption = prefs.getQueueCorruptionWarning(),
                 dropped = prefs.getDroppedForwardingWarning(),
+                droppedEmails = prefs.getDroppedEmailWarning(),
                 serviceTimeoutAtMillis = prefs.getServiceTimeoutAt(),
-                problemCount = queue?.unacknowledgedProblems()?.size ?: 0
+                problemCount = queue?.unacknowledgedProblems()?.size ?: 0,
+                emailProblemCount = emailProblems.size,
+                lastEmailProblem = emailProblems.maxByOrNull { it.updatedAtMillis },
+                emailStateWriteFailedAtMillis = prefs.getEmailStateWriteFailureAt()
             )
         }
     }
@@ -220,8 +276,11 @@ fun ForwardingWarningsCardHost(modifier: Modifier = Modifier) {
                     runCatching {
                         AppContainer.requirePrefsManager().acknowledgeQueueCorruption()
                         AppContainer.requirePrefsManager().acknowledgeDroppedForwardings()
+                        AppContainer.requirePrefsManager().acknowledgeDroppedEmails()
+                        AppContainer.requirePrefsManager().acknowledgeEmailStateWriteFailure()
                         AppContainer.requirePrefsManager().acknowledgeServiceTimeout()
                         AppContainer.getForwardingQueueSafe()?.acknowledgeProblems()
+                        AppContainer.getEmailQueueSafe()?.acknowledgeProblems()
                     }
                 }
                 reload()

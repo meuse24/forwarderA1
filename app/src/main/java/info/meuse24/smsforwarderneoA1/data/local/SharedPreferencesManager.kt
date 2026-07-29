@@ -21,6 +21,7 @@ import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeSet
 import info.meuse24.smsforwarderneoA1.domain.model.ForwardingCodeSnapshot
 import info.meuse24.smsforwarderneoA1.domain.model.MmiProfileMigration
 import info.meuse24.smsforwarderneoA1.domain.model.DroppedForwardingWarning
+import info.meuse24.smsforwarderneoA1.domain.model.EmailTransportSecurity
 import info.meuse24.smsforwarderneoA1.domain.model.QueueCorruptionWarning
 import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import java.io.File
@@ -454,12 +455,40 @@ class SharedPreferencesManager(private val context: Context) {
     fun getSmtpPassword(): String =
         getPreference(KEY_SMTP_PASSWORD, "")
 
-    fun saveSmtpSettings(host: String, port: Int, username: String, password: String) {
+    /**
+     * Absenderadresse des Versands. Leer bedeutet „wie Benutzername" - so verhalten sich
+     * Bestandsinstallationen unveraendert weiter.
+     */
+    fun getSmtpFromAddress(): String = getPreference(KEY_SMTP_FROM_ADDRESS, "")
+
+    /** Aufgeloeste Absenderadresse: die gepflegte, sonst der Benutzername. */
+    fun getEffectiveSmtpFromAddress(): String =
+        getSmtpFromAddress().ifBlank { getSmtpUsername() }
+
+    /**
+     * Transportverschluesselung. Fuer Bestandsinstallationen ohne gespeicherten Wert wird sie aus
+     * dem Port abgeleitet: Wer 465 eingetragen hatte, meinte implizites TLS - mit der frueheren
+     * reinen STARTTLS-Konfiguration hat dieser Versand nie funktioniert.
+     */
+    fun getSmtpSecurity(): EmailTransportSecurity =
+        EmailTransportSecurity.fromNameOrNull(getPreference(KEY_SMTP_SECURITY, ""))
+            ?: EmailTransportSecurity.forPort(getSmtpPort())
+
+    fun saveSmtpSettings(
+        host: String,
+        port: Int,
+        username: String,
+        password: String,
+        security: EmailTransportSecurity = getSmtpSecurity(),
+        fromAddress: String = getSmtpFromAddress()
+    ) {
         prefs.edit().apply {
             putString(KEY_SMTP_HOST, host)
             putInt(KEY_SMTP_PORT, port)
             putString(KEY_SMTP_USERNAME, username)
             putString(KEY_SMTP_PASSWORD, password)
+            putString(KEY_SMTP_SECURITY, security.name)
+            putString(KEY_SMTP_FROM_ADDRESS, fromAddress)
             apply()
         }
     }
@@ -940,6 +969,41 @@ class SharedPreferencesManager(private val context: Context) {
     }.getOrNull()
 
     /**
+     * Vermerkt eine E-Mail-Weiterleitung, die wegen voller Warteschlange nicht eingereiht wurde.
+     * Gleiche Begruendung wie [recordDroppedForwarding]: In der Queue selbst kann der Vermerk
+     * nicht stehen, weil die Aufbewahrungsregel ihn bei voller Queue sofort wieder verdraengt.
+     */
+    fun recordDroppedEmail(): Boolean =
+        updateWarning(KEY_DROPPED_EMAILS) { current ->
+            JSONObject().apply {
+                put("timestamp", System.currentTimeMillis())
+                put("count", (parseDroppedForwarding(current)?.count ?: 0) + 1)
+            }.toString()
+        }
+
+    fun getDroppedEmailWarning(): DroppedForwardingWarning? =
+        parseDroppedForwarding(getPreference(KEY_DROPPED_EMAILS, ""))
+
+    fun acknowledgeDroppedEmails(): Boolean = updateWarning(KEY_DROPPED_EMAILS) { "" }
+
+    /**
+     * Vermerkt, dass der Zustand einer E-Mail-Weiterleitung nicht haltbar geschrieben werden
+     * konnte.
+     *
+     * Der Vermerk liegt in den Konfigurations-Preferences und damit in einer **anderen** Datei als
+     * die Queue - deren Schreiben ist ja gerade das, was fehlgeschlagen ist. Fachliche Folge: Ein
+     * bereits zugestellter Empfaenger kann beim Wiederanlauf ein zweites Mal beliefert werden.
+     */
+    fun recordEmailStateWriteFailure(timestampMillis: Long): Boolean =
+        updateWarning(KEY_EMAIL_STATE_WRITE_FAILED) { timestampMillis.toString() }
+
+    fun getEmailStateWriteFailureAt(): Long? =
+        getPreference(KEY_EMAIL_STATE_WRITE_FAILED, "").toLongOrNull()
+
+    fun acknowledgeEmailStateWriteFailure(): Boolean =
+        updateWarning(KEY_EMAIL_STATE_WRITE_FAILED) { "" }
+
+    /**
      * Merkt, dass die Statusanzeige mangels `POST_NOTIFICATIONS` unterdrueckt ist. Die
      * Weiterleitung laeuft dabei weiter - die Plattform verlangt die Berechtigung fuer einen
      * Foreground Service nicht.
@@ -977,6 +1041,8 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_SMTP_PORT = "smtp_port"
         private const val KEY_SMTP_USERNAME = "smtp_username"
         private const val KEY_SMTP_PASSWORD = "smtp_password"
+        private const val KEY_SMTP_SECURITY = "smtp_security"
+        private const val KEY_SMTP_FROM_ADDRESS = "smtp_from_address"
         private const val DEFAULT_SMTP_HOST = "smtp.gmail.com"
         private const val DEFAULT_SMTP_PORT = 587
         private const val PREFS_NAME = "sms_forwarder_secure_prefs"
@@ -1012,6 +1078,8 @@ class SharedPreferencesManager(private val context: Context) {
         private const val KEY_RCS_HINT_DISMISSED = "rcs_hint_dismissed"
         private const val KEY_QUEUE_CORRUPTION = "forwarding_queue_corruption"
         private const val KEY_DROPPED_FORWARDINGS = "forwarding_dropped_queue_full"
+        private const val KEY_DROPPED_EMAILS = "email_dropped_queue_full"
+        private const val KEY_EMAIL_STATE_WRITE_FAILED = "email_state_write_failed_at"
         private const val KEY_NOTIFICATIONS_SUPPRESSED = "notifications_suppressed"
         private const val KEY_SERVICE_TIMEOUT_AT = "service_timeout_at"
 

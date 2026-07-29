@@ -252,6 +252,12 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 - **Multi-Teil SMS**: Werden automatisch gruppiert und rekonstruiert
 - **Unabhängige Kanäle**: SMS und E-Mail laufen parallel; ein SMTP-Ausfall bricht den SMS-Versand
   nicht ab und löst keine zusätzliche SMS aus
+- **E-Mail-Wiederholung**: Eine nicht zustellbare E-Mail bleibt gespeichert und wird bis zu
+  24 Stunden lang erneut versucht (1, 5, 15, 60 Minuten, dann 3 Stunden). Wiederholt wird nur bei
+  Netz- und Serverproblemen — ein falsches Passwort oder eine abgelehnte Adresse führt zu genau
+  einem Versuch und erscheint als Hinweis auf der Startseite
+- **Ein Empfänger je Nachricht**: Bei mehreren E-Mail-Empfängern sieht keiner die Adressen der
+  anderen, und eine Wiederholung beliefert nur die noch offenen
 - **WakeLock**: Verhindert Sleep während der Nachrichtenverarbeitung
 - **Service-Neustart**: Nutzt `START_STICKY` für automatischen Neustart
 
@@ -368,6 +374,9 @@ info.meuse24.smsforwarderneoA1/
 
 <!-- Internet (für E-Mail) -->
 <uses-permission android:name="android.permission.INTERNET" />
+
+<!-- Netzstatus: prüft vor dem E-Mail-Versand, ob überhaupt eine Verbindung besteht -->
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 ```
 
 ## Sicherheit
@@ -376,6 +385,12 @@ info.meuse24.smsforwarderneoA1/
 - Alle Einstellungen werden mit `androidx.security.crypto` verschlüsselt
 - SMTP-Passwörter werden niemals im Klartext gespeichert
 - Verschlüsselte SharedPreferences mit AES256-GCM
+- Weiterzuleitende Nachrichten liegen bis zur Zustellung in zwei getrennten, ebenfalls
+  verschlüsselten Warteschlangen (SMS-Volltext, Absendernummer, bei E-Mail zusätzlich die
+  Empfängeradressen). Erledigte Einträge werden nach spätestens 7 Tagen gelöscht; beide Dateien
+  sind vom Cloud-Backup und von der Geräteübertragung ausgeschlossen
+- Der SMTP-Versand ist immer verschlüsselt: STARTTLS (erzwungen, kein Rückfall auf Klartext) oder
+  TLS ab dem ersten Byte, jeweils TLS 1.2+ mit Prüfung der Serveridentität
 
 ### Datenschutz
 - Zielnummern und Einstellungen werden nur lokal und verschlüsselt verarbeitet
@@ -616,11 +631,18 @@ SOFTWARE.
 
 ---
 
-**Version**: Barracuda 4.1.0
+**Version**: Barracuda 5.0.0
 **Build**: Debug/Release
-**Letzte Aktualisierung**: 2026-01-23
+**Letzte Aktualisierung**: 2026-07-29
 
-### Neueste Änderungen (2026-01-23)
+### Neueste Änderungen (2026-07-29)
+- ✅ **SMS-Weiterleitung dauerbetriebsfest**: Vordergrunddienst als `specialUse` (kein 6-Stunden-Limit), persistente Sendewarteschlange, Autostart nach Neustart. Einzelheiten in `sms.md`
+- ✅ **E-Mail-Weiterleitung dauerbetriebsfest**: eigene verschlüsselte Warteschlange, Wiederholung nach Fehlerursache statt pauschal, Zustellung pro Empfänger, STARTTLS **und** SSL/TLS, getrennte Absenderadresse, Empfangszeitpunkt im Text. Einzelheiten in `smtp.md`
+- ✅ **Hinweiskarte auf der Startseite**: fehlgeschlagene Weiterleitungen, verlorene Einträge, unterdrückte Statusanzeige und Batterieoptimierung — sichtbar und quittierbar
+- ✅ **RCS-Hinweis**: erklärt, warum RCS-Chats aus Google Messages nicht weitergeleitet werden
+- ✅ **Android 16**: `targetSdk`/`compileSdk` 36, Edge-to-Edge umgesetzt
+
+### Änderungen 2026-01-23
 - ✅ **Open Source**: Vollständige MIT-Lizenz Dokumentation
 - ✅ **Info Screen**: Open Source Card mit GitHub-Links und Lizenzhinweis
 - ✅ **Hilfe Screen**: Technische Details zu Loop-Schutz, Multi-SIM und Datensicherheit

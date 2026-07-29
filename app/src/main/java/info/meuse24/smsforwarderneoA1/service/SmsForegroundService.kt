@@ -8,6 +8,9 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -25,11 +28,20 @@ import info.meuse24.smsforwarderneoA1.PhoneNumberValidator
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.SnackbarManager
+import info.meuse24.smsforwarderneoA1.data.local.EmailQueueStore
+import info.meuse24.smsforwarderneoA1.data.local.EmailQueueUpdate
 import info.meuse24.smsforwarderneoA1.data.local.ForwardingQueueStore
 import info.meuse24.smsforwarderneoA1.data.local.QueueUpdate
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import info.meuse24.smsforwarderneoA1.domain.model.EmailBodyComposer
+import info.meuse24.smsforwarderneoA1.domain.model.EmailDeliveryReducer
+import info.meuse24.smsforwarderneoA1.domain.model.EmailDeliveryState
+import info.meuse24.smsforwarderneoA1.domain.model.EmailDispatchBudget
+import info.meuse24.smsforwarderneoA1.domain.model.EmailFailure
+import info.meuse24.smsforwarderneoA1.domain.model.EmailFailureKind
+import info.meuse24.smsforwarderneoA1.domain.model.EmailForwardingJob
+import info.meuse24.smsforwarderneoA1.domain.model.EmailQueueRetentionPolicy
 import info.meuse24.smsforwarderneoA1.domain.model.ForwardingQueueRetentionPolicy
-import info.meuse24.smsforwarderneoA1.domain.model.EmailRetryPolicy
 import info.meuse24.smsforwarderneoA1.domain.model.ForwardingOperation
 import info.meuse24.smsforwarderneoA1.domain.model.ForwardingState
 import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
@@ -39,8 +51,10 @@ import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
 import info.meuse24.smsforwarderneoA1.domain.model.SmsDeliveryReducer
 import info.meuse24.smsforwarderneoA1.domain.model.SmsForwardingComposer
 import info.meuse24.smsforwarderneoA1.domain.model.SmsMessagePart
-import info.meuse24.smsforwarderneoA1.util.email.EmailResult
+import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
+import info.meuse24.smsforwarderneoA1.util.email.EmailSendOutcome
 import info.meuse24.smsforwarderneoA1.util.email.EmailSender
+import info.meuse24.smsforwarderneoA1.util.email.SmtpConfig
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,6 +83,9 @@ class SmsForegroundService : Service() {
     private val queue: ForwardingQueueStore by lazy {
         AppContainer.requireForwardingQueue()
     }
+    private val emailQueue: EmailQueueStore by lazy {
+        AppContainer.requireEmailQueue()
+    }
     private var currentNotificationText = ""
     private lateinit var defaultNotificationText: String
 
@@ -94,6 +111,16 @@ class SmsForegroundService : Service() {
     private val wakeLockMutex = Mutex()
     private val wakeLockTimeout = 5 * 60 * 1000L // 5 Minuten Maximum
     private val wakeLockTag = "${BuildConfig.APPLICATION_ID}:ForegroundService"
+    private val emailWakeLockTag = "${BuildConfig.APPLICATION_ID}:EmailDispatch"
+
+    /**
+     * Serialisiert die E-Mail-Zustellung. **Getrennt** von [wakeLockMutex]: Dieser serialisiert den
+     * SMS-Empfang, und ein haengender SMTP-Server wuerde darueber jede eintreffende SMS aufhalten.
+     */
+    private val emailDispatchMutex = Mutex()
+
+    /** Wird beim Eintreffen einer Netzverbindung angemeldet, um faellige Auftraege sofort zu senden. */
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     /** Verhindert, dass derselbe Vorgang mehrfach parallel auf seinen Neuversuch wartet. */
     private val scheduledDispatches = ConcurrentHashMap<String, Job>()
@@ -109,8 +136,9 @@ class SmsForegroundService : Service() {
         /** Anstoss von aussen, die Queue sofort zu pruefen (z. B. nach einem Sende-Callback). */
         const val ACTION_PROCESS_QUEUE = "PROCESS_QUEUE"
 
-        /** Takt des Ablauf-Scans. Getrennt vom E-Mail-Retry, der eigenen Regeln folgt. */
+        /** Takt des Ablauf-Scans. Deckt beide Kanaele ab. */
         private const val QUEUE_SCAN_INTERVAL_MILLIS = 5 * 60 * 1000L
+
 
         @Volatile
         private var isRunning = false
@@ -122,10 +150,12 @@ class SmsForegroundService : Service() {
          */
         private val firstScanAfterProcessStart = AtomicBoolean(true)
 
-        // Retry-Zaehler des E-Mail-Kanals (thread-safe). Der SMS-Kanal hat seine eigene,
-        // persistente Wiederholung ueber die Queue.
-        private val emailRetryCounter = ConcurrentHashMap<String, Int>()
-        private val activeEmailRetryJobs = ConcurrentHashMap<String, Job>()
+        /**
+         * Gegenstueck fuer den E-Mail-Kanal. Ein vorgefundenes `ATTEMPTING` geht dort **zurueck
+         * nach `QUEUED`** statt nach `UNKNOWN`: Eine E-Mail kostet nichts, der Verlust einer
+         * Weiterleitung ist der eigentliche Schadensfall.
+         */
+        private val emailScanAfterProcessStart = AtomicBoolean(true)
 
         fun startService(context: Context) {
             if (!isRunning) {
@@ -168,6 +198,7 @@ class SmsForegroundService : Service() {
         try {
             setupService()
             startQueueMaintenance()
+            registerNetworkCallback()
         } catch (e: Exception) {
             LoggingManager.logError(
                 component = "SmsForegroundService",
@@ -343,7 +374,12 @@ class SmsForegroundService : Service() {
                     if (!isRunning) {
                         startForegroundService()
                     }
-                    serviceScope.launch { withContext(Dispatchers.IO) { scanQueue() } }
+                    serviceScope.launch {
+                        withContext(Dispatchers.IO) {
+                            scanQueue()
+                            processEmailQueue()
+                        }
+                    }
                 }
 
                 ACTION_UPDATE_NOTIFICATION -> {
@@ -363,7 +399,12 @@ class SmsForegroundService : Service() {
                             message = "Service nach System-Kill neugestartet"
                         )
                     }
-                    serviceScope.launch { withContext(Dispatchers.IO) { scanQueue() } }
+                    serviceScope.launch {
+                        withContext(Dispatchers.IO) {
+                            scanQueue()
+                            processEmailQueue()
+                        }
+                    }
                 }
 
                 else -> {
@@ -509,11 +550,16 @@ class SmsForegroundService : Service() {
 
             if (prefsManager.isForwardSmsToEmail()) {
                 launch {
-                    val retryKey = "${group.sender}_${group.parts.firstOrNull()?.intentId ?: group.text.hashCode()}"
                     try {
-                        withContext(Dispatchers.IO) { handleEmailForwarding(group.sender, group.text) }
+                        withContext(Dispatchers.IO) { enqueueEmailForwarding(group) }
                     } catch (e: Exception) {
-                        handleEmailError(retryKey, group.sender, group.text, e)
+                        LoggingManager.logError(
+                            component = "SmsForegroundService",
+                            action = "ENQUEUE_EMAIL_ERROR",
+                            message = "Fehler im E-Mail-Zweig",
+                            error = e,
+                            details = mapOf("sender" to MmiCodeMasker.maskNumber(group.sender))
+                        )
                     }
                 }
             }
@@ -776,10 +822,54 @@ class SmsForegroundService : Service() {
                             error = error
                         )
                     }
+                    runCatching { processEmailQueue() }.onFailure { error ->
+                        LoggingManager.logError(
+                            component = "SmsForegroundService",
+                            action = "EMAIL_SCAN_ERROR",
+                            message = "E-Mail-Durchlauf fehlgeschlagen",
+                            error = error
+                        )
+                    }
                 }
                 delay(QUEUE_SCAN_INTERVAL_MILLIS)
             }
         }
+    }
+
+    /**
+     * Meldet sich fuer die Standardverbindung an und sendet faellige Auftraege, sobald wieder Netz
+     * da ist.
+     *
+     * Der 5-Minuten-Takt bleibt die Rueckfallebene; dies ist nur eine Beschleunigung. Ein
+     * `JobScheduler`-Constraint waere ein zweiter Planer mit eigenem Lebenszyklus und eigenem
+     * Kontingent - eine zusaetzliche Fehlerquelle ohne Gegenwert, solange der Dienst ohnehin laeuft.
+     */
+    private fun registerNetworkCallback() {
+        val manager = getSystemService(ConnectivityManager::class.java) ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                serviceScope.launch {
+                    runCatching { processEmailQueue() }.onFailure { error ->
+                        LoggingManager.logError(
+                            component = "SmsForegroundService",
+                            action = "EMAIL_SCAN_ERROR",
+                            message = "E-Mail-Durchlauf nach Netzwiederkehr fehlgeschlagen",
+                            error = error
+                        )
+                    }
+                }
+            }
+        }
+        runCatching { manager.registerDefaultNetworkCallback(callback) }
+            .onSuccess { networkCallback = callback }
+            .onFailure { error ->
+                LoggingManager.logWarning(
+                    component = "SmsForegroundService",
+                    action = "NETWORK_CALLBACK_FAILED",
+                    message = "Netzbeobachtung nicht moeglich - Wiederholungen laufen ueber den Scan-Takt",
+                    details = mapOf("error" to (error.message ?: error.javaClass.simpleName))
+                )
+            }
     }
 
     /**
@@ -829,114 +919,441 @@ class SmsForegroundService : Service() {
 
     // --- E-Mail-Kanal -------------------------------------------------------------------------
 
-    private suspend fun handleEmailForwarding(sender: String, messageBody: String) {
-        val emailAddresses = prefsManager.getEmailAddresses()
-        if (emailAddresses.isEmpty()) {
+    /**
+     * Reiht die E-Mail-Weiterleitung persistent ein und stoesst den Versand **asynchron** an.
+     *
+     * Der Empfangspfad darf hier nicht auf das Netz warten: Er laeuft unter [wakeLockMutex], der
+     * jede weitere eintreffende SMS serialisiert - ein haengender SMTP-Server wuerde sonst auch
+     * den SMS-Kanal blockieren. Geschrieben wird deshalb nur der Auftrag; gesendet wird im
+     * Queue-Durchlauf.
+     */
+    private fun enqueueEmailForwarding(group: SmsForwardingComposer.Group) {
+        val recipients = prefsManager.getEmailAddresses()
+        if (recipients.isEmpty()) {
             LoggingManager.logWarning(
                 component = "SmsForegroundService",
-                action = "EMAIL_FORWARD",
+                action = "EMAIL_ENQUEUE",
                 message = "Keine Email-Adressen konfiguriert"
             )
             return
         }
 
-        val host = prefsManager.getSmtpHost()
-        val port = prefsManager.getSmtpPort()
-        val username = prefsManager.getSmtpUsername()
-        val password = prefsManager.getSmtpPassword()
-
-        if (host.isEmpty() || username.isEmpty() || password.isEmpty()) {
-            LoggingManager.logWarning(
+        // Wie beim SMS-Kanal: Ist die Obergrenze erreicht, wird nicht eingereiht und der Verlust
+        // ausserhalb der Queue vermerkt - ein Vermerk *in* der Queue waere der naechste Kandidat
+        // der Aufbewahrungsregel und wuerde sich selbst loeschen.
+        if (emailQueue.activeCount() >= EmailQueueRetentionPolicy.MAX_ENTRIES) {
+            val recorded = runCatching { prefsManager.recordDroppedEmail() }.getOrDefault(false)
+            LoggingManager.logError(
                 component = "SmsForegroundService",
-                action = "EMAIL_FORWARD",
-                message = "Unvollständige SMTP-Konfiguration",
+                action = "EMAIL_QUEUE_FULL",
+                message = if (recorded) {
+                    "E-Mail-Warteschlange voll - kein Versand, Verlust dauerhaft vermerkt"
+                } else {
+                    "E-Mail-Warteschlange voll - kein Versand, Verlust NUR im Protokoll"
+                },
                 details = mapOf(
-                    "has_host" to host.isNotEmpty(),
-                    "has_username" to username.isNotEmpty(),
-                    "has_credentials" to password.isNotEmpty()
+                    "sender" to MmiCodeMasker.maskNumber(group.sender),
+                    "max_entries" to EmailQueueRetentionPolicy.MAX_ENTRIES,
+                    "warning_persisted" to recorded
                 )
+            )
+            SnackbarManager.showError(getString(R.string.warning_email_queue_full))
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        val job = EmailDeliveryReducer.queue(
+            id = UUID.randomUUID().toString(),
+            now = now,
+            sender = group.sender,
+            // Der Empfangszeitpunkt der SMS, nicht der Verarbeitungszeitpunkt.
+            receivedAtMillis = group.receivedAtMillis.takeIf { it > 0 } ?: now,
+            body = group.text,
+            recipients = recipients
+        )
+
+        if (!emailQueue.enqueue(job)) {
+            LoggingManager.logError(
+                component = "SmsForegroundService",
+                action = "EMAIL_QUEUE_WRITE_FAILED",
+                message = "E-Mail-Auftrag konnte nicht persistiert werden - kein Versand",
+                details = mapOf("sender" to MmiCodeMasker.maskNumber(group.sender))
+            )
+            SnackbarManager.showError(getString(R.string.warning_email_queue_write_failed))
+            return
+        }
+
+        serviceScope.launch { processEmailQueue() }
+    }
+
+    /**
+     * Versendet alle faelligen E-Mail-Auftraege.
+     *
+     * Der eigene [emailDispatchMutex] und der eigene WakeLock sind Absicht: Unter
+     * [withWakeLock]/[wakeLockMutex] zu laufen wuerde den SMS-Empfang serialisieren und genau die
+     * Blockade wiederherstellen, die der Umbau beseitigt.
+     *
+     * Die zeitliche Aufloesung des Backoffs ist der Scan-Takt: Ein Neuversuch nach einer Minute
+     * findet fruehestens beim naechsten Durchlauf statt, also bis zu [QUEUE_SCAN_INTERVAL_MILLIS]
+     * spaeter. Ein eigener Zeitgeber je Auftrag waere die genauere, aber auch fehleranfaelligere
+     * Loesung; der haeufigste Fall - Netz war weg, Netz ist wieder da - wird ohnehin sofort ueber
+     * [registerNetworkCallback] abgedeckt.
+     */
+    private suspend fun processEmailQueue() = withContext(Dispatchers.IO) {
+        emailDispatchMutex.withLock {
+            if (emailScanAfterProcessStart.compareAndSet(true, false)) {
+                emailQueue.updateAll { EmailDeliveryReducer.onProcessRestart(it, System.currentTimeMillis()) }
+            }
+            // Holt Auftraege zurueck, deren Versuch im laufenden Prozess steckengeblieben ist -
+            // etwa weil ein Empfaengerergebnis nicht schreibbar war oder die Coroutine abbrach.
+            // Sicher an dieser Stelle: Der Mutex belegt, dass gerade kein Versand laeuft.
+            emailQueue.updateAll { EmailDeliveryReducer.onStaleAttempt(it, System.currentTimeMillis()) }
+            emailQueue.updateAll { EmailDeliveryReducer.onExpiryScan(it, System.currentTimeMillis()) }
+
+            val due = emailQueue.all().filter {
+                EmailDeliveryReducer.isDispatchDue(it, System.currentTimeMillis())
+            }
+            if (due.isEmpty()) return@withLock
+
+            // Ohne Netz gar nicht erst versuchen: Ein Versuch im Funkloch wuerde nur den
+            // Versuchszaehler und damit das Wiederholungsbudget aufbrauchen.
+            if (!isNetworkUsable()) {
+                LoggingManager.logInfo(
+                    component = "SmsForegroundService",
+                    action = "EMAIL_DISPATCH_DEFERRED",
+                    message = "Kein Netz - E-Mail-Versand aufgeschoben",
+                    details = mapOf("due_jobs" to due.size)
+                )
+                return@withLock
+            }
+
+            // Jeder Auftrag bekommt seinen eigenen, zu seiner Empfaengerzahl passenden WakeLock.
+            // Ein gemeinsamer WakeLock ueber alle faelligen Auftraege lief bei einem Rueckstau -
+            // etwa nach einem laengeren Serverausfall - ab, waehrend noch gesendet wurde.
+            //
+            // Die Grenze wirkt als **Startgrenze**: Ein bereits begonnener Auftrag laeuft unter
+            // seinem eigenen WakeLock zu Ende, statt mittendrin gekappt zu werden. Die dadurch
+            // laengstmoegliche Dauer eines Durchlaufs steht in
+            // EmailDispatchBudget.worstCaseRunMillis().
+            val lastStart = System.currentTimeMillis() + EmailDispatchBudget.MAX_RUN_START_MILLIS
+            for ((index, job) in due.withIndex()) {
+                if (System.currentTimeMillis() >= lastStart) {
+                    LoggingManager.logInfo(
+                        component = "SmsForegroundService",
+                        action = "EMAIL_RUN_BUDGET_EXHAUSTED",
+                        message = "Zeitbudget des Durchlaufs erschoepft - restliche Auftraege folgen im naechsten",
+                        details = mapOf("remaining" to due.size - index)
+                    )
+                    break
+                }
+                dispatchEmailJob(job)
+            }
+        }
+    }
+
+    /**
+     * Ein Versuch fuer einen Auftrag.
+     *
+     * Reihenfolge wie im SMS-Kanal: Erst die **Inbesitznahme** haltbar schreiben, dann senden.
+     * Schlaegt das Schreiben fehl, unterbleibt der Versand; der Auftrag bleibt nachweislich
+     * ungesendet. War ein anderer Durchlauf schneller, sendet nur dieser.
+     */
+    private suspend fun dispatchEmailJob(job: EmailForwardingJob) {
+        val claim = emailQueue.update(job.id) {
+            EmailDeliveryReducer.onAttemptStart(it, System.currentTimeMillis())
+        }
+        val claimed = when (claim) {
+            is EmailQueueUpdate.Applied -> claim.job
+
+            is EmailQueueUpdate.Rejected -> return
+
+            EmailQueueUpdate.NotStored -> {
+                LoggingManager.logError(
+                    component = "SmsForegroundService",
+                    action = "EMAIL_ATTEMPT_COMMIT_FAILED",
+                    message = "Zustand ATTEMPTING nicht haltbar geschrieben - Versand unterbleibt",
+                    details = mapOf("job_id" to job.id)
+                )
+                return
+            }
+        }
+
+        // Moeglich nach einem Prozessverlust: Der letzte Empfaenger wurde noch als zugestellt
+        // geschrieben, der Abschluss des Versuchs nicht mehr. Dann ist nichts mehr zu senden.
+        if (claimed.pendingRecipients.isEmpty()) {
+            finishEmailAttempt(job.id)
+            return
+        }
+
+        val config = resolveSmtpConfig()
+        if (config == null) {
+            emailQueue.update(job.id) {
+                EmailDeliveryReducer.onConnectionFailed(
+                    it,
+                    System.currentTimeMillis(),
+                    EmailFailure(EmailFailureKind.CONFIGURATION, "smtp_settings_incomplete")
+                )
+            }
+            finishEmailAttempt(job.id)
+            return
+        }
+
+        val sentAt = System.currentTimeMillis()
+        val recipientCount = claimed.pendingRecipients.size
+        val jobDeadline = sentAt + EmailDispatchBudget.forJob(recipientCount)
+        var stateWriteFailed = false
+
+        val outcome = withEmailWakeLock(EmailDispatchBudget.wakeLockMillisForJob(recipientCount)) {
+            EmailSender(config).send(
+                recipients = claimed.pendingRecipients,
+                subject = EmailBodyComposer.subject(claimed.sender),
+                body = composeEmailBody(claimed, sentAt),
+                // Stabile Message-ID je Auftrag: Eine Wiederholung nach Prozessverlust ist damit
+                // fuer Server und Client als Wiederholung erkennbar.
+                messageId = "${claimed.id}@${config.fromAddress.substringAfter('@', "sms-forwarder.local")}"
+            ) { address, failure ->
+                // Der Rueckgabewert entscheidet, ob weitergesendet wird.
+                val result = emailQueue.update(job.id) {
+                    if (failure == null) {
+                        EmailDeliveryReducer.onRecipientDelivered(it, System.currentTimeMillis(), address)
+                    } else {
+                        EmailDeliveryReducer.onRecipientFailed(it, System.currentTimeMillis(), address, failure)
+                    }
+                }
+                when {
+                    // Ergebnis nicht haltbar: Der Auftragszustand bildet den tatsaechlichen
+                    // Versand nicht mehr ab, jeder weitere Empfaenger vergroesserte den Schaden.
+                    result == EmailQueueUpdate.NotStored -> {
+                        stateWriteFailed = true
+                        false
+                    }
+
+                    // Budget erschoepft: sauber aufhoeren, solange der WakeLock noch haelt. Die
+                    // offenen Empfaenger bleiben vermerkt und sind im naechsten Durchlauf dran.
+                    System.currentTimeMillis() >= jobDeadline -> false
+
+                    else -> true
+                }
+            }
+        }
+
+        when (outcome) {
+            is EmailSendOutcome.ConnectionFailed -> {
+                emailQueue.update(job.id) {
+                    EmailDeliveryReducer.onConnectionFailed(it, System.currentTimeMillis(), outcome.failure)
+                }
+                finishEmailAttempt(job.id)
+            }
+
+            EmailSendOutcome.Completed -> finishEmailAttempt(job.id)
+
+            EmailSendOutcome.Aborted -> if (stateWriteFailed) {
+                // Der Auftrag wird **nicht** abgeschlossen: Ein zugestellter Empfaenger, dessen
+                // Ergebnis fehlt, gaelte sonst als offen und bekaeme die Nachricht ein zweites
+                // Mal. Er bleibt in ATTEMPTING und wird ueber onStaleAttempt bzw.
+                // onProcessRestart kontrolliert wieder aufgenommen.
+                reportEmailStateWriteFailure(job)
+            } else {
+                // Beim Budgetabbruch ist der Zustand vollstaendig: Der Abschluss stellt die noch
+                // offenen Empfaenger als Neuversuch ein - kein Verlust, keine Dublette.
+                LoggingManager.logInfo(
+                    component = "SmsForegroundService",
+                    action = "EMAIL_JOB_BUDGET_EXHAUSTED",
+                    message = "Zeitbudget des Auftrags erschoepft - offene Empfaenger folgen im naechsten Durchlauf",
+                    details = mapOf(
+                        "job_id" to job.id,
+                        "recipients" to recipientCount,
+                        "budget_millis" to EmailDispatchBudget.forJob(recipientCount)
+                    )
+                )
+                finishEmailAttempt(job.id)
+            }
+        }
+    }
+
+    /**
+     * Ein Empfaengerergebnis liess sich nicht haltbar schreiben.
+     *
+     * Der Vermerk liegt **ausserhalb** der Queue: Deren Schreiben ist ja gerade das, was
+     * fehlgeschlagen ist. Ohne ihn bliebe der einzige Beleg ein Protokolleintrag, den niemand
+     * sieht - und die moegliche Doppelzustellung waere unerklaerlich.
+     */
+    private fun reportEmailStateWriteFailure(job: EmailForwardingJob) {
+        val recorded = runCatching {
+            prefsManager.recordEmailStateWriteFailure(System.currentTimeMillis())
+        }.getOrDefault(false)
+
+        LoggingManager.logError(
+            component = "SmsForegroundService",
+            action = "EMAIL_STATE_WRITE_FAILED",
+            message = if (recorded) {
+                "Empfaengerergebnis nicht haltbar geschrieben - Versand abgebrochen, Hinweis dauerhaft vermerkt"
+            } else {
+                "Empfaengerergebnis nicht haltbar geschrieben - Versand abgebrochen, Hinweis NUR im Protokoll"
+            },
+            details = mapOf(
+                "job_id" to job.id,
+                "sender" to MmiCodeMasker.maskNumber(job.sender),
+                "warning_persisted" to recorded
+            )
+        )
+        SnackbarManager.showError(getString(R.string.warning_email_state_write_failed))
+    }
+
+    /** Wertet die Empfaengerergebnisse aus und meldet nur den **endgueltigen** Ausgang. */
+    private fun finishEmailAttempt(jobId: String) {
+        val result = emailQueue.update(jobId) {
+            EmailDeliveryReducer.onAttemptFinished(it, System.currentTimeMillis())
+        }
+
+        if (result == EmailQueueUpdate.NotStored) {
+            // Anders als beim Abbruch mitten im Versand droht hier keine Dublette: Die
+            // Empfaengerergebnisse stehen bereits, der Auftrag bleibt in ATTEMPTING und wird
+            // ueber onStaleAttempt mit leerer Empfaengerliste sauber abgeschlossen.
+            LoggingManager.logError(
+                component = "SmsForegroundService",
+                action = "EMAIL_FINISH_COMMIT_FAILED",
+                message = "Abschluss des Versuchs nicht haltbar geschrieben - Auftrag bleibt zum Wiederanlauf offen",
+                details = mapOf("job_id" to jobId)
             )
             return
         }
 
-        val emailSender = EmailSender(host, port, username, password)
-        val subject = "Neue SMS von $sender"
-        val body = buildEmailBody(sender, messageBody)
+        val job = (result as? EmailQueueUpdate.Applied)?.job ?: return
 
-        when (val result = emailSender.sendEmail(emailAddresses, subject, body)) {
-            is EmailResult.Success -> {
+        when (job.state) {
+            EmailDeliveryState.SENT -> {
                 LoggingManager.logInfo(
                     component = "SmsForegroundService",
                     action = "EMAIL_FORWARD",
-                    message = "SMS erfolgreich per Email weitergeleitet",
+                    message = "SMS per E-Mail weitergeleitet",
                     details = mapOf(
-                        "sender" to sender,
-                        "recipients" to emailAddresses.size,
-                        "smtp_host" to host
+                        "sender" to MmiCodeMasker.maskNumber(job.sender),
+                        "recipients" to job.recipients.size,
+                        "attempt" to job.attempt
                     )
                 )
                 SnackbarManager.showSuccess(getString(R.string.snackbar_email_forward_success))
                 updateServiceStatus()
             }
 
-            // Ein gemeldeter Fehler wird wie eine Exception behandelt, damit beide Wege
-            // dieselbe Wiederholungsregel durchlaufen.
-            is EmailResult.Error -> throw java.io.IOException(result.message)
+            // Eine Meldung pro Fehlversuch waere Laerm: Der Nutzer sieht sie im Hintergrund
+            // ohnehin nicht, und der naechste Versuch steht bevor. Gemeldet wird das Ergebnis.
+            EmailDeliveryState.FAILED, EmailDeliveryState.PARTIAL -> {
+                LoggingManager.logError(
+                    component = "SmsForegroundService",
+                    action = "EMAIL_FORWARD_FAILED",
+                    message = "E-Mail-Weiterleitung endgueltig gescheitert",
+                    details = mapOf(
+                        "sender" to MmiCodeMasker.maskNumber(job.sender),
+                        "state" to job.state.name,
+                        "delivered" to job.deliveredCount,
+                        "recipients" to job.recipients.size,
+                        "attempt" to job.attempt,
+                        "failure_kind" to (job.lastFailure?.kind?.name ?: "unknown"),
+                        "return_code" to job.lastFailure?.returnCode
+                    )
+                )
+                SnackbarManager.showError(
+                    getString(R.string.snackbar_email_forward_failed_final, job.sender)
+                )
+            }
+
+            EmailDeliveryState.RETRY -> LoggingManager.logWarning(
+                component = "SmsForegroundService",
+                action = "EMAIL_FORWARD_RETRY",
+                message = "E-Mail-Versand fehlgeschlagen, Neuversuch geplant",
+                details = mapOf(
+                    "sender" to MmiCodeMasker.maskNumber(job.sender),
+                    "attempt" to job.attempt,
+                    "next_attempt_at" to job.nextAttemptAtMillis,
+                    "failure_kind" to (job.lastFailure?.kind?.name ?: "unknown")
+                )
+            )
+
+            else -> Unit
         }
+    }
+
+    private fun composeEmailBody(job: EmailForwardingJob, nowMillis: Long): String =
+        EmailBodyComposer.body(
+            sender = job.sender,
+            receivedAt = formatTimestamp(job.receivedAtMillis),
+            forwardedAt = formatTimestamp(nowMillis)
+                .takeIf { EmailBodyComposer.needsForwardedAt(job.receivedAtMillis, nowMillis) },
+            message = job.body
+        )
+
+    /** `null`, wenn die Konfiguration unvollstaendig ist - dann ist kein Versuch sinnvoll. */
+    private fun resolveSmtpConfig(): SmtpConfig? {
+        val host = prefsManager.getSmtpHost()
+        val username = prefsManager.getSmtpUsername()
+        val password = prefsManager.getSmtpPassword()
+        val from = prefsManager.getEffectiveSmtpFromAddress()
+
+        if (host.isBlank() || username.isBlank() || password.isBlank() || from.isBlank()) {
+            LoggingManager.logWarning(
+                component = "SmsForegroundService",
+                action = "EMAIL_CONFIG_INCOMPLETE",
+                message = "Unvollstaendige SMTP-Konfiguration",
+                details = mapOf(
+                    "has_host" to host.isNotBlank(),
+                    "has_username" to username.isNotBlank(),
+                    "has_credentials" to password.isNotBlank(),
+                    "has_from" to from.isNotBlank()
+                )
+            )
+            return null
+        }
+
+        return SmtpConfig(
+            host = host,
+            port = prefsManager.getSmtpPort(),
+            security = prefsManager.getSmtpSecurity(),
+            username = username,
+            password = password,
+            fromAddress = from
+        )
     }
 
     /**
-     * Wiederholt **ausschliesslich** den E-Mail-Versand.
+     * Netz vorhanden?
      *
-     * Frueher wurde die ganze Gruppe erneut verarbeitet; ein reiner SMTP-Ausfall erzeugte damit
-     * bis zu drei zusaetzliche, kostenpflichtige SMS.
+     * `NET_CAPABILITY_VALIDATED` wird bewusst **nicht** verlangt: Ein interner SMTP-Server kann
+     * ueber VPN oder LAN erreichbar sein, ohne dass Android eine oeffentliche Validierung meldet.
+     * Ist der Dienst gar nicht verfuegbar, wird im Zweifel versucht statt aufgeschoben.
      */
-    private fun handleEmailError(retryKey: String, sender: String, messageBody: String, error: Throwable) {
-        LoggingManager.logError(
-            component = "SmsForegroundService",
-            action = "EMAIL_FORWARD_FAILED",
-            message = "Email-Weiterleitung fehlgeschlagen",
-            error = error,
-            details = mapOf("sender" to sender, "error_type" to error.javaClass.simpleName)
-        )
-        SnackbarManager.showError(getString(R.string.snackbar_email_forward_failed, error.message ?: ""))
+    private fun isNetworkUsable(): Boolean = runCatching {
+        val manager = getSystemService(ConnectivityManager::class.java) ?: return@runCatching true
+        val capabilities = manager.getNetworkCapabilities(manager.activeNetwork)
+            ?: return@runCatching false
+        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        // Fehlt die Berechtigung wider Erwarten, wird versucht statt aufgeschoben: Ein
+        // unterbliebener Versand waere der groessere Schaden als ein vergeblicher.
+    }.getOrDefault(true)
 
-        if (activeEmailRetryJobs[retryKey]?.isActive == true) return
-
-        val attempt = emailRetryCounter.compute(retryKey) { _, value -> (value ?: 0) + 1 }!!
-        if (!EmailRetryPolicy.shouldRetry(error, attempt)) {
-            emailRetryCounter.remove(retryKey)
-            if (EmailRetryPolicy.isRetryable(error)) {
-                SnackbarManager.showError(
-                    getString(R.string.snackbar_email_retry_failed, sender, EmailRetryPolicy.MAX_RETRIES)
-                )
+    /**
+     * Eigener, auftragslokaler WakeLock fuer den SMTP-Versand.
+     *
+     * Getrennt von [wakeLock]: Jener wird von [withWakeLock] verwaltet, ist nicht
+     * referenzgezaehlt und wuerde beim Freigeben den jeweils anderen Halter mit abraeumen.
+     *
+     * @param timeoutMillis aus der Empfaengerzahl abgeleitet (siehe [EmailDispatchBudget]), damit
+     *   der Versand nicht laenger dauern kann als sein WakeLock haelt
+     */
+    private suspend fun <T> withEmailWakeLock(timeoutMillis: Long, block: suspend () -> T): T {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val lock = runCatching {
+            powerManager?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, emailWakeLockTag)?.apply {
+                setReferenceCounted(false)
+                acquire(timeoutMillis)
             }
-            return
-        }
+        }.getOrNull()
 
-        val job = serviceScope.launch {
-            delay(EmailRetryPolicy.delayMillis(attempt))
-            try {
-                withContext(Dispatchers.IO) { handleEmailForwarding(sender, messageBody) }
-                emailRetryCounter.remove(retryKey)
-            } catch (e: Exception) {
-                activeEmailRetryJobs.remove(retryKey)
-                handleEmailError(retryKey, sender, messageBody, e)
-            } finally {
-                activeEmailRetryJobs.remove(retryKey)
-            }
-        }
-        activeEmailRetryJobs[retryKey] = job
-    }
-
-    private fun buildEmailBody(sender: String, messageBody: String): String {
-        return buildString {
-            append("SMS Weiterleitung\n\n")
-            append("Absender: $sender\n")
-            append("Zeitpunkt: ${getCurrentTimestamp()}\n\n")
-            append("Nachricht:\n")
-            append(messageBody)
-            append("\n\nDiese E-Mail wurde automatisch durch den SMS Forwarder generiert.")
+        try {
+            return block()
+        } finally {
+            runCatching { if (lock?.isHeld == true) lock.release() }
         }
     }
 
@@ -947,9 +1364,9 @@ class SmsForegroundService : Service() {
         updateNotification(status)
     }
 
-    private fun getCurrentTimestamp(): String {
+    private fun formatTimestamp(millis: Long): String {
         return SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
-            .format(Date())
+            .format(Date(millis))
     }
 
     /** Kurzform fuer die Kopfzeile der Weiterleitung - jedes Zeichen kostet SMS-Laenge. */
@@ -1047,6 +1464,13 @@ class SmsForegroundService : Service() {
 
     override fun onDestroy() {
         try {
+            networkCallback?.let { callback ->
+                runCatching {
+                    getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(callback)
+                }
+            }
+            networkCallback = null
+
             // cancel() beendet automatisch alle child coroutines
             serviceScope.cancel()
 

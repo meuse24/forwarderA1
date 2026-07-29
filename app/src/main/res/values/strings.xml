@@ -433,9 +433,9 @@
     <string name="privacy_perm_battery_de">Akku-Optimierung ignorieren</string>
     <string name="privacy_perm_battery_body_de">• REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: Für kontinuierlichen Dienst\n\nAndroid kann Apps im Hintergrund stoppen, um Akku zu sparen. Diese Berechtigung verhindert, dass der SMS-Weiterleitungsdienst unerwartet beendet wird.</string>
     <string name="privacy_section_security_title_de">2. Datenverarbeitung und Sicherheit</string>
-    <string name="privacy_section_security_body_de">• Alle Einstellungen werden verschlüsselt und lokal gespeichert\n• SMTP-Passwörter werden mit androidx.security.crypto verschlüsselt\n• Das MMI-Audit enthält höchstens 200 maskierte Einträge für maximal 30 Tage; vollständige Zielnummern und rohe Netzantworten sind ausgeschlossen\n• Keine Daten werden an externe Server gesendet (außer E-Mail-Weiterleitung zu Ihrem SMTP-Server)\n• Die App ist für private Nutzung gedacht</string>
+    <string name="privacy_section_security_body_de">• Alle Einstellungen werden verschlüsselt und lokal gespeichert\n• SMTP-Passwörter werden mit androidx.security.crypto verschlüsselt\n• Weiterzuleitende Nachrichten werden bis zu ihrer Zustellung verschlüsselt zwischengespeichert. Sie enthalten den vollständigen SMS-Text, die Absendernummer und bei E-Mail-Weiterleitung die Empfängeradressen. Erledigte Einträge werden spätestens nach 7 Tagen gelöscht\n• Diese Zwischenspeicher sind von Cloud-Backup und Geräteübertragung ausgeschlossen und verlassen das Gerät nicht\n• Das MMI-Audit enthält höchstens 200 maskierte Einträge für maximal 30 Tage; vollständige Zielnummern und rohe Netzantworten sind ausgeschlossen\n• Keine Daten werden an externe Server gesendet (außer E-Mail-Weiterleitung zu Ihrem SMTP-Server)\n• Die App ist für private Nutzung gedacht</string>
     <string name="privacy_section_email_title_de">3. E-Mail-Weiterleitung (optional)</string>
-    <string name="privacy_section_email_body_de">Wenn Sie E-Mail-Weiterleitung aktivieren, werden SMS-Inhalte an die von Ihnen konfigurierten E-Mail-Adressen gesendet. Dazu sind SMTP-Zugangsdaten (Gmail, Outlook, etc.) erforderlich, die verschlüsselt gespeichert werden.</string>
+    <string name="privacy_section_email_body_de">Wenn Sie E-Mail-Weiterleitung aktivieren, werden SMS-Inhalte an die von Ihnen konfigurierten E-Mail-Adressen gesendet. Dazu sind SMTP-Zugangsdaten (Gmail, Outlook, etc.) erforderlich, die verschlüsselt gespeichert werden.\n\nÜbertragen werden Absendernummer, Empfangszeitpunkt und Nachrichtentext — ausschließlich an den von Ihnen angegebenen SMTP-Server. Die Verbindung ist stets verschlüsselt (STARTTLS oder SSL/TLS, mindestens TLS 1.2, mit Prüfung der Serveridentität); eine unverschlüsselte Übertragung ist nicht möglich. Jeder Empfänger erhält eine eigene Nachricht und sieht die übrigen Adressen nicht.\n\nGelingt die Zustellung nicht sofort, bleibt die Nachricht verschlüsselt auf dem Gerät gespeichert und wird bis zu 24 Stunden lang erneut versucht. Danach oder nach erfolgreicher Zustellung wird der Eintrag spätestens nach 7 Tagen gelöscht.</string>
     <string name="privacy_section_opensource_title_de">4. Open Source und Transparenz</string>
     <string name="privacy_section_opensource_body_de">Diese App ist Open Source und unter der MIT-Lizenz veröffentlicht. Der vollständige Quellcode ist verfügbar unter: https://github.com/meuse24/forwarderA1\n\nSie können den Code einsehen und prüfen, dass keine versteckten Funktionen oder Datensammlung vorhanden sind. Beiträge und Fehlermeldungen sind willkommen.</string>
     <string name="privacy_section_loop_protection_title_de">5. Loop-Schutz</string>
@@ -459,9 +459,9 @@
     <string name="privacy_perm_battery_en">Ignore Battery Optimization</string>
     <string name="privacy_perm_battery_body_en">• REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: For continuous service\n\nAndroid may stop background apps to save battery. This permission prevents the SMS forwarding service from being unexpectedly terminated.</string>
     <string name="privacy_section_security_title_en">2. Data Processing and Security</string>
-    <string name="privacy_section_security_body_en">• All settings are encrypted and stored on your device\n• SMTP passwords are encrypted using androidx.security.crypto\n• The MMI audit keeps at most 200 masked entries for up to 30 days; full destination numbers and raw carrier responses are excluded\n• No data is sent to external servers (except email forwarding to your SMTP server)\n• The app is designed for private use</string>
+    <string name="privacy_section_security_body_en">• All settings are encrypted and stored on your device\n• SMTP passwords are encrypted using androidx.security.crypto\n• Messages awaiting forwarding are cached encrypted until they are delivered. They contain the full SMS text, the sender number and, for email forwarding, the recipient addresses. Completed entries are deleted after 7 days at the latest\n• These caches are excluded from cloud backup and device transfer and never leave your device\n• The MMI audit keeps at most 200 masked entries for up to 30 days; full destination numbers and raw carrier responses are excluded\n• No data is sent to external servers (except email forwarding to your SMTP server)\n• The app is designed for private use</string>
     <string name="privacy_section_email_title_en">3. Email Forwarding (Optional)</string>
-    <string name="privacy_section_email_body_en">If you enable email forwarding, SMS contents will be sent to the email addresses you configure. This requires entering SMTP credentials (Gmail, Outlook, etc.), which are stored encrypted.</string>
+    <string name="privacy_section_email_body_en">If you enable email forwarding, SMS contents will be sent to the email addresses you configure. This requires entering SMTP credentials (Gmail, Outlook, etc.), which are stored encrypted.\n\nWhat is transmitted: sender number, time of receipt and message text — exclusively to the SMTP server you specify. The connection is always encrypted (STARTTLS or SSL/TLS, TLS 1.2 or higher, with server identity verification); unencrypted transmission is not possible. Each recipient receives a separate message and cannot see the other addresses.\n\nIf delivery does not succeed immediately, the message remains stored encrypted on your device and is retried for up to 24 hours. After that, or after successful delivery, the entry is deleted within 7 days at the latest.</string>
     <string name="privacy_section_opensource_title_en">4. Open Source and Transparency</string>
     <string name="privacy_section_opensource_body_en">This app is open source and licensed under the MIT License. The complete source code is available at: https://github.com/meuse24/forwarderA1\n\nYou can review the code and verify that there are no hidden features or data collection. Contributions and bug reports are welcome.</string>
     <string name="privacy_section_loop_protection_title_en">5. Loop Protection</string>
@@ -498,12 +498,12 @@
     <string name="help_email_heading">Email Forwarding (Optional)</string>
     <string name="help_email_intro">In addition to SMS forwarding, you can also forward SMS to any number of email addresses:</string>
     <string name="help_email_step1_title">Configure SMTP Server:</string>
-    <string name="help_email_step1_body">Open the &lt;b&gt;Setup&lt;/b&gt; tab and scroll to &lt;b&gt;Email Forwarding&lt;/b&gt;. Configure your SMTP server (Gmail, GMX, etc.) with server address, port, username and password. Use the presets for common providers.</string>
+    <string name="help_email_step1_body">Open the &lt;b&gt;Setup&lt;/b&gt; tab and scroll to &lt;b&gt;Email Forwarding&lt;/b&gt;. Configure your SMTP server (Gmail, GMX, etc.) with server address, encryption, username and password. Choose &lt;b&gt;STARTTLS&lt;/b&gt; for port 587 or &lt;b&gt;SSL/TLS&lt;/b&gt; for port 465 — the matching port is filled in for you. Leave &lt;b&gt;Sender address&lt;/b&gt; empty unless your login is not an email address; some providers require a separate sender.</string>
     <string name="help_email_step2_title">Add Email Addresses:</string>
     <string name="help_email_step2_body">Once the SMTP server is configured, the &lt;b&gt;Mail&lt;/b&gt; tab appears in the navigation. There you can add, delete and send test emails to addresses.</string>
     <string name="help_email_step3_title">Activate Forwarding:</string>
     <string name="help_email_step3_body">In the &lt;b&gt;Mail&lt;/b&gt; tab, enable the &lt;i&gt;\"Forward SMS to all emails\"&lt;/i&gt; toggle. Incoming SMS will now be forwarded in parallel via SMS and email.</string>
-    <string name="help_email_note">Email forwarding works independently from SMS forwarding. You can use both channels individually or combined.</string>
+    <string name="help_email_note">Email forwarding works independently from SMS forwarding. You can use both channels individually or combined. If the mail server cannot be reached, the message is kept and retried for up to 24 hours — a failure never triggers an additional SMS. Problems that cannot be fixed automatically, such as a rejected password, appear on the home screen.</string>
 
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Error loading contact: %1$s</string>
@@ -578,8 +578,6 @@
     <string name="snackbar_sim2_unavailable">SIM 2 unavailable, using default SIM</string>
     <string name="snackbar_message_too_long">Message too long for forwarding (max. %1$d chars)</string>
     <string name="snackbar_email_forward_success">SMS forwarded via Email</string>
-    <string name="snackbar_email_forward_error">Error forwarding via Email</string>
-    <string name="snackbar_email_forward_failed">Email forwarding failed: %1$s</string>
     <string name="snackbar_sms_sent_success">SMS successfully sent to %1$s</string>
     <string name="snackbar_sms_error_generic">SMS send error: Generic failure</string>
     <string name="snackbar_sms_error_no_service">SMS send error: No service</string>
@@ -675,7 +673,7 @@
     <string name="help_data_security_intro">Your data is protected:</string>
     <string name="help_data_security_1">All settings stored encrypted on device</string>
     <string name="help_data_security_2">No data sent to external servers</string>
-    <string name="help_data_security_3">SMS contents are not permanently stored</string>
+    <string name="help_data_security_3">SMS contents are cached encrypted only until they are delivered</string>
     <string name="help_data_security_4">SMTP passwords encrypted with Android Keystore</string>
     <string name="help_opensource_heading">Open Source</string>
     <string name="help_opensource_body">This app is open source under the MIT License. View the source code and report issues at:</string>
@@ -713,11 +711,44 @@
     <string name="warning_queue_corruption">%1$d entries of the forwarding list were lost on %2$s.</string>
     <string name="warning_queue_corruption_unknown">The forwarding list was unreadable on %1$s and has been recreated. How many entries were affected cannot be determined.</string>
     <string name="warning_service_timeout">The service was stopped by a system time limit on %1$s.</string>
-    <string name="warning_failed_operations">%1$d forwardings failed or remain unresolved.</string>
+    <plurals name="warning_failed_operations">
+        <item quantity="one">One forwarding failed or remains unresolved.</item>
+        <item quantity="other">%1$d forwardings failed or remain unresolved.</item>
+    </plurals>
     <string name="warning_acknowledge">Got it</string>
     <string name="warning_queue_write_failed">Forwarding could not be stored – no send attempt was made.</string>
     <string name="warning_queue_full">Forwarding queue is full – the message was not sent.</string>
     <string name="warning_dropped_forwardings">%1$d messages were not forwarded because the queue was full (most recently on %2$s).</string>
     <string name="warning_battery_optimization">Battery optimization is active – the system may stop the forwarding service.</string>
-    <string name="snackbar_email_retry_failed">Email for the SMS from %1$s failed after %2$d attempts</string>
+
+    <!-- ==================== EMAIL CHANNEL ==================== -->
+    <string name="warning_email_queue_full">Email queue is full – the message was not queued for sending.</string>
+    <string name="warning_email_queue_write_failed">Email forwarding could not be stored – no send attempt was made.</string>
+    <string name="snackbar_email_forward_failed_final">Email for the SMS from %1$s could not be delivered</string>
+    <plurals name="warning_failed_emails">
+        <item quantity="one">One email forwarding failed or was only partially delivered.</item>
+        <item quantity="other">%1$d email forwardings failed or were only partially delivered.</item>
+    </plurals>
+    <string name="warning_email_failure_detail">Most recent: SMS from %1$s of %2$s – %3$s</string>
+    <string name="warning_dropped_emails">%1$d messages were not forwarded by email because the queue was full (most recently on %2$s).</string>
+    <string name="warning_email_cause_authentication">The mail server rejected the login – check the SMTP password.</string>
+    <string name="warning_email_cause_configuration">SMTP settings are incomplete or the sender address is invalid.</string>
+    <string name="warning_email_cause_recipient">The mail server rejected the recipient address.</string>
+    <string name="warning_email_cause_permanent">The mail server rejected the message permanently.</string>
+    <string name="warning_email_cause_transport_security">No encrypted connection possible – check port and encryption mode.</string>
+    <string name="warning_email_cause_transient">The mail server could not be reached.</string>
+    <string name="warning_email_cause_unknown">The reason is unknown.</string>
+    <string name="warning_email_state_write_failed">Delivery state could not be stored – sending was stopped.</string>
+    <string name="warning_email_state_write_failed_at">On %1$s the delivery state of an email forwarding could not be stored. That message may be delivered twice.</string>
+
+    <!-- ==================== SMTP SETTINGS ==================== -->
+    <string name="label_smtp_security">Encryption</string>
+    <string name="option_smtp_starttls">STARTTLS (587)</string>
+    <string name="option_smtp_implicit_tls">SSL/TLS (465)</string>
+    <string name="label_smtp_from_address">Sender address</string>
+    <string name="desc_smtp_from_address">Leave empty to use the username. Required whenever the login is not an email address.</string>
+    <string name="error_smtp_port_empty">Please enter a port.</string>
+    <string name="error_smtp_port_not_a_number">Port must be a number.</string>
+    <string name="error_smtp_port_out_of_range">Port must be between 1 and 65535.</string>
+    <string name="error_smtp_from_invalid">Not a valid email address.</string>
 </resources>

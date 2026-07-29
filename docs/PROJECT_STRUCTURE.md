@@ -89,8 +89,16 @@ info.meuse24.smsforwarderneoA1/
 | Datei | Zeilen | Beschreibung |
 |-------|--------|--------------|
 | `data/local/FileLoggingTree.kt` | ~250 | Timber-basiertes Logging (JSON Lines) |
-| `data/local/SharedPreferencesManager.kt` | 505 | Encrypted SharedPreferences |
+| `data/local/SharedPreferencesManager.kt` | ~1.070 | Encrypted SharedPreferences: Konfiguration, MMI-Audit, Warnzustände |
+| `data/local/ForwardingQueueStore.kt` | ~265 | Persistente SMS-Weiterleitungs-Queue, eigene verschlüsselte Datei, `commit()` je Übergang |
+| `data/local/EmailQueueStore.kt` | ~275 | Persistente E-Mail-Queue, gleicher Aufbau, eigene Datei |
 | `data/local/PermissionHandler.kt` | 86 | Runtime Permission Management |
+
+Beide Queues liegen in **eigenen** verschlüsselten Dateien, getrennt von der Konfiguration: Eine
+defekte Queue reisst die Einstellungen nicht mit, und der Korruptionswarnzustand liegt umgekehrt in
+den Konfigurations-Preferences — im Ereignisfall ist ja gerade die Queue-Datei die unlesbare. Beide
+sind von Cloud-Backup und Geräteübertragung ausgeschlossen (`backup_rules.xml`,
+`data_extraction_rules.xml`).
 
 **Features**:
 - Encrypted storage via `androidx.security.crypto`
@@ -174,15 +182,34 @@ components/navigation/
 
 ### Domain Models
 
-| Model | Zeilen | Beschreibung |
-|-------|--------|--------------|
-| `domain/model/LogEntry.kt` | 37 | Log entry mit Timestamp & Formatierung |
-| `domain/model/Contact.kt` | 27 | Kontakt mit normalisierter Nummer |
-| `domain/model/SimInfo.kt` | 15 | SIM-Karten Informationen |
+Die Auswahl unten zeigt die tragenden Modelle; das Paket enthält darüber hinaus die MMI-/USSD-
+Modelle (`Mmi*`), die Warnzustände und weitere Value Objects.
+
+| Model | Beschreibung |
+|-------|--------------|
+| `domain/model/LogEntry.kt` | Log entry mit Timestamp & Formatierung |
+| `domain/model/Contact.kt` | Kontakt mit normalisierter Nummer |
+| `domain/model/SimInfo.kt` | SIM-Karten Informationen |
+| **SMS-Kanal** | |
+| `ForwardingOperation.kt` | Zustand einer SMS-Weiterleitung, Rückmeldungen als Mengen von Teilindizes |
+| `SmsDeliveryReducer.kt` | Zustandsmaschine; Neuversand nur bei belegtem Fehlschlag |
+| `ForwardingQueueRetentionPolicy.kt` | Aufbewahrung: 50 Einträge / 7 Tage, verdrängt nur Terminales |
+| `SmsForwardingComposer.kt` | Gruppierung mehrteiliger Nachrichten, Kopfzeile, Kürzungsregel |
+| **E-Mail-Kanal** | |
+| `EmailForwardingJob.kt` | Auftrag mit Zustellstand **je Empfänger** |
+| `EmailDeliveryReducer.kt` | Zustandsmaschine; im Zweifel erneut senden (Umkehrung der SMS-Regel) |
+| `EmailFailure.kt` | Fehlerursachen: transient, Anmeldung, Empfänger, permanent, Konfiguration, TLS |
+| `SmtpFailureClassifier.kt` | Antwortcode/Klassenname → Ursache, ohne JavaMail-Abhängigkeit |
+| `EmailRetryPolicy.kt` | Backoff 1/5/15/60 min, dann 3 h; Frist 24 h |
+| `EmailDispatchBudget.kt` | Zeitbudget je Auftrag und Durchlauf, WakeLock-Laufzeit |
+| `EmailQueueRetentionPolicy.kt` | Aufbewahrung: 100 Einträge / 7 Tage |
+| `EmailTransportSecurity.kt` | STARTTLS / implizites TLS samt Portableitung |
+| `EmailPortPolicy.kt` | Portprüfung (1–65535) |
+| `EmailBodyComposer.kt` | Betreff und Text, Empfangs- statt Versandzeit |
 
 **Features**:
-- Framework-unabhängig
-- Business logic
+- Framework-unabhängig, ohne Android- und ohne JavaMail-Abhängigkeit
+- Die Zustandslogik beider Kanäle ist damit ohne Gerät prüfbar (siehe Unit-Tests)
 - Value Objects
 
 ---
@@ -193,7 +220,7 @@ components/navigation/
 
 | Package | Datei | Zeilen | Beschreibung |
 |---------|-------|--------|--------------|
-| `util/email/` | EmailSender.kt | 91 | SMTP Email Versand (JavaMail) |
+| `util/email/` | EmailSender.kt | ~250 | SMTP-Versand (JavaMail): eine Verbindung je Auftrag, **ein Empfänger je Nachricht**, erzwungenes STARTTLS oder implizites TLS, typisierte Fehlerursachen |
 | `util/phone/` | CarrierTrie.kt | 64 | Carrier Prefix Lookup (Trie) |
 | `util/sms/` | Gsm7BitEncoder.kt | 60 | GSM 7-bit Encoding |
 | `util/permission/` | PermissionHelper.kt | 35 | Permission Utilities |

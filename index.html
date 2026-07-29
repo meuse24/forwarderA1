@@ -352,7 +352,7 @@
     <div class="container">
         <header class="header">
             <h1>SMS/TEL Forwarder Neo</h1>
-            <p>Version: Barracuda 4.1.0 (V4.1.0)</p>
+            <p>Version: Barracuda 5.0.0 (V5.0.0)</p>
         </header>
 
         <main class="content">
@@ -437,7 +437,9 @@
                     <h3>🔒 Sicherheit &amp; Datenschutz</h3>
                     <ul>
                         <li><strong>Verschlüsselte Präferenzen:</strong> Alle Einstellungen werden verschlüsselt gespeichert</li>
-                        <li><strong>Keine Cloud-Synchronisation:</strong> Alle Daten bleiben lokal auf dem Gerät</li>
+                        <li><strong>Keine Cloud-Synchronisation:</strong> Alle Daten bleiben lokal auf dem Gerät. Einzige Ausnahme ist die optionale E-Mail-Weiterleitung: Sie überträgt Absender, Empfangszeitpunkt und Nachrichtentext an den SMTP-Server, den Sie selbst angeben — es gibt keinen Server des Herausgebers</li>
+                        <li><strong>Erzwungene Transportverschlüsselung:</strong> E-Mails gehen nur über STARTTLS oder SSL/TLS hinaus, mindestens TLS 1.2 und mit Prüfung der Serveridentität; unverschlüsselt wird nicht gesendet</li>
+                        <li><strong>Zwischenspeicher mit Verfallsdatum:</strong> Noch nicht zugestellte Weiterleitungen liegen verschlüsselt auf dem Gerät, sind vom Cloud-Backup ausgenommen und werden spätestens nach 7 Tagen gelöscht</li>
                         <li><strong>Maskiertes MMI-Audit:</strong> Höchstens 200 Einträge für maximal 30 Tage; keine vollständigen Zielnummern oder rohen Netzantworten</li>
                         <li><strong>Open Source (MIT):</strong> Vollständig transparenter Quellcode auf GitHub</li>
                         <li><strong>Keine Tracking-Dienste:</strong> Keinerlei Datensammlung oder Analytics</li>

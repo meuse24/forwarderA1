@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import info.meuse24.smsforwarderneoA1.R
+import info.meuse24.smsforwarderneoA1.data.local.EmailQueueStore
 import info.meuse24.smsforwarderneoA1.data.local.FileLoggingTree
 import info.meuse24.smsforwarderneoA1.data.local.ForwardingQueueStore
 import info.meuse24.smsforwarderneoA1.data.local.PermissionHandler
@@ -48,6 +49,10 @@ object AppContainer {
     lateinit var forwardingQueue: ForwardingQueueStore
         private set
 
+    /** Persistente E-Mail-Queue. Getrennt vom SMS-Kanal, mit eigener Zustellsemantik. */
+    lateinit var emailQueue: EmailQueueStore
+        private set
+
     private lateinit var phoneUtils: PhoneSmsUtils.Companion
 
     fun initializeCritical(app: SmsForwarderApplication) {
@@ -55,6 +60,7 @@ object AppContainer {
         application = app
         prefsManager = SharedPreferencesManager(app)
         forwardingQueue = ForwardingQueueStore(app, prefsManager)
+        emailQueue = EmailQueueStore(app, prefsManager)
         PhoneSmsUtils.initialize()
         phoneUtils = PhoneSmsUtils
         _isBasicInitialized.value = true
@@ -103,6 +109,16 @@ object AppContainer {
 
     fun getForwardingQueueSafe(): ForwardingQueueStore? =
         if (::forwardingQueue.isInitialized) forwardingQueue else null
+
+    fun requireEmailQueue(): EmailQueueStore {
+        if (!::emailQueue.isInitialized) {
+            throw IllegalStateException("EmailQueue not initialized. Call initializeCritical() first.")
+        }
+        return emailQueue
+    }
+
+    fun getEmailQueueSafe(): EmailQueueStore? =
+        if (::emailQueue.isInitialized) emailQueue else null
 
     fun requirePermissionHandler(): PermissionHandler {
         if (!::permissionHandler.isInitialized) {

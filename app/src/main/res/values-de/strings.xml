@@ -447,12 +447,12 @@
     <string name="help_email_heading">Email-Weiterleitung (optional)</string>
     <string name="help_email_intro">Zusätzlich zur SMS-Weiterleitung können Sie SMS auch an beliebig viele Email-Adressen weiterleiten:</string>
     <string name="help_email_step1_title">SMTP-Server konfigurieren:</string>
-    <string name="help_email_step1_body">Öffnen Sie den &lt;b&gt;Setup&lt;/b&gt; Tab und scrollen Sie zu &lt;b&gt;Email-Weiterleitung&lt;/b&gt;. Konfigurieren Sie Ihren SMTP-Server (Gmail, GMX, etc.) mit Server-Adresse, Port, Benutzername und Passwort. Verwenden Sie die Voreinstellungen für gängige Anbieter.</string>
+    <string name="help_email_step1_body">Öffnen Sie den &lt;b&gt;Setup&lt;/b&gt; Tab und scrollen Sie zu &lt;b&gt;Email-Weiterleitung&lt;/b&gt;. Konfigurieren Sie Ihren SMTP-Server (Gmail, GMX, etc.) mit Server-Adresse, Verschlüsselung, Benutzername und Passwort. Wählen Sie &lt;b&gt;STARTTLS&lt;/b&gt; für Port 587 oder &lt;b&gt;SSL/TLS&lt;/b&gt; für Port 465 — der passende Port wird automatisch eingetragen. Das Feld &lt;b&gt;Absenderadresse&lt;/b&gt; bleibt leer, solange Ihr Benutzername eine E-Mail-Adresse ist; manche Anbieter verlangen dort einen eigenen Absender.</string>
     <string name="help_email_step2_title">Email-Adressen hinzufügen:</string>
     <string name="help_email_step2_body">Sobald der SMTP-Server konfiguriert ist, erscheint der &lt;b&gt;Mail&lt;/b&gt; Tab in der Navigation. Dort können Sie Email-Adressen hinzufügen, löschen und Test-Emails versenden.</string>
     <string name="help_email_step3_title">Weiterleitung aktivieren:</string>
     <string name="help_email_step3_body">Aktivieren Sie im &lt;b&gt;Mail&lt;/b&gt; Tab den Schalter &lt;i&gt;\"SMS an alle E-Mails weiterleiten\"&lt;/i&gt;. Eingehende SMS werden nun parallel per SMS und Email weitergeleitet.</string>
-    <string name="help_email_note">Die Email-Weiterleitung funktioniert unabhängig von der SMS-Weiterleitung. Sie können beide Kanäle einzeln oder kombiniert nutzen.</string>
+    <string name="help_email_note">Die Email-Weiterleitung funktioniert unabhängig von der SMS-Weiterleitung. Sie können beide Kanäle einzeln oder kombiniert nutzen. Ist der Mailserver nicht erreichbar, bleibt die Nachricht gespeichert und wird bis zu 24 Stunden lang erneut versucht — ein Fehlschlag löst nie eine zusätzliche SMS aus. Probleme, die sich nicht von selbst beheben, etwa ein abgelehntes Passwort, erscheinen auf der Startseite.</string>
 
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Fehler beim Laden des Kontakts: %1$s</string>
@@ -580,14 +580,14 @@
     <!-- Security Section -->
     <string name="privacy_section_security_title_de">Datensicherheit</string>
     <string name="privacy_section_security_title_en">Data Security</string>
-    <string name="privacy_section_security_body_de">Alle Einstellungen und sensiblen Daten werden verschlüsselt auf Ihrem Gerät gespeichert. Das lokale MMI-Audit enthält höchstens 200 Einträge für maximal 30 Tage und nur maskierte Codes, Nummern und Netzantworten. Vollständige Zielnummern und rohe Netzantworten werden dort nicht gespeichert. Es werden keine Daten an externe Server übertragen.</string>
-    <string name="privacy_section_security_body_en">All settings and sensitive data are stored encrypted on your device. The local MMI audit keeps at most 200 entries for up to 30 days and contains only masked codes, numbers, and carrier responses. Full destination numbers and raw carrier responses are not stored there. No data is transmitted to external servers.</string>
+    <string name="privacy_section_security_body_de">Alle Einstellungen und sensiblen Daten werden verschlüsselt auf Ihrem Gerät gespeichert. Weiterzuleitende Nachrichten werden bis zu ihrer Zustellung verschlüsselt zwischengespeichert; diese Zwischenspeicher enthalten den vollständigen SMS-Text, die Absendernummer und bei E-Mail-Weiterleitung die Empfängeradressen. Erledigte Einträge werden spätestens nach 7 Tagen gelöscht. Die Zwischenspeicher sind von Cloud-Backup und Geräteübertragung ausgeschlossen. Das lokale MMI-Audit enthält höchstens 200 Einträge für maximal 30 Tage und nur maskierte Codes, Nummern und Netzantworten. Vollständige Zielnummern und rohe Netzantworten werden dort nicht gespeichert. Es werden keine Daten an externe Server übertragen.</string>
+    <string name="privacy_section_security_body_en">All settings and sensitive data are stored encrypted on your device. Messages awaiting forwarding are cached encrypted until they are delivered; these caches contain the full SMS text, the sender number and, for email forwarding, the recipient addresses. Completed entries are deleted after 7 days at the latest. The caches are excluded from cloud backup and device transfer. The local MMI audit keeps at most 200 entries for up to 30 days and contains only masked codes, numbers, and carrier responses. Full destination numbers and raw carrier responses are not stored there. No data is transmitted to external servers.</string>
 
     <!-- Email Section -->
     <string name="privacy_section_email_title_de">E-Mail-Weiterleitung</string>
     <string name="privacy_section_email_title_en">Email Forwarding</string>
-    <string name="privacy_section_email_body_de">Wenn Sie die E-Mail-Weiterleitung aktivieren, werden Ihre SMTP-Zugangsdaten verschlüsselt gespeichert und nur zum Versenden von SMS-Weiterleitungen verwendet.</string>
-    <string name="privacy_section_email_body_en">If you enable email forwarding, your SMTP credentials are stored encrypted and used only for sending SMS forwards.</string>
+    <string name="privacy_section_email_body_de">Wenn Sie die E-Mail-Weiterleitung aktivieren, werden Ihre SMTP-Zugangsdaten verschlüsselt gespeichert und nur zum Versenden von SMS-Weiterleitungen verwendet.\n\nÜbertragen werden Absendernummer, Empfangszeitpunkt und Nachrichtentext — ausschließlich an den von Ihnen angegebenen SMTP-Server. Die Verbindung ist stets verschlüsselt (STARTTLS oder SSL/TLS, mindestens TLS 1.2, mit Prüfung der Serveridentität). Jeder Empfänger erhält eine eigene Nachricht und sieht die übrigen Adressen nicht.\n\nGelingt die Zustellung nicht sofort, bleibt die Nachricht verschlüsselt auf dem Gerät gespeichert und wird bis zu 24 Stunden lang erneut versucht.</string>
+    <string name="privacy_section_email_body_en">If you enable email forwarding, your SMTP credentials are stored encrypted and used only for sending SMS forwards.\n\nWhat is transmitted: sender number, time of receipt and message text — exclusively to the SMTP server you specify. The connection is always encrypted (STARTTLS or SSL/TLS, TLS 1.2 or higher, with server identity verification). Each recipient receives a separate message and cannot see the other addresses.\n\nIf delivery does not succeed immediately, the message remains stored encrypted on your device and is retried for up to 24 hours.</string>
 
     <!-- Open Source Section -->
     <string name="privacy_section_opensource_title_de">Open Source</string>
@@ -620,8 +620,6 @@
     <!-- Email -->
     <string name="snackbar_email_add_error">Fehler beim Hinzufügen der E-Mail-Adresse</string>
     <string name="snackbar_email_exists">E-Mail-Adresse existiert bereits</string>
-    <string name="snackbar_email_forward_error">Fehler beim Weiterleiten der SMS per E-Mail</string>
-    <string name="snackbar_email_forward_failed">E-Mail-Weiterleitung fehlgeschlagen</string>
     <string name="snackbar_email_forward_success">SMS erfolgreich per E-Mail weitergeleitet</string>
     <string name="snackbar_email_forwarding_disabled_no_addresses">E-Mail-Weiterleitung deaktiviert: Keine Adressen konfiguriert</string>
     <string name="snackbar_email_invalid">Ungültige E-Mail-Adresse</string>
@@ -726,7 +724,7 @@
     <string name="help_data_security_intro">Ihre Daten sind geschützt:</string>
     <string name="help_data_security_1">Alle Einstellungen verschlüsselt auf dem Gerät gespeichert</string>
     <string name="help_data_security_2">Keine Daten an externe Server gesendet</string>
-    <string name="help_data_security_3">SMS-Inhalte werden nicht dauerhaft gespeichert</string>
+    <string name="help_data_security_3">SMS-Inhalte werden nur bis zur Zustellung verschlüsselt zwischengespeichert</string>
     <string name="help_data_security_4">SMTP-Passwörter mit Android Keystore verschlüsselt</string>
     <string name="help_opensource_heading">Open Source</string>
     <string name="help_opensource_body">Diese App ist Open Source unter der MIT-Lizenz. Quellcode ansehen und Fehler melden unter:</string>
@@ -770,11 +768,44 @@
     <string name="warning_queue_corruption">%1$d Einträge der Weiterleitungsliste sind am %2$s verloren gegangen.</string>
     <string name="warning_queue_corruption_unknown">Die Weiterleitungsliste war am %1$s unlesbar und wurde neu angelegt. Wie viele Einträge betroffen waren, ist nicht feststellbar.</string>
     <string name="warning_service_timeout">Der Dienst wurde am %1$s durch ein Zeitlimit des Systems beendet.</string>
-    <string name="warning_failed_operations">%1$d Weiterleitungen sind fehlgeschlagen oder ungeklärt.</string>
+    <plurals name="warning_failed_operations">
+        <item quantity="one">Eine Weiterleitung ist fehlgeschlagen oder ungeklärt.</item>
+        <item quantity="other">%1$d Weiterleitungen sind fehlgeschlagen oder ungeklärt.</item>
+    </plurals>
     <string name="warning_acknowledge">Verstanden</string>
     <string name="warning_queue_write_failed">Weiterleitung konnte nicht gespeichert werden – es wurde nicht gesendet.</string>
     <string name="warning_queue_full">Warteschlange voll – die Nachricht wurde nicht gesendet.</string>
     <string name="warning_dropped_forwardings">%1$d Nachrichten wurden nicht weitergeleitet, weil die Warteschlange voll war (zuletzt am %2$s).</string>
     <string name="warning_battery_optimization">Batterieoptimierung ist aktiv – das System kann den Weiterleitungsdienst beenden.</string>
-    <string name="snackbar_email_retry_failed">E-Mail zur SMS von %1$s nach %2$d Versuchen fehlgeschlagen</string>
+
+    <!-- ==================== E-MAIL-KANAL ==================== -->
+    <string name="warning_email_queue_full">E-Mail-Warteschlange voll – die Nachricht wurde nicht zum Versand eingereiht.</string>
+    <string name="warning_email_queue_write_failed">E-Mail-Weiterleitung konnte nicht gespeichert werden – kein Sendeversuch.</string>
+    <string name="snackbar_email_forward_failed_final">E-Mail zur SMS von %1$s konnte nicht zugestellt werden</string>
+    <plurals name="warning_failed_emails">
+        <item quantity="one">Eine E-Mail-Weiterleitung ist gescheitert oder wurde nur teilweise zugestellt.</item>
+        <item quantity="other">%1$d E-Mail-Weiterleitungen sind gescheitert oder wurden nur teilweise zugestellt.</item>
+    </plurals>
+    <string name="warning_email_failure_detail">Zuletzt: SMS von %1$s vom %2$s – %3$s</string>
+    <string name="warning_dropped_emails">%1$d Nachrichten wurden nicht per E-Mail weitergeleitet, weil die Warteschlange voll war (zuletzt am %2$s).</string>
+    <string name="warning_email_cause_authentication">Der Mailserver hat die Anmeldung abgelehnt – SMTP-Passwort prüfen.</string>
+    <string name="warning_email_cause_configuration">SMTP-Einstellungen unvollständig oder Absenderadresse ungültig.</string>
+    <string name="warning_email_cause_recipient">Der Mailserver hat die Empfängeradresse abgelehnt.</string>
+    <string name="warning_email_cause_permanent">Der Mailserver hat die Nachricht dauerhaft abgelehnt.</string>
+    <string name="warning_email_cause_transport_security">Keine verschlüsselte Verbindung möglich – Port und Verschlüsselungsart prüfen.</string>
+    <string name="warning_email_cause_transient">Der Mailserver war nicht erreichbar.</string>
+    <string name="warning_email_cause_unknown">Die Ursache ist unbekannt.</string>
+    <string name="warning_email_state_write_failed">Zustellstand nicht speicherbar – der Versand wurde angehalten.</string>
+    <string name="warning_email_state_write_failed_at">Am %1$s konnte der Zustellstand einer E-Mail-Weiterleitung nicht gespeichert werden. Diese Nachricht kann dadurch doppelt zugestellt werden.</string>
+
+    <!-- ==================== SMTP-EINSTELLUNGEN ==================== -->
+    <string name="label_smtp_security">Verschlüsselung</string>
+    <string name="option_smtp_starttls">STARTTLS (587)</string>
+    <string name="option_smtp_implicit_tls">SSL/TLS (465)</string>
+    <string name="label_smtp_from_address">Absenderadresse</string>
+    <string name="desc_smtp_from_address">Leer lassen, um den Benutzernamen zu verwenden. Nötig, wenn der Login keine E-Mail-Adresse ist.</string>
+    <string name="error_smtp_port_empty">Bitte einen Port eingeben.</string>
+    <string name="error_smtp_port_not_a_number">Der Port muss eine Zahl sein.</string>
+    <string name="error_smtp_port_out_of_range">Der Port muss zwischen 1 und 65535 liegen.</string>
+    <string name="error_smtp_from_invalid">Keine gültige E-Mail-Adresse.</string>
 </resources>

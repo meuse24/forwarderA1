@@ -126,8 +126,9 @@ Oder erstelle eine auf GitHub Pages basierend auf der in-app Policy.
 
 **Datenerfassung:**
 - ❌ Keine Daten werden gesammelt oder geteilt
-- ✅ Alle Daten bleiben lokal auf dem Gerät
+- ✅ Alle Daten bleiben lokal auf dem Gerät — **mit einer Ausnahme:** Bei aktiver E-Mail-Weiterleitung werden Absendernummer, Empfangszeitpunkt und Nachrichtentext an den vom Nutzer selbst angegebenen SMTP-Server übertragen. Empfänger und Server bestimmt ausschliesslich der Nutzer; es gibt keinen Server des Anbieters.
 - ✅ Verschlüsselte Speicherung
+- ✅ Weiterleitungen werden bis zur Zustellung verschlüsselt zwischengespeichert (SMS-Volltext, Absendernummer, bei E-Mail zusätzlich die Empfängeradressen), spätestens nach 7 Tagen gelöscht und von Cloud-Backup sowie Geräteübertragung ausgeschlossen
 - ✅ Lokales MMI-Audit ist maskiert und auf 200 Einträge bzw. 30 Tage begrenzt
 
 **Berechtigungen Begründung:**
@@ -137,6 +138,8 @@ Oder erstelle eine auf GitHub Pages basierend auf der in-app Policy.
 - `READ_PHONE_STATE`: SIM-Karten Erkennung (Dual-SIM)
 - `FOREGROUND_SERVICE`: Zuverlässige Hintergrundverarbeitung
 - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: Service-Kontinuität
+- `INTERNET`: E-Mail-Versand an den vom Nutzer konfigurierten SMTP-Server
+- `ACCESS_NETWORK_STATE`: Prüfung vor dem E-Mail-Versand, ob überhaupt eine Verbindung besteht; ohne sie würde jeder Versuch im Funkloch das Wiederholungsbudget verbrauchen. Installationszeit-Berechtigung ohne Nutzerabfrage, kein Zugriff auf personenbezogene Daten.
 
 **Paketsichtbarkeit (`<queries>`, keine Berechtigung):**
 - `com.google.android.apps.messaging`: Die App prüft, ob Google Messages installiert bzw. Standard-SMS-App ist, um zu erklären, warum RCS-Chats nicht weitergeleitet werden können. Es wird kein Zugriff auf fremde App-Daten gewährt; die Data-Safety-Angaben ändern sich dadurch nicht.

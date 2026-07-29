@@ -27,9 +27,7 @@ import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.domain.model.SmsCallbackUri
 import info.meuse24.smsforwarderneoA1.service.SmsDeliveredReceiver
 import info.meuse24.smsforwarderneoA1.service.SmsSentReceiver
-import info.meuse24.smsforwarderneoA1.util.email.EmailResult
 import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
-import info.meuse24.smsforwarderneoA1.util.email.EmailSender
 import info.meuse24.smsforwarderneoA1.util.permission.PermissionHelper
 import info.meuse24.smsforwarderneoA1.util.phone.CarrierTrie
 import java.io.IOException

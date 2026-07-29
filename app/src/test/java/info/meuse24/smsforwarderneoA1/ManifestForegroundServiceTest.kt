@@ -36,4 +36,12 @@ class ManifestForegroundServiceTest {
         assertTrue(content.contains("android.permission.FOREGROUND_SERVICE_SPECIAL_USE"))
         assertTrue(content.contains("android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"))
     }
+
+    /**
+     * Ohne ACCESS_NETWORK_STATE laesst sich vor einem SMTP-Versuch nicht feststellen, ob Netz
+     * vorhanden ist; jeder Versuch im Funkloch wuerde das Wiederholungsbudget aufbrauchen.
+     */
+    @Test fun theEmailChannelCanCheckForNetwork() {
+        assertTrue(manifest.contains("android.permission.ACCESS_NETWORK_STATE"))
+    }
 }
