@@ -17,7 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,10 +26,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import info.meuse24.smsforwarderneoA1.AppContainer
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.DroppedForwardingWarning
@@ -192,7 +195,22 @@ fun ForwardingWarningsCardHost(modifier: Modifier = Modifier) {
         }
     }
 
-    LaunchedEffect(Unit) { reload() }
+    // Bei jedem Sichtbarwerden neu bewerten, nicht nur beim ersten Aufbau. Genau hier kehrt der
+    // Nutzer aus den Systemeinstellungen zurueck - Batterieoptimierung freigegeben,
+    // Benachrichtigung erteilt. Eine Warnung, die den erledigten Zustand weiter anzeigt, ist
+    // schlimmer als keine: Sie widerspricht dem, was der Nutzer gerade selbst getan hat.
+    // addObserver stellt den Beobachter auf den aktuellen Zustand nach, deshalb deckt das auch
+    // den ersten Aufbau ab.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                scope.launch { reload() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     ForwardingWarningsCard(
         state = state,
