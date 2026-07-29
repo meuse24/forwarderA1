@@ -865,6 +865,10 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        // SIM-Daten koennen sich ausserhalb der App geaendert haben: SIM-Wechsel, Flugmodus,
+        // nachtraeglich erteilte Berechtigung. Sie werden sonst nur einmal beim Start gelesen.
+        viewModel.refreshSimInfo()
+
         // Prüfe ob alle Berechtigungen noch vorhanden sind
         if (!permissionHandler.hasAllPermissions()) {
             val missing = permissionHandler.getMissingPermissions()
@@ -1231,6 +1235,10 @@ class MainActivity : ComponentActivity() {
      * Führt notwendige Schritte nach erteilten Berechtigungen aus.
      */
     private fun completeInitializationAfterPermissions() {
+        // Das ViewModel entsteht bereits in onCreate, sein init lief also ohne Berechtigungen
+        // und damit ohne lesbare SIM-Daten. Jetzt nachholen.
+        viewModel.refreshSimInfo()
+
         // Starte Services und weitere Initialisierungen
         SmsForegroundService.startService(this@MainActivity)
 

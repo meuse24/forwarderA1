@@ -872,12 +872,40 @@ class ContactsViewModel(
         }
     }
 
-    /** Records a user-reported carrier-side failure without stopping SMS forwarding. */
+    /**
+     * Nimmt die Rückmeldung entgegen, dass das Netz die Rufumleitung nicht geschaltet hat,
+     * und stellt einen definierten Zustand her, statt weiter eine aktive Umleitung zu behaupten.
+     *
+     * Dazu wird der Deaktivierungscode gesendet: Er ist unschädlich, wenn ohnehin nichts
+     * geschaltet ist, und räumt auf, falls die Aktivierung doch teilweise gegriffen hat.
+     *
+     * Die Anzeige wird bewusst **nicht** sofort geleert. Das übernimmt erst
+     * [resolvePendingForwardingResult], wenn die Deaktivierung durch ist - und nur, wenn sie
+     * gelungen ist. "Keine Umleitung" zu behaupten, während das Netz womöglich noch umleitet,
+     * wäre der gefährlichere Irrtum: Anrufe gingen dann still woanders hin, während der Nutzer
+     * sie bei sich erwartet. Scheitert die Deaktivierung, bleibt der Zustand deshalb stehen
+     * und wird gemeldet.
+     *
+     * Damit endet auch die SMS-/E-Mail-Weiterleitung, denn `forwardingActive` trägt beide
+     * Bedeutungen. Wer bewusst weitermachen will, hat dafür [continueWithAssumedForwarding].
+     */
     fun reportForwardingFailure() {
         _showTransientForwardingHint.value = false
         _forwardingVerification.value = ForwardingVerification.USER_REPORTED_FAILURE
         prefsManager.saveForwardingVerification(ForwardingVerification.USER_REPORTED_FAILURE)
-        LoggingManager.logWarning(component = "ContactsViewModel", action = "FORWARDING_USER_REPORTED_FAILURE", message = "Nutzer meldet Fehler der Netzrufumleitung")
+        LoggingManager.logWarning(
+            component = "ContactsViewModel",
+            action = "FORWARDING_USER_REPORTED_FAILURE",
+            message = "Nutzer meldet Fehler der Netzrufumleitung - schalte zur Sicherheit ab"
+        )
+        SnackbarManager.showInfo(application.getString(R.string.snackbar_forwarding_safety_deactivation))
+        deactivateForwarding { result ->
+            if (result is ForwardingResult.Error) {
+                SnackbarManager.showError(
+                    application.getString(R.string.snackbar_forwarding_deactivation_error, result.message)
+                )
+            }
+        }
     }
 
     /** User explicitly accepts continuing the independent SMS forwarding despite a carrier-side warning. */
@@ -1447,15 +1475,7 @@ class ContactsViewModel(
                 // Lade gespeicherten MMI-SIM-Auswahl-Modus
                 _mmiSimSelectionMode.value = prefsManager.getMmiSimSelectionMode()
 
-                // Ermittle verfügbare SIM-Karten
-                val sims = PhoneSmsUtils.getAllSimInfo(application)
-                _availableSimCards.value = sims
-
-                // Ermittle Standard-SMS-SIM und Standard-Sprach-SIM
-                val defaultSims = PhoneSmsUtils.getDefaultSimIds(application)
-                _defaultSmsSubscriptionId.value = defaultSims?.first ?: -1
-                _defaultVoiceSubscriptionId.value = defaultSims?.second ?: -1
-                updateMmiSimA1Detection(sims)
+                applyPlatformSimInfo()
 
                 // Lade SMS-Empfangsfilter-Einstellungen
                 _sim1ReceiveEnabled.value = prefsManager.isSim1ReceiveEnabled()
@@ -1468,7 +1488,7 @@ class ContactsViewModel(
                     details = mapOf(
                         "sms_mode" to _simSelectionMode.value.name,
                         "mmi_mode" to _mmiSimSelectionMode.value.name,
-                        "available_sims" to sims.size,
+                        "available_sims" to _availableSimCards.value.size,
                         "default_sms_sub_id" to _defaultSmsSubscriptionId.value,
                         "default_voice_sub_id" to _defaultVoiceSubscriptionId.value,
                         "sim1_receive_enabled" to _sim1ReceiveEnabled.value,
@@ -1483,6 +1503,77 @@ class ContactsViewModel(
                     error = e
                 )
             }
+        }
+    }
+
+    /**
+     * Liest die vom System stammenden SIM-Daten neu ein.
+     *
+     * Notwendig, weil das ViewModel bereits in `onCreate` erzeugt wird - also **bevor** die
+     * Berechtigungen erteilt sind. `getAllSimInfo` liefert dann eine leere Liste, und ohne
+     * erneutes Lesen bliebe dieser Zustand die ganze Sitzung stehen: sichtbar als
+     * "Unbekannter Anbieter", folgenreich für die A1-Erkennung, die auf `carrierId`/`mccMnc`
+     * beruht. Deshalb zusätzlich nach der Berechtigungserteilung und bei jedem `onResume`
+     * (SIM-Wechsel, Flugmodus, Rückkehr aus dem Hintergrund).
+     *
+     * Aus den Einstellungen abgeleitete Werte bleiben unberührt - die halten ihre Setter aktuell.
+     */
+    fun refreshSimInfo() {
+        viewModelScope.launch {
+            runCatching { applyPlatformSimInfo() }.onFailure { error ->
+                LoggingManager.logError(
+                    component = "ContactsViewModel",
+                    action = "REFRESH_SIM_INFO",
+                    message = "SIM-Daten konnten nicht aktualisiert werden",
+                    error = error as? Exception ?: Exception(error)
+                )
+            }
+        }
+    }
+
+    private suspend fun applyPlatformSimInfo() = withContext(Dispatchers.IO) {
+        val sims = PhoneSmsUtils.getAllSimInfo(application)
+
+        // Eine leere Liste ist nicht davon zu unterscheiden, dass das Lesen fehlgeschlagen ist
+        // (fehlende Berechtigung, Binder-Fehler). Bereits bekannte Karten deshalb nicht wegen
+        // eines möglichen Leseproblems verwerfen - der nächste erfolgreiche Lauf korrigiert.
+        if (sims.isEmpty() && _availableSimCards.value.isNotEmpty()) {
+            LoggingManager.logWarning(
+                component = "ContactsViewModel",
+                action = "SIM_INFO_UNAVAILABLE",
+                message = "Keine SIM-Daten lesbar - behalte zuletzt bekannten Stand",
+                details = mapOf("known_sims" to _availableSimCards.value.size)
+            )
+            return@withContext
+        }
+
+        val defaultSims = PhoneSmsUtils.getDefaultSimIds(application)
+        val smsSubscriptionId = defaultSims?.first ?: -1
+        val voiceSubscriptionId = defaultSims?.second ?: -1
+        val changed = sims != _availableSimCards.value ||
+            smsSubscriptionId != _defaultSmsSubscriptionId.value ||
+            voiceSubscriptionId != _defaultVoiceSubscriptionId.value
+
+        _availableSimCards.value = sims
+        _defaultSmsSubscriptionId.value = smsSubscriptionId
+        _defaultVoiceSubscriptionId.value = voiceSubscriptionId
+        updateMmiSimA1Detection(sims)
+
+        // Nur protokollieren, wenn sich etwas geändert hat: onResume feuert häufig, und das
+        // Protokoll ist größenbegrenzt und wird exportiert.
+        if (changed) {
+            LoggingManager.logInfo(
+                component = "ContactsViewModel",
+                action = "SIM_INFO_REFRESHED",
+                message = "SIM-Daten aktualisiert",
+                details = mapOf(
+                    "available_sims" to sims.size,
+                    "carriers" to sims.joinToString { it.carrierName?.takeIf(String::isNotBlank) ?: "unknown" },
+                    "default_sms_sub_id" to smsSubscriptionId,
+                    "default_voice_sub_id" to voiceSubscriptionId,
+                    "a1_detection" to _mmiSimA1Detection.value.name
+                )
+            )
         }
     }
 

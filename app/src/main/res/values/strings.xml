@@ -507,6 +507,7 @@
     <string name="snackbar_contact_picker_denied">The contact picker did not release the selected number. Please try again.</string>
     <string name="snackbar_forwarding_activation_error">Forwarding could not be activated: %1$s</string>
     <string name="snackbar_forwarding_deactivation_error">Forwarding could not be deactivated: %1$s</string>
+    <string name="snackbar_forwarding_safety_deactivation">Failure reported — switching the call forwarding off to be safe.</string>
     <string name="snackbar_no_operation_to_retry">No call-forwarding operation available to repeat</string>
     <string name="snackbar_status_query_failed">Status query could not be sent</string>
     <string name="snackbar_no_sim_receive_enabled">⚠️ No SIM card enabled for SMS reception - SMS forwarding inactive!</string>

@@ -460,6 +460,7 @@
     <string name="snackbar_contact_picker_denied">Das Auswahlmenü hat die gewählte Rufnummer nicht freigegeben. Bitte erneut versuchen.</string>
     <string name="snackbar_forwarding_activation_error">Weiterleitung konnte nicht aktiviert werden: %1$s</string>
     <string name="snackbar_forwarding_deactivation_error">Weiterleitung konnte nicht deaktiviert werden: %1$s</string>
+    <string name="snackbar_forwarding_safety_deactivation">Fehler gemeldet — die Rufumleitung wird zur Sicherheit abgeschaltet.</string>
     <string name="snackbar_no_operation_to_retry">Kein Rufumleitungs-Vorgang zum Wiederholen verfügbar</string>
     <string name="snackbar_status_query_failed">Statusabfrage konnte nicht gesendet werden</string>
     <string name="snackbar_no_sim_receive_enabled">⚠️ Keine SIM-Karte für SMS-Empfang aktiviert - SMS-Weiterleitung inaktiv!</string>
