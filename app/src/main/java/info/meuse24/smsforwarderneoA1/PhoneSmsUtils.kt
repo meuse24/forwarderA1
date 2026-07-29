@@ -1609,6 +1609,27 @@ class PhoneSmsUtils private constructor() {
                 return "" // Signalisiert: Keine Erkennung möglich
             }
         }
+
+        /**
+         * Liefert die ISO-3166-Region der SIM fuer libphonenumber (z.B. "AT").
+         *
+         * Anders als [getSimCardCountryCode] ist das Ergebnis nicht auf AT/CH/DE beschraenkt:
+         * Nationale Rufnummern eines Kontakts lassen sich nur mit der passenden Region nach
+         * E.164 aufloesen. Ohne erkennbare SIM bleibt Oesterreich der Default der App.
+         */
+        fun getSimRegionIso(context: Context): String {
+            val fallback = "AT"
+            return try {
+                val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+                    ?: return fallback
+                val iso = telephonyManager.simCountryIso?.takeIf { it.isNotBlank() }
+                    ?: telephonyManager.networkCountryIso?.takeIf { it.isNotBlank() }
+                iso?.uppercase() ?: fallback
+            } catch (e: Exception) {
+                logMsg("Fehler bei der Erkennung der SIM-Region: ${e.message}", e)
+                fallback
+            }
+        }
     }
 }
 

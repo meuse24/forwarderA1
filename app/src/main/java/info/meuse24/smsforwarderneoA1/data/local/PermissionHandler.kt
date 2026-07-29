@@ -12,7 +12,7 @@ import info.meuse24.smsforwarderneoA1.MainActivity
 /**
  * Permission handler for runtime permission requests.
  *
- * Manages required permissions for SMS, contacts, and phone access.
+ * Manages required permissions for SMS and phone access.
  * Uses ActivityResultContracts for permission requests.
  */
 class PermissionHandler(private val activity: MainActivity) {
@@ -112,8 +112,16 @@ class PermissionHandler(private val activity: MainActivity) {
     companion object {
         private const val TAG = "PermissionHandler"
 
+        /**
+         * Ohne diese Berechtigungen kann die App ihre Aufgabe nicht erfuellen; fehlt eine,
+         * bricht der Start ab.
+         *
+         * Eine Kontakteberechtigung ist bewusst nicht darunter und auch nicht deklariert:
+         * Die Auswahl ueber `PickPhoneNumber` liefert die Rufnummer samt temporaerer
+         * Leseberechtigung auf deren Datenzeile. Die App braucht genau ein Weiterleitungsziel
+         * und liest es sofort aus - Zugriff auf das Adressbuch waere dafuer unverhaeltnismaessig.
+         */
         private val PERMISSIONS_BASE = arrayOf(
-            Manifest.permission.READ_CONTACTS,
             Manifest.permission.SEND_SMS,
             Manifest.permission.RECEIVE_SMS,
             Manifest.permission.CALL_PHONE,

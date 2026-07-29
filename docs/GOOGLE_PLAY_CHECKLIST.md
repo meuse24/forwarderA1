@@ -133,7 +133,7 @@ Oder erstelle eine auf GitHub Pages basierend auf der in-app Policy.
 
 **Berechtigungen Begründung:**
 - `RECEIVE_SMS` / `SEND_SMS`: SMS-Weiterleitung (Kernfunktion)
-- `READ_CONTACTS`: Kontaktauswahl für Weiterleitungsziel
+- **Keine Kontakteberechtigung**: `READ_CONTACTS` ist nicht deklariert. Die Auswahl des Weiterleitungsziels läuft über den System-Picker (`ACTION_PICK` auf `Phone.CONTENT_URI`), der allein die gewählte Rufnummer freigibt und dafür temporären Lesezugriff auf deren Daten-URI delegiert. Die Nummer wird sofort gelesen und normalisiert gespeichert; das Adressbuch wird zu keinem Zeitpunkt gelesen
 - `CALL_PHONE`: MMI-/USSD-Ausführung über die gewählte SIM, insbesondere A1-Sprach-MMI
 - `READ_PHONE_STATE`: SIM-Karten Erkennung (Dual-SIM)
 - `FOREGROUND_SERVICE`: Zuverlässige Hintergrundverarbeitung

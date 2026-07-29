@@ -15,9 +15,16 @@ class PhoneNumberValidator(private val context: Context? = null) {
      * Validiert und formatiert eine Telefonnummer.
      * @param phoneNumber Die zu validierende Telefonnummer
      * @param defaultRegion Der Default-Ländercode (z.B. "AT" für Österreich)
+     * @param requireMobile Erzwingt eine Mobilnummer. Für ein Weiterleitungsziel bewusst
+     *   abschaltbar: Eine Netzrufumleitung auf eine Festnetznummer ist gültig, auch wenn
+     *   dorthin keine SMS zugestellt werden kann.
      * @return ValidatedPhoneNumber Objekt mit Validierungsergebnis
      */
-    fun validatePhoneNumber(phoneNumber: String, defaultRegion: String = "AT"): ValidatedPhoneNumber {
+    fun validatePhoneNumber(
+        phoneNumber: String,
+        defaultRegion: String = "AT",
+        requireMobile: Boolean = true
+    ): ValidatedPhoneNumber {
         try {
             // Versuche die Nummer zu parsen
             val numberProto = phoneUtil.parse(phoneNumber, defaultRegion)
@@ -32,7 +39,7 @@ class PhoneNumberValidator(private val context: Context? = null) {
             }
 
             // Prüfe ob es eine Mobilnummer ist (optional)
-            if (phoneUtil.getNumberType(numberProto) != PhoneNumberUtil.PhoneNumberType.MOBILE) {
+            if (requireMobile && phoneUtil.getNumberType(numberProto) != PhoneNumberUtil.PhoneNumberType.MOBILE) {
                 return ValidatedPhoneNumber(
                     isValid = false,
                     errorType = PhoneNumberError.NOT_MOBILE,

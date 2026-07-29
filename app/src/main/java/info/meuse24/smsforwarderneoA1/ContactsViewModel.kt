@@ -211,7 +211,7 @@ class ContactsViewModel(
 
     private fun PendingForwardingRequest.toPersistedOperation() = PersistedMmiOperation(
         id, action.name, code, executionMode, dialedAtMillis,
-        contact?.name, contact?.phoneNumber, contact?.description, state, verification, evidence,
+        contact?.name, contact?.phoneNumber, state, verification, evidence,
         targetSubscriptionId, dialPath, userMessage
     )
 
@@ -261,8 +261,7 @@ class ContactsViewModel(
         if (savedPhoneNumber.isNotEmpty() && _forwardingActive.value) {
             _selectedContact.value = Contact(
                 name = savedContactName.ifEmpty { "Unbekannt" },
-                phoneNumber = savedPhoneNumber,
-                description = savedPhoneNumber
+                phoneNumber = savedPhoneNumber
             )
 
             LoggingManager.logInfo(
@@ -293,7 +292,7 @@ class ContactsViewModel(
         val pending = PendingForwardingRequest(
             id = stored.id,
             action = action,
-            contact = stored.contactNumber?.let { Contact(stored.contactName.takeIf { !it.isNullOrBlank() } ?: "Unbekannt", it, stored.contactDescription ?: it) },
+            contact = stored.contactNumber?.let { Contact(stored.contactName.takeIf { !it.isNullOrBlank() } ?: "Unbekannt", it) },
             code = stored.code,
             executionMode = stored.mode,
             dialedAtMillis = stored.dialedAtMillis,
@@ -511,109 +510,168 @@ class ContactsViewModel(
     }
 
     /**
+     * Ergebnis der Umwandlung einer Picker-URI in ein Weiterleitungsziel.
+     *
+     * Die Fälle werden getrennt gehalten, weil sie für den Nutzer verschiedene Handlungen
+     * bedeuten: eine fehlende Nummer erfordert einen anderen Kontakt, eine entzogene
+     * Berechtigung einen Griff in die Systemeinstellungen.
+     */
+    private sealed interface ContactPickResult {
+        data class Selected(val contact: Contact) : ContactPickResult
+        data object NoPhoneNumber : ContactPickResult
+        data class NotDialable(val reason: String) : ContactPickResult
+
+        /**
+         * Das Auswahlmenü hat die Datenzeile der gewählten Rufnummer nicht freigegeben.
+         *
+         * Kein erwarteter Zustand: `ACTION_PICK` auf `Phone.CONTENT_URI` delegiert den
+         * Lesezugriff auf das Ergebnis. Tritt das auf, weicht die Picker-Implementierung des
+         * Geräts vom Vertrag ab - eine Kontakteberechtigung würde die App deshalb hier nicht
+         * anfordern.
+         */
+        data object PermissionDenied : ContactPickResult
+        data class ReadFailed(val reason: String) : ContactPickResult
+    }
+
+    /**
      * Handle contact picker result - extracts contact info from URI and activates forwarding
      */
     fun handleContactPickerResult(uri: Uri) {
         viewModelScope.launch {
-            try {
-                val contact = extractContactFromUri(uri)
-                if (contact != null) {
-                    // Activate forwarding to selected contact
-                    activateForwarding(contact) { result ->
-                        when (result) {
-                            is ForwardingResult.Success -> {
-                                // Erfolgsmeldung entfernt - Status ist im Log sichtbar
-                            }
-                            is ForwardingResult.Error -> {
-                                SnackbarManager.showError(
-                                    "Fehler beim Aktivieren der Weiterleitung: ${result.message}"
-                                )
-                            }
+            when (val picked = extractContactFromUri(uri)) {
+                is ContactPickResult.Selected -> activateForwarding(picked.contact) { result ->
+                    when (result) {
+                        is ForwardingResult.Success -> {
+                            // Erfolgsmeldung entfernt - Status ist im Log sichtbar
                         }
+                        is ForwardingResult.Error -> SnackbarManager.showError(
+                            application.getString(R.string.snackbar_forwarding_activation_error, result.message)
+                        )
                     }
-                } else {
-                    SnackbarManager.showError("Kontakt konnte nicht geladen werden")
                 }
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "ContactsViewModel",
-                    action = "CONTACT_PICKER_ERROR",
-                    message = "Fehler beim Verarbeiten des ausgewählten Kontakts",
-                    error = e
+
+                ContactPickResult.NoPhoneNumber ->
+                    SnackbarManager.showError(application.getString(R.string.snackbar_contact_no_number))
+
+                is ContactPickResult.NotDialable -> SnackbarManager.showError(
+                    application.getString(R.string.snackbar_contact_number_invalid, picked.reason)
                 )
-                SnackbarManager.showError("Fehler beim Laden des Kontakts: ${e.message}")
+
+                ContactPickResult.PermissionDenied ->
+                    SnackbarManager.showError(application.getString(R.string.snackbar_contact_picker_denied))
+
+                is ContactPickResult.ReadFailed -> SnackbarManager.showError(
+                    application.getString(R.string.snackbar_error_loading_contact, picked.reason)
+                )
             }
         }
     }
 
     /**
-     * Extract contact information from Contact Picker URI
+     * Liest die gewählte Rufnummer aus und macht sie wählbar.
+     *
+     * [uri] ist die Datenzeile **einer** Rufnummer (siehe `PickPhoneNumber`), nicht ein
+     * Kontakt. Deshalb genügt eine einzige Abfrage genau dieser Zeile: Der Nutzer hat die
+     * Nummer bereits ausgewählt, und die URI trägt die dafür nötige temporäre
+     * Leseberechtigung. Ein Zugriff auf die allgemeine Nummerntabelle entfällt damit - die
+     * App kommt ohne Kontakteberechtigung aus.
+     *
+     * Die Rufnummer wird auf E.164 normalisiert, **bevor** sie irgendwo gespeichert oder in
+     * einen MMI-Code eingesetzt wird. Adressbucheinträge enthalten regelmäßig Trennzeichen
+     * und Schreibweisen wie "+43 (0)664 …"; deren Null überlebt das Entfernen der
+     * Trennzeichen im Telefonie-Stack und würde beim Netz eine falsche Zielrufnummer
+     * registrieren. Eine Festnetznummer wird bewusst akzeptiert - die Netzrufumleitung
+     * dorthin ist gültig, auch wenn die SMS-Weiterleitung sie nicht erreicht.
      */
-    private suspend fun extractContactFromUri(uri: Uri): Contact? = withContext(Dispatchers.IO) {
+    private suspend fun extractContactFromUri(uri: Uri): ContactPickResult = withContext(Dispatchers.IO) {
         try {
             val contentResolver: ContentResolver = application.contentResolver
+            val cursor = contentResolver.query(
+                uri,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.NUMBER,
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.TYPE
+                ),
+                null,
+                null,
+                null
+            )
 
-            // Query contact ID from picker URI
-            val contactCursor = contentResolver.query(uri, null, null, null, null)
-            contactCursor?.use {
-                if (it.moveToFirst()) {
-                    val contactId = it.getString(it.getColumnIndexOrThrow(ContactsContract.Contacts._ID))
-                    val displayName = it.getString(it.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME))
+            cursor?.use {
+                if (!it.moveToFirst()) return@use
 
-                    // Query phone numbers for this contact
-                    val phoneCursor = contentResolver.query(
-                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        arrayOf(
-                            ContactsContract.CommonDataKinds.Phone.NUMBER,
-                            ContactsContract.CommonDataKinds.Phone.TYPE
-                        ),
-                        "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
-                        arrayOf(contactId),
-                        null
+                val rawNumber = it.getString(
+                    it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                ).orEmpty()
+                if (rawNumber.isBlank()) return@withContext ContactPickResult.NoPhoneNumber
+
+                val displayName = it.getString(
+                    it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                ).orEmpty().ifBlank { rawNumber }
+                val phoneType = it.getInt(
+                    it.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.TYPE)
+                )
+                val typeLabel = ContactsContract.CommonDataKinds.Phone.getTypeLabel(
+                    application.resources,
+                    phoneType,
+                    ""
+                ).toString()
+
+                val region = PhoneSmsUtils.getSimRegionIso(application)
+                val validated = PhoneNumberValidator(application)
+                    .validatePhoneNumber(rawNumber, region, requireMobile = false)
+                val normalized = validated.normalizedNumber
+                if (!validated.isValid || normalized.isNullOrBlank()) {
+                    LoggingManager.logWarning(
+                        component = "ContactsViewModel",
+                        action = "CONTACT_NUMBER_REJECTED",
+                        message = "Rufnummer des Kontakts ist nicht als Weiterleitungsziel verwendbar",
+                        details = mapOf(
+                            "number" to MmiCodeMasker.maskNumber(rawNumber),
+                            "region" to region,
+                            "error_type" to (validated.errorType?.name ?: "unknown")
+                        )
                     )
-
-                    phoneCursor?.use { phoneCurs ->
-                        if (phoneCurs.moveToFirst()) {
-                            val phoneNumber = phoneCurs.getString(
-                                phoneCurs.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                            )
-                            val phoneType = phoneCurs.getInt(
-                                phoneCurs.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.TYPE)
-                            )
-
-                            val typeLabel = ContactsContract.CommonDataKinds.Phone.getTypeLabel(
-                                application.resources,
-                                phoneType,
-                                ""
-                            ).toString()
-
-                            LoggingManager.logInfo(
-                                component = "ContactsViewModel",
-                                action = "CONTACT_EXTRACTED",
-                                message = "Kontakt aus Picker extrahiert",
-                                details = mapOf(
-                                    "name" to displayName,
-                                    "number" to MmiCodeMasker.maskNumber(phoneNumber),
-                                    "type" to typeLabel
-                                )
-                            )
-
-                            return@withContext Contact(
-                                name = displayName,
-                                phoneNumber = phoneNumber,
-                                description = "$phoneNumber ($typeLabel)"
-                            )
-                        }
-                    }
+                    return@withContext ContactPickResult.NotDialable(
+                        validated.errorMessage
+                            ?: application.getString(R.string.phone_error_invalid_number)
+                    )
                 }
+
+                LoggingManager.logInfo(
+                    component = "ContactsViewModel",
+                    action = "CONTACT_EXTRACTED",
+                    message = "Rufnummer aus Picker übernommen",
+                    details = mapOf(
+                        "name" to displayName,
+                        "number" to MmiCodeMasker.maskNumber(normalized),
+                        "type" to typeLabel,
+                        "region" to region,
+                        "normalized" to (normalized != rawNumber)
+                    )
+                )
+
+                return@withContext ContactPickResult.Selected(
+                    Contact(name = displayName, phoneNumber = normalized)
+                )
             }
 
             LoggingManager.logWarning(
                 component = "ContactsViewModel",
                 action = "CONTACT_EXTRACTION_FAILED",
-                message = "Keine Telefonnummer für ausgewählten Kontakt gefunden"
+                message = "Ausgewählte Rufnummer konnte nicht gelesen werden"
             )
-            null
+            ContactPickResult.NoPhoneNumber
+        } catch (e: SecurityException) {
+            // Vertragsbruch des Pickers: ACTION_PICK delegiert den Lesezugriff auf sein Ergebnis.
+            LoggingManager.logError(
+                component = "ContactsViewModel",
+                action = "EXTRACT_CONTACT_URI_DENIED",
+                message = "Auswahlmenü hat die Datenzeile der gewählten Rufnummer nicht freigegeben",
+                error = e
+            )
+            ContactPickResult.PermissionDenied
         } catch (e: Exception) {
             LoggingManager.logError(
                 component = "ContactsViewModel",
@@ -621,7 +679,7 @@ class ContactsViewModel(
                 message = "Fehler beim Extrahieren der Kontaktdaten",
                 error = e
             )
-            null
+            ContactPickResult.ReadFailed(e.message ?: e.javaClass.simpleName)
         }
     }
 
@@ -635,7 +693,9 @@ class ContactsViewModel(
                     // Erfolgsmeldung entfernt - Status ist im Log sichtbar
                 }
                 is ForwardingResult.Error -> {
-                    SnackbarManager.showError("Fehler beim Deaktivieren: ${result.message}")
+                    SnackbarManager.showError(
+                        application.getString(R.string.snackbar_forwarding_deactivation_error, result.message)
+                    )
                 }
             }
         }
@@ -812,12 +872,40 @@ class ContactsViewModel(
         }
     }
 
-    /** Records a user-reported carrier-side failure without stopping SMS forwarding. */
+    /**
+     * Nimmt die Rückmeldung entgegen, dass das Netz die Rufumleitung nicht geschaltet hat,
+     * und stellt einen definierten Zustand her, statt weiter eine aktive Umleitung zu behaupten.
+     *
+     * Dazu wird der Deaktivierungscode gesendet: Er ist unschädlich, wenn ohnehin nichts
+     * geschaltet ist, und räumt auf, falls die Aktivierung doch teilweise gegriffen hat.
+     *
+     * Die Anzeige wird bewusst **nicht** sofort geleert. Das übernimmt erst
+     * [resolvePendingForwardingResult], wenn die Deaktivierung durch ist - und nur, wenn sie
+     * gelungen ist. "Keine Umleitung" zu behaupten, während das Netz womöglich noch umleitet,
+     * wäre der gefährlichere Irrtum: Anrufe gingen dann still woanders hin, während der Nutzer
+     * sie bei sich erwartet. Scheitert die Deaktivierung, bleibt der Zustand deshalb stehen
+     * und wird gemeldet.
+     *
+     * Damit endet auch die SMS-/E-Mail-Weiterleitung, denn `forwardingActive` trägt beide
+     * Bedeutungen. Wer bewusst weitermachen will, hat dafür [continueWithAssumedForwarding].
+     */
     fun reportForwardingFailure() {
         _showTransientForwardingHint.value = false
         _forwardingVerification.value = ForwardingVerification.USER_REPORTED_FAILURE
         prefsManager.saveForwardingVerification(ForwardingVerification.USER_REPORTED_FAILURE)
-        LoggingManager.logWarning(component = "ContactsViewModel", action = "FORWARDING_USER_REPORTED_FAILURE", message = "Nutzer meldet Fehler der Netzrufumleitung")
+        LoggingManager.logWarning(
+            component = "ContactsViewModel",
+            action = "FORWARDING_USER_REPORTED_FAILURE",
+            message = "Nutzer meldet Fehler der Netzrufumleitung - schalte zur Sicherheit ab"
+        )
+        SnackbarManager.showInfo(application.getString(R.string.snackbar_forwarding_safety_deactivation))
+        deactivateForwarding { result ->
+            if (result is ForwardingResult.Error) {
+                SnackbarManager.showError(
+                    application.getString(R.string.snackbar_forwarding_deactivation_error, result.message)
+                )
+            }
+        }
     }
 
     /** User explicitly accepts continuing the independent SMS forwarding despite a carrier-side warning. */
@@ -835,7 +923,7 @@ class ContactsViewModel(
     /** Repeats the last completed MMI request with a new correlation id. */
     fun retryLastForwardingOperation() {
         val previous = lastCompletedForwardingRequest ?: run {
-            SnackbarManager.showError("Kein Rufumleitungs-Vorgang zum Wiederholen verfügbar")
+            SnackbarManager.showError(application.getString(R.string.snackbar_no_operation_to_retry))
             return
         }
         if (!MmiOperationPolicy.mayStartOperation(_pendingForwardingRequest.value != null, mmiReservationInProgress)) return
@@ -854,7 +942,8 @@ class ContactsViewModel(
         prefsManager.savePendingMmiRequest(retry.toPersistedOperation())
         schedulePendingMmiWatchdog(retry)
         onDialMmiCode?.invoke(retry.code) ?: resolvePendingForwardingResult(
-            retry.id, false, ForwardingVerification.DIAL_FAILED, "MMI_RETRY_NO_CALLBACK", "MMI-Code konnte nicht gesendet werden"
+            retry.id, false, ForwardingVerification.DIAL_FAILED, "MMI_RETRY_NO_CALLBACK",
+            application.getString(R.string.error_mmi_code_not_sent)
         )
     }
 
@@ -870,7 +959,7 @@ class ContactsViewModel(
                     action = "FORWARDING_REQUEST_BLOCKED",
                     message = "MMI-Vorgang läuft bereits; weitere Aktion verworfen"
                 )
-                onResult(ForwardingResult.Error("Ein Rufumleitungs-Vorgang läuft bereits"))
+                onResult(ForwardingResult.Error(application.getString(R.string.snackbar_forwarding_operation_running)))
                 return@launch
             }
             // Reserve before switching to Dispatchers.IO so a second tap cannot pass
@@ -880,7 +969,7 @@ class ContactsViewModel(
                 val result = when (action) {
                     ForwardingAction.ACTIVATE -> {
                         if (contact == null) {
-                            ForwardingResult.Error("Kein Kontakt für Aktivierung ausgewählt")
+                            ForwardingResult.Error(application.getString(R.string.error_no_contact_selected))
                         } else {
                             withContext(Dispatchers.IO) {
                                 activateForwardingInternal(contact)
@@ -904,7 +993,7 @@ class ContactsViewModel(
                                 activateForwardingInternal(contact)
                             }
                         } else {
-                            ForwardingResult.Error("Kein Kontakt für Toggle-Aktivierung ausgewählt")
+                            ForwardingResult.Error(application.getString(R.string.error_no_contact_selected))
                         }
                     }
                 }
@@ -928,7 +1017,7 @@ class ContactsViewModel(
                 )
                 onResult(
                     ForwardingResult.Error(
-                        "Fehler bei der Weiterleitung: ${e.message}",
+                        application.getString(R.string.error_forwarding_generic, e.message ?: e.javaClass.simpleName),
                         e.stackTraceToString()
                     )
                 )
@@ -966,7 +1055,7 @@ class ContactsViewModel(
                     ownNumber = ownNumber
                 )
 
-                return ForwardingResult.Error("Loop Protection: Weiterleitung an eigene SIM-Karte blockiert.")
+                return ForwardingResult.Error(application.getString(R.string.snackbar_loop_protection_own_sim))
             }
         }
 
@@ -989,7 +1078,7 @@ class ContactsViewModel(
                 action = "ACTIVATE_FORWARDING",
                 message = "Kein Callback für MMI-Code-Wahl gesetzt"
             )
-            return ForwardingResult.Error("MMI-Code konnte nicht gesendet werden")
+            return ForwardingResult.Error(application.getString(R.string.error_mmi_code_not_sent))
         }
 
         LoggingManager.logInfo(
@@ -1031,7 +1120,7 @@ class ContactsViewModel(
                 action = "DEACTIVATE_FORWARDING",
                 message = "Kein Callback für MMI-Code-Wahl gesetzt"
             )
-            return ForwardingResult.Error("MMI-Code konnte nicht gesendet werden")
+            return ForwardingResult.Error(application.getString(R.string.error_mmi_code_not_sent))
         }
 
         LoggingManager.logInfo(
@@ -1299,7 +1388,7 @@ class ContactsViewModel(
                 action = "QUERY_FORWARDING_STATUS",
                 message = "Kein Callback für MMI-Code-Wahl gesetzt"
             )
-            SnackbarManager.showError("Statusabfrage konnte nicht gesendet werden")
+            SnackbarManager.showError(application.getString(R.string.snackbar_status_query_failed))
             return
         }
 
@@ -1386,15 +1475,7 @@ class ContactsViewModel(
                 // Lade gespeicherten MMI-SIM-Auswahl-Modus
                 _mmiSimSelectionMode.value = prefsManager.getMmiSimSelectionMode()
 
-                // Ermittle verfügbare SIM-Karten
-                val sims = PhoneSmsUtils.getAllSimInfo(application)
-                _availableSimCards.value = sims
-
-                // Ermittle Standard-SMS-SIM und Standard-Sprach-SIM
-                val defaultSims = PhoneSmsUtils.getDefaultSimIds(application)
-                _defaultSmsSubscriptionId.value = defaultSims?.first ?: -1
-                _defaultVoiceSubscriptionId.value = defaultSims?.second ?: -1
-                updateMmiSimA1Detection(sims)
+                applyPlatformSimInfo()
 
                 // Lade SMS-Empfangsfilter-Einstellungen
                 _sim1ReceiveEnabled.value = prefsManager.isSim1ReceiveEnabled()
@@ -1407,7 +1488,7 @@ class ContactsViewModel(
                     details = mapOf(
                         "sms_mode" to _simSelectionMode.value.name,
                         "mmi_mode" to _mmiSimSelectionMode.value.name,
-                        "available_sims" to sims.size,
+                        "available_sims" to _availableSimCards.value.size,
                         "default_sms_sub_id" to _defaultSmsSubscriptionId.value,
                         "default_voice_sub_id" to _defaultVoiceSubscriptionId.value,
                         "sim1_receive_enabled" to _sim1ReceiveEnabled.value,
@@ -1422,6 +1503,77 @@ class ContactsViewModel(
                     error = e
                 )
             }
+        }
+    }
+
+    /**
+     * Liest die vom System stammenden SIM-Daten neu ein.
+     *
+     * Notwendig, weil das ViewModel bereits in `onCreate` erzeugt wird - also **bevor** die
+     * Berechtigungen erteilt sind. `getAllSimInfo` liefert dann eine leere Liste, und ohne
+     * erneutes Lesen bliebe dieser Zustand die ganze Sitzung stehen: sichtbar als
+     * "Unbekannter Anbieter", folgenreich für die A1-Erkennung, die auf `carrierId`/`mccMnc`
+     * beruht. Deshalb zusätzlich nach der Berechtigungserteilung und bei jedem `onResume`
+     * (SIM-Wechsel, Flugmodus, Rückkehr aus dem Hintergrund).
+     *
+     * Aus den Einstellungen abgeleitete Werte bleiben unberührt - die halten ihre Setter aktuell.
+     */
+    fun refreshSimInfo() {
+        viewModelScope.launch {
+            runCatching { applyPlatformSimInfo() }.onFailure { error ->
+                LoggingManager.logError(
+                    component = "ContactsViewModel",
+                    action = "REFRESH_SIM_INFO",
+                    message = "SIM-Daten konnten nicht aktualisiert werden",
+                    error = error as? Exception ?: Exception(error)
+                )
+            }
+        }
+    }
+
+    private suspend fun applyPlatformSimInfo() = withContext(Dispatchers.IO) {
+        val sims = PhoneSmsUtils.getAllSimInfo(application)
+
+        // Eine leere Liste ist nicht davon zu unterscheiden, dass das Lesen fehlgeschlagen ist
+        // (fehlende Berechtigung, Binder-Fehler). Bereits bekannte Karten deshalb nicht wegen
+        // eines möglichen Leseproblems verwerfen - der nächste erfolgreiche Lauf korrigiert.
+        if (sims.isEmpty() && _availableSimCards.value.isNotEmpty()) {
+            LoggingManager.logWarning(
+                component = "ContactsViewModel",
+                action = "SIM_INFO_UNAVAILABLE",
+                message = "Keine SIM-Daten lesbar - behalte zuletzt bekannten Stand",
+                details = mapOf("known_sims" to _availableSimCards.value.size)
+            )
+            return@withContext
+        }
+
+        val defaultSims = PhoneSmsUtils.getDefaultSimIds(application)
+        val smsSubscriptionId = defaultSims?.first ?: -1
+        val voiceSubscriptionId = defaultSims?.second ?: -1
+        val changed = sims != _availableSimCards.value ||
+            smsSubscriptionId != _defaultSmsSubscriptionId.value ||
+            voiceSubscriptionId != _defaultVoiceSubscriptionId.value
+
+        _availableSimCards.value = sims
+        _defaultSmsSubscriptionId.value = smsSubscriptionId
+        _defaultVoiceSubscriptionId.value = voiceSubscriptionId
+        updateMmiSimA1Detection(sims)
+
+        // Nur protokollieren, wenn sich etwas geändert hat: onResume feuert häufig, und das
+        // Protokoll ist größenbegrenzt und wird exportiert.
+        if (changed) {
+            LoggingManager.logInfo(
+                component = "ContactsViewModel",
+                action = "SIM_INFO_REFRESHED",
+                message = "SIM-Daten aktualisiert",
+                details = mapOf(
+                    "available_sims" to sims.size,
+                    "carriers" to sims.joinToString { it.carrierName?.takeIf(String::isNotBlank) ?: "unknown" },
+                    "default_sms_sub_id" to smsSubscriptionId,
+                    "default_voice_sub_id" to voiceSubscriptionId,
+                    "a1_detection" to _mmiSimA1Detection.value.name
+                )
+            )
         }
     }
 
@@ -1495,7 +1647,7 @@ class ContactsViewModel(
             // Prüfe ob beide SIM-Karten deaktiviert sind und Weiterleitung aktiv ist
             if (!enabled && !_sim2ReceiveEnabled.value && _forwardingActive.value) {
                 withContext(Dispatchers.Main) {
-                    SnackbarManager.showWarning("⚠️ Keine SIM-Karte für SMS-Empfang aktiviert - SMS-Weiterleitung inaktiv!")
+                    SnackbarManager.showWarning(application.getString(R.string.snackbar_no_sim_receive_enabled))
                 }
                 LoggingManager.logWarning(
                     component = "ContactsViewModel",
@@ -1529,7 +1681,7 @@ class ContactsViewModel(
             // Prüfe ob beide SIM-Karten deaktiviert sind und Weiterleitung aktiv ist
             if (!enabled && !_sim1ReceiveEnabled.value && _forwardingActive.value) {
                 withContext(Dispatchers.Main) {
-                    SnackbarManager.showWarning("⚠️ Keine SIM-Karte für SMS-Empfang aktiviert - SMS-Weiterleitung inaktiv!")
+                    SnackbarManager.showWarning(application.getString(R.string.snackbar_no_sim_receive_enabled))
                 }
                 LoggingManager.logWarning(
                     component = "ContactsViewModel",

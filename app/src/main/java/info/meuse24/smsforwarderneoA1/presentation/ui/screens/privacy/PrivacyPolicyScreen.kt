@@ -210,11 +210,6 @@ private fun PrivacyPolicyContentDE() {
         )
 
         PermissionItem(
-            title = stringResource(R.string.privacy_perm_contacts_de),
-            description = stringResource(R.string.privacy_perm_contacts_body_de)
-        )
-
-        PermissionItem(
             title = stringResource(R.string.privacy_perm_foreground_de),
             description = stringResource(R.string.privacy_perm_foreground_body_de)
         )
@@ -272,11 +267,6 @@ private fun PrivacyPolicyContentEN() {
         PermissionItem(
             title = stringResource(R.string.privacy_perm_phone_en),
             description = stringResource(R.string.privacy_perm_phone_body_en)
-        )
-
-        PermissionItem(
-            title = stringResource(R.string.privacy_perm_contacts_en),
-            description = stringResource(R.string.privacy_perm_contacts_body_en)
         )
 
         PermissionItem(

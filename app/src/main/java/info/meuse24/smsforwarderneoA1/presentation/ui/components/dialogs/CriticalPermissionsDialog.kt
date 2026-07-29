@@ -117,8 +117,6 @@ fun CriticalPermissionsDialog(
  */
 private fun String.toReadableName(context: android.content.Context): String {
     return when (this) {
-        Manifest.permission.READ_CONTACTS ->
-            context.getString(R.string.perm_contacts_desc)
         Manifest.permission.SEND_SMS ->
             context.getString(R.string.perm_send_sms_desc)
         Manifest.permission.RECEIVE_SMS ->

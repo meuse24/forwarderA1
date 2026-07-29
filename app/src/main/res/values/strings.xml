@@ -17,7 +17,6 @@
     <string name="heading_required_permissions">Required permissions:</string>
 
     <!-- Permission Descriptions -->
-    <string name="perm_contacts_desc">Contacts - For selecting forwarding destination</string>
     <string name="perm_send_sms_desc">Send SMS - For forwarding messages</string>
     <string name="perm_receive_sms_desc">Receive SMS - For receiving incoming messages</string>
     <string name="perm_call_forwarding_desc">Phone - For call forwarding (MMI codes)</string>
@@ -426,8 +425,6 @@
     <string name="privacy_perm_sms_body_de">• SMS_RECEIVE: Zum Empfang eingehender SMS-Nachrichten\n• SMS_SEND: Zum Weiterleiten von SMS an die konfigurierte Zielrufnummer\n\nDies ist die Kernfunktionalität der App. Ohne diese Berechtigung kann die SMS-Weiterleitung nicht funktionieren.</string>
     <string name="privacy_perm_phone_de">Telefon / Anrufe</string>
     <string name="privacy_perm_phone_body_de">• CALL_PHONE: Zum Ausführen konfigurierte MMI-/USSD-Codes über die gewählte SIM\n• READ_PHONE_STATE: Zum Erkennen der SIM-Karte und Beobachten des Telefonstatus\n\nDas optionale A1-Sonderprofil wird als Sprachanruf ausgeführt. Die Netzansage ist hörbar, kann von Android aber nicht maschinell ausgewertet werden.</string>
-    <string name="privacy_perm_contacts_de">Kontakte lesen</string>
-    <string name="privacy_perm_contacts_body_de">• READ_CONTACTS: Zum Öffnen des Android-Kontaktauswahlmenüs\n\nDie App speichert nur den ausgewählten Kontakt (Name + Nummer) lokal und verschlüsselt. Es werden keine Kontaktdaten an Dritte weitergegeben.</string>
     <string name="privacy_perm_foreground_de">Vordergrund-Dienst</string>
     <string name="privacy_perm_foreground_body_de">• FOREGROUND_SERVICE: Für zuverlässige Hintergrundverarbeitung\n• FOREGROUND_SERVICE_PHONE_CALL: Speziell für SMS/Telefon-Funktionen\n\nDer Vordergrund-Dienst stellt sicher, dass SMS auch bei gesperrtem Bildschirm weitergeleitet werden. Sie sehen eine Benachrichtigung, wenn der Dienst aktiv ist.</string>
     <string name="privacy_perm_battery_de">Akku-Optimierung ignorieren</string>
@@ -452,8 +449,6 @@
     <string name="privacy_perm_sms_body_en">• SMS_RECEIVE: To receive incoming SMS messages\n• SMS_SEND: To forward SMS to the configured target number\n\nThis is the core functionality of the app. Without this permission, SMS forwarding cannot work.</string>
     <string name="privacy_perm_phone_en">Phone / Calls</string>
     <string name="privacy_perm_phone_body_en">• CALL_PHONE: To execute configured MMI/USSD codes through the selected SIM\n• READ_PHONE_STATE: To identify the SIM and observe call state\n\nThe optional A1 special profile is executed as a voice call. The carrier announcement is audible but cannot be machine-read by Android.</string>
-    <string name="privacy_perm_contacts_en">Read Contacts</string>
-    <string name="privacy_perm_contacts_body_en">• READ_CONTACTS: To open the Android contact picker dialog\n\nThe app only stores the selected contact (name + number) locally and encrypted. No contact data is shared with third parties.</string>
     <string name="privacy_perm_foreground_en">Foreground Service</string>
     <string name="privacy_perm_foreground_body_en">• FOREGROUND_SERVICE: For reliable background processing\n• FOREGROUND_SERVICE_PHONE_CALL: Specifically for SMS/phone functions\n\nThe foreground service ensures SMS are forwarded even when the screen is locked. You will see a notification when the service is active.</string>
     <string name="privacy_perm_battery_en">Ignore Battery Optimization</string>
@@ -507,7 +502,18 @@
 
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Error loading contact: %1$s</string>
-    <string name="snackbar_contact_loaded">Contact loaded</string>
+    <string name="snackbar_contact_no_number">The selected contact has no phone number</string>
+    <string name="snackbar_contact_number_invalid">Not usable as a forwarding destination: %1$s</string>
+    <string name="snackbar_contact_picker_denied">The contact picker did not release the selected number. Please try again.</string>
+    <string name="snackbar_forwarding_activation_error">Forwarding could not be activated: %1$s</string>
+    <string name="snackbar_forwarding_deactivation_error">Forwarding could not be deactivated: %1$s</string>
+    <string name="snackbar_forwarding_safety_deactivation">Failure reported — switching the call forwarding off to be safe.</string>
+    <string name="snackbar_no_operation_to_retry">No call-forwarding operation available to repeat</string>
+    <string name="snackbar_status_query_failed">Status query could not be sent</string>
+    <string name="snackbar_no_sim_receive_enabled">⚠️ No SIM card enabled for SMS reception - SMS forwarding inactive!</string>
+    <string name="error_mmi_code_not_sent">MMI code could not be sent</string>
+    <string name="error_no_contact_selected">No contact selected for activation</string>
+    <string name="error_forwarding_generic">Forwarding error: %1$s</string>
     <string name="snackbar_forwarding_activated">Forwarding activated</string>
     <string name="snackbar_forwarding_deactivated">Forwarding deactivated</string>
     <string name="snackbar_forwarding_activation_failed">Call forwarding was not applied: %1$s</string>

@@ -349,7 +349,7 @@ fun LandscapeLayout(
                     emailViewModel = emailViewModel,
                     onSelectContact = { viewModel.launchContactPicker() },
                     onDeactivate = { viewModel.deactivateCurrentForwarding() },
-                    onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
+                    onSendTestSms = { testUtilsViewModel.sendTestSms() }
                 )
             }
 
@@ -457,7 +457,7 @@ fun PortraitLayout(
                 emailViewModel = emailViewModel,
                 onSelectContact = { viewModel.launchContactPicker() },
                 onDeactivate = { viewModel.deactivateCurrentForwarding() },
-                onSendTestSms = { testUtilsViewModel.sendTestSms(selectedContact) }
+                onSendTestSms = { testUtilsViewModel.sendTestSms() }
             )
 
             // Bottom row: Buttons
