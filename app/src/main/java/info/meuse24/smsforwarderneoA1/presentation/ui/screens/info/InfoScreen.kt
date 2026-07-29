@@ -168,7 +168,7 @@ fun InfoScreen() {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "${stringResource(R.string.label_build)} ${BuildConfig.BUILD_TIME}",
+                            text = "${stringResource(R.string.label_build)} ${BuildConfig.BUILD_STAMP}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

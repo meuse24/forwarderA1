@@ -1,7 +1,4 @@
 import com.android.Version
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -16,6 +13,31 @@ val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+/**
+ * Herkunft des Builds fuer die Info-Seite.
+ *
+ * Bewusst der Commit statt einer Uhrzeit: Er beantwortet die Frage "habe ich den aktuellen Stand?"
+ * genauer, denn zwei Builds desselben Commits sind derselbe Code. Eine Uhrzeit taugte hier ohnehin
+ * nicht - `buildConfigField` wird in der Konfigurationsphase ausgewertet, und die ueberspringt der
+ * Konfigurations-Cache. Die eingebrannte Zeit war deshalb die der letzten Neuberechnung, nicht die
+ * des Builds.
+ *
+ * `providers.exec` wird beim Pruefen des Cache-Eintrags erneut ausgefuehrt; der Eintrag verfaellt
+ * damit genau dann, wenn sich der Commit aendert - und nicht bei jedem Build.
+ */
+fun gitOutput(vararg command: String): String? = runCatching {
+    providers.exec { commandLine(*command) }
+        .standardOutput.asText.get().trim().takeIf { it.isNotEmpty() }
+}.getOrNull()
+
+val buildStamp: String = run {
+    val commit = gitOutput("git", "rev-parse", "--short", "HEAD") ?: return@run "ohne Git-Bezug"
+    val date = gitOutput("git", "log", "-1", "--format=%cd", "--date=format:%d.%m.%Y %H:%M")
+    // Uncommittete Aenderungen kenntlich machen - sonst behauptet der Hash mehr, als er weiss.
+    val dirty = gitOutput("git", "status", "--porcelain")?.let { " + lokale Änderungen" } ?: ""
+    if (date == null) "$commit$dirty" else "$commit vom $date$dirty"
 }
 
 android {
@@ -104,17 +126,7 @@ android {
 
     buildTypes {
         debug {
-            // Build time: Use dynamic timestamp when built from command line (./build.sh)
-            // Use static value for Android Studio incremental builds (better caching)
-            val useDynamicBuildTime = project.hasProperty("dynamicBuildTime") &&
-                                      project.property("dynamicBuildTime") == "true"
-            val buildTime = if (useDynamicBuildTime) {
-                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                sdf.format(Date())
-            } else {
-                "dev-build (use ./build.sh for timestamp)"
-            }
-            buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
+            buildConfigField("String", "BUILD_STAMP", "\"$buildStamp\"")
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
             buildConfigField("String", "BUILD_TYPE", "\"debug\"")
 
@@ -139,9 +151,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Build time generated at build time for release builds
-            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            buildConfigField("String", "BUILD_TIME", "\"${sdf.format(Date())}\"")
+            buildConfigField("String", "BUILD_STAMP", "\"$buildStamp\"")
             buildConfigField("String", "GRADLE_VERSION", "\"${gradle.gradleVersion}\"")
             buildConfigField("String", "BUILD_TYPE", "\"release\"")
 
@@ -166,11 +176,6 @@ android {
     }
 }
 
-// BUILD_TIME behavior:
-// - Debug builds: Static "dev-build" in Android Studio for better caching
-//                 Dynamic timestamp when built via ./build.sh (sets -PdynamicBuildTime=true)
-// - Release builds: Always dynamic timestamp
-// This balances Android Studio performance with accurate build information
 
 dependencies {
     // Core Android & Kotlin
