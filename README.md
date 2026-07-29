@@ -373,8 +373,9 @@ info.meuse24.smsforwarderneoA1/
 <uses-permission android:name="android.permission.RECEIVE_SMS"/>
 <uses-permission android:name="android.permission.SEND_SMS"/>
 
-<!-- Kontaktzugriff -->
-<uses-permission android:name="android.permission.READ_CONTACTS"/>
+<!-- Kein Kontaktzugriff: Die Auswahl des Weiterleitungsziels läuft über
+     ACTION_PICK auf Phone.CONTENT_URI. Der System-Picker gibt allein die
+     gewählte Rufnummer frei und delegiert dafür temporären Lesezugriff. -->
 
 <!-- Telefonfunktionen -->
 <uses-permission android:name="android.permission.CALL_PHONE" />

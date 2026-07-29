@@ -25,7 +25,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -90,6 +89,7 @@ import info.meuse24.smsforwarderneoA1.presentation.viewmodel.NavigationViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.SimManagementViewModel
 import info.meuse24.smsforwarderneoA1.presentation.viewmodel.TestUtilsViewModel
 import info.meuse24.smsforwarderneoA1.service.SmsForegroundService
+import info.meuse24.smsforwarderneoA1.util.phone.PickPhoneNumber
 import info.meuse24.smsforwarderneoA1.UssdRequestResult
 import info.meuse24.smsforwarderneoA1.UssdRequestType
 import kotlinx.coroutines.Dispatchers
@@ -127,15 +127,11 @@ class MainActivity : ComponentActivity() {
     // State für kritischen Berechtigungs-Dialog
 
 
-    // Contact Picker Launcher
+    // Contact Picker Launcher - liefert die Datenzeile der gewaehlten Rufnummer
     private val contactPickerLauncher = registerForActivityResult(
-        ActivityResultContracts.PickContact()
+        PickPhoneNumber()
     ) { uri: Uri? ->
-        uri?.let {
-            lifecycleScope.launch {
-                viewModel.handleContactPickerResult(it)
-            }
-        }
+        uri?.let { viewModel.handleContactPickerResult(it) }
     }
 
     // Call state management for MMI codes
@@ -163,7 +159,7 @@ class MainActivity : ComponentActivity() {
         viewModel.onDialStatusCode = { code -> dialCode(code, null) }
 
         // Set the contact picker launcher callback
-        viewModel.onLaunchContactPicker = { contactPickerLauncher.launch(null) }
+        viewModel.onLaunchContactPicker = { contactPickerLauncher.launch(Unit) }
 
         // Set EmailViewModel callback to update service notification when forwarding state changes
         emailViewModel.onForwardingStateChanged = {

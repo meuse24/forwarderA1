@@ -1,27 +1,12 @@
 package info.meuse24.smsforwarderneoA1.domain.model
 
 /**
- * Domain model representing a contact with phone number.
+ * Domain model representing the contact a forwarding is registered to.
  *
- * Equality is based on normalized phone number (digits only),
- * not on the contact name or description.
+ * There is exactly one selected contact at a time; the app no longer manages a
+ * contact list of its own since the switch to the system contact picker.
  */
 data class Contact(
     val name: String,
-    val phoneNumber: String,
-    val description: String
-) {
-    // Normalisierte Telefonnummer für Vergleiche
-    private val normalizedNumber = phoneNumber.filter { it.isDigit() }
-
-    // Der Name sollte bei equals/hashCode NICHT berücksichtigt werden
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Contact) return false
-        return normalizedNumber == other.normalizedNumber
-    }
-
-    override fun hashCode(): Int {
-        return normalizedNumber.hashCode()
-    }
-}
+    val phoneNumber: String
+)

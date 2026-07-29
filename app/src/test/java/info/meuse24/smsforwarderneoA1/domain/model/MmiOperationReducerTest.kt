@@ -7,7 +7,7 @@ import org.junit.Test
 
 class MmiOperationReducerTest {
     private fun operation(mode: MmiExecutionMode = MmiExecutionMode.USSD_CALLBACK) =
-        PersistedMmiOperation("id", "ACTIVATE", "*21*123#", mode, 0, null, null, null)
+        PersistedMmiOperation("id", "ACTIVATE", "*21*123#", mode, 0, null, null)
 
     @Test fun `USSD response confirms operation and stores response`() {
         val result = MmiOperationReducer.withUssdResponse(operation(), "OK", true)

@@ -33,8 +33,8 @@ class MmiOperationPolicyTest {
     }
 
     @Test fun `timeout transitions preserve activate and deactivate actions`() {
-        val activate = PersistedMmiOperation("activate", "ACTIVATE", "*21*1#", MmiExecutionMode.USSD_CALLBACK, 0, null, null, null)
-        val deactivate = PersistedMmiOperation("deactivate", "DEACTIVATE", "##21#", MmiExecutionMode.USSD_CALLBACK, 0, null, null, null)
+        val activate = PersistedMmiOperation("activate", "ACTIVATE", "*21*1#", MmiExecutionMode.USSD_CALLBACK, 0, null, null)
+        val deactivate = PersistedMmiOperation("deactivate", "DEACTIVATE", "##21#", MmiExecutionMode.USSD_CALLBACK, 0, null, null)
 
         assertTrue(MmiOperationReducer.withTimeout(activate).action == "ACTIVATE")
         assertTrue(MmiOperationReducer.withTimeout(deactivate).action == "DEACTIVATE")

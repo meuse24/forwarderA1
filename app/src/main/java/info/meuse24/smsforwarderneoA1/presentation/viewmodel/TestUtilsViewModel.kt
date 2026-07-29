@@ -1,20 +1,15 @@
 package info.meuse24.smsforwarderneoA1.presentation.viewmodel
 
 import android.app.Application
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
 import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
-import info.meuse24.smsforwarderneoA1.domain.model.Contact
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 /**
  * ViewModel für Test- und Utility-Funktionen.
@@ -22,15 +17,10 @@ import kotlinx.coroutines.launch
  * Verantwortlichkeiten:
  * - Test-SMS Text Management
  * - Test-SMS Versand
- * - Test-Kontakte setzen (für Unit Tests)
- *
- * Note: Filter Text wurde zurück nach ContactsViewModel verschoben,
- * da es für die Core-Filterlogik benötigt wird.
  */
 class TestUtilsViewModel(
     private val application: Application,
-    private val prefsManager: SharedPreferencesManager,
-    private val contactsStore: Any // ContactsStore für setTestContacts
+    private val prefsManager: SharedPreferencesManager
 ) : AndroidViewModel(application) {
 
     // StateFlows
@@ -71,18 +61,7 @@ class TestUtilsViewModel(
      * regulären Weiterleitungsmechanismus (SmsForegroundService) verarbeitet,
      * was bereits die Email-Weiterleitung beinhaltet.
      */
-    fun sendTestSms(selectedContact: Contact?) {
-        if (selectedContact == null) {
-            LoggingManager.logWarning(
-                component = "TestUtilsViewModel",
-                action = "TEST_SMS_FAILED",
-                message = "Test-SMS konnte nicht gesendet werden - kein Kontakt ausgewählt",
-                details = mapOf("reason" to "no_contact_selected")
-            )
-            SnackbarManager.showError("Kein Kontakt ausgewählt")
-            return
-        }
-
+    fun sendTestSms() {
         // Verwendung der eigenen Telefonnummer aus SIM-Verwaltung
         val simNumbers = prefsManager.getSimPhoneNumbers()
         val receiver = simNumbers.values.firstOrNull()
@@ -140,39 +119,6 @@ class TestUtilsViewModel(
     }
 
     /**
-     * Setzt Test-Kontakte (nur für Unit Tests).
-     */
-    @VisibleForTesting
-    fun setTestContacts(contacts: List<Contact>, onComplete: suspend () -> Unit) = viewModelScope.launch {
-        try {
-            // Callback zum Setzen der Kontakte im ContactsStore
-            onComplete()
-
-            // Warten bis die Änderungen übernommen wurden
-            delay(500)
-
-            LoggingManager.logDebug(
-                component = "TestUtilsViewModel",
-                action = "SET_TEST_CONTACTS",
-                message = "Test-Kontakte wurden gesetzt",
-                details = mapOf(
-                    "contacts_count" to contacts.size
-                )
-            )
-        } catch (e: Exception) {
-            LoggingManager.logError(
-                component = "TestUtilsViewModel",
-                action = "SET_TEST_CONTACTS_ERROR",
-                message = "Fehler beim Setzen der Test-Kontakte",
-                error = e,
-                details = mapOf(
-                    "contacts_count" to contacts.size
-                )
-            )
-        }
-    }
-
-    /**
      * Factory für TestUtilsViewModel.
      */
     class Factory(
@@ -182,8 +128,7 @@ class TestUtilsViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(TestUtilsViewModel::class.java)) {
-                // contactsStore wird als dummy Any() übergeben, da es nur für Test-Callbacks verwendet wird
-                return TestUtilsViewModel(application, prefsManager, Any()) as T
+                return TestUtilsViewModel(application, prefsManager) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

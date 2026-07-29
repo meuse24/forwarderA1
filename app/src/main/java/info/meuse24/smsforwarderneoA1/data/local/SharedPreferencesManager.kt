@@ -339,7 +339,7 @@ class SharedPreferencesManager(private val context: Context) {
             put("state", request.state.name); put("verification", request.verification.name)
             put("call_observed", request.evidence.callObserved); put("call_duration", request.evidence.callDurationMs)
             put("watchdog_expired", request.evidence.watchdogExpired); put("ussd_response", request.evidence.ussdResponse)
-            put("contact_name", request.contactName); put("contact_number", request.contactNumber); put("contact_description", request.contactDescription)
+            put("contact_name", request.contactName); put("contact_number", request.contactNumber)
             put("target_subscription_id", request.targetSubscriptionId); put("dial_path", request.dialPath.name)
             put("user_message", request.userMessage)
         }
@@ -351,7 +351,7 @@ class SharedPreferencesManager(private val context: Context) {
         if (raw.isBlank()) return null
         val json = JSONObject(raw)
         val number = json.optString("contact_number").takeIf { it.isNotBlank() }
-        PersistedMmiOperation(json.getString("id"), json.getString("action"), json.getString("code"), MmiExecutionMode.valueOf(json.getString("mode")), json.getLong("dialed_at"), json.optString("contact_name"), number, json.optString("contact_description"), MmiOperationState.valueOf(json.optString("state", MmiOperationState.DIALING.name)), ForwardingVerification.valueOf(json.optString("verification", ForwardingVerification.NOT_CHECKED.name)), MmiEvidence(json.optBoolean("call_observed"), json.optLong("call_duration").takeIf { it > 0 }, json.optBoolean("watchdog_expired"), json.optString("ussd_response").takeIf { it.isNotBlank() }), json.optInt("target_subscription_id").takeIf { it >= 0 }, runCatching { DialPath.valueOf(json.optString("dial_path", DialPath.NOT_DISPATCHED.name)) }.getOrDefault(DialPath.NOT_DISPATCHED), json.optString("user_message").takeIf { it.isNotBlank() })
+        PersistedMmiOperation(json.getString("id"), json.getString("action"), json.getString("code"), MmiExecutionMode.valueOf(json.getString("mode")), json.getLong("dialed_at"), json.optString("contact_name"), number, MmiOperationState.valueOf(json.optString("state", MmiOperationState.DIALING.name)), ForwardingVerification.valueOf(json.optString("verification", ForwardingVerification.NOT_CHECKED.name)), MmiEvidence(json.optBoolean("call_observed"), json.optLong("call_duration").takeIf { it > 0 }, json.optBoolean("watchdog_expired"), json.optString("ussd_response").takeIf { it.isNotBlank() }), json.optInt("target_subscription_id").takeIf { it >= 0 }, runCatching { DialPath.valueOf(json.optString("dial_path", DialPath.NOT_DISPATCHED.name)) }.getOrDefault(DialPath.NOT_DISPATCHED), json.optString("user_message").takeIf { it.isNotBlank() })
     }.getOrNull()
 
     fun clearPendingMmiRequest() = setPreference(KEY_PENDING_MMI_OPERATION, "")

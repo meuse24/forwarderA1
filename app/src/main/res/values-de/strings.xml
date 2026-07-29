@@ -17,7 +17,6 @@
     <string name="heading_required_permissions">Erforderliche Berechtigungen:</string>
 
     <!-- Permission Descriptions -->
-    <string name="perm_contacts_desc">Kontakte - Für die Auswahl des Weiterleitungsziels</string>
     <string name="perm_send_sms_desc">SMS senden - Zum Weiterleiten von Nachrichten</string>
     <string name="perm_receive_sms_desc">SMS empfangen - Zum Empfangen eingehender Nachrichten</string>
     <string name="perm_call_forwarding_desc">Telefon - Für die Anrufweiterleitung (MMI Codes)</string>
@@ -456,7 +455,17 @@
 
     <!-- ==================== SNACKBAR MESSAGES ==================== -->
     <string name="snackbar_error_loading_contact">Fehler beim Laden des Kontakts: %1$s</string>
-    <string name="snackbar_contact_loaded">Kontakt geladen</string>
+    <string name="snackbar_contact_no_number">Der ausgewählte Kontakt hat keine Telefonnummer</string>
+    <string name="snackbar_contact_number_invalid">Als Weiterleitungsziel nicht verwendbar: %1$s</string>
+    <string name="snackbar_contact_picker_denied">Das Auswahlmenü hat die gewählte Rufnummer nicht freigegeben. Bitte erneut versuchen.</string>
+    <string name="snackbar_forwarding_activation_error">Weiterleitung konnte nicht aktiviert werden: %1$s</string>
+    <string name="snackbar_forwarding_deactivation_error">Weiterleitung konnte nicht deaktiviert werden: %1$s</string>
+    <string name="snackbar_no_operation_to_retry">Kein Rufumleitungs-Vorgang zum Wiederholen verfügbar</string>
+    <string name="snackbar_status_query_failed">Statusabfrage konnte nicht gesendet werden</string>
+    <string name="snackbar_no_sim_receive_enabled">⚠️ Keine SIM-Karte für SMS-Empfang aktiviert - SMS-Weiterleitung inaktiv!</string>
+    <string name="error_mmi_code_not_sent">MMI-Code konnte nicht gesendet werden</string>
+    <string name="error_no_contact_selected">Kein Kontakt für die Aktivierung ausgewählt</string>
+    <string name="error_forwarding_generic">Fehler bei der Weiterleitung: %1$s</string>
     <string name="snackbar_forwarding_activated">Weiterleitung aktiviert</string>
     <string name="snackbar_forwarding_deactivated">Weiterleitung deaktiviert</string>
     <string name="snackbar_forwarding_activation_failed">Rufumleitung wurde nicht übernommen: %1$s</string>
@@ -554,10 +563,6 @@
     <string name="privacy_perm_sms_body_en">Required to receive and forward incoming SMS messages.</string>
 
     <!-- Contacts Permission -->
-    <string name="privacy_perm_contacts_de">Kontakte</string>
-    <string name="privacy_perm_contacts_en">Contacts</string>
-    <string name="privacy_perm_contacts_body_de">Ermöglicht die Auswahl eines Kontakts für die Weiterleitung.</string>
-    <string name="privacy_perm_contacts_body_en">Allows you to select a contact for forwarding.</string>
 
     <!-- Phone Permission -->
     <string name="privacy_perm_phone_de">Telefon</string>
