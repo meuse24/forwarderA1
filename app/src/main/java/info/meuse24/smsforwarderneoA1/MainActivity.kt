@@ -949,9 +949,13 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Initialisieren Sie den SnackbarManager mit dem State und Scope
-        LaunchedEffect(snackbarHostState) {
-            SnackbarManager.setSnackbarState(snackbarHostState, this)
+        // Der Scope muss die Registrierung ueberleben: `this` waere der Scope der
+        // LaunchedEffect-Coroutine, und die ist mit dem Ende ihres Blocks abgeschlossen. Ein
+        // abgeschlossener Job nimmt keine Kinder mehr an - jedes spaetere launch() zum Anzeigen
+        // einer Meldung lief damit ins Leere, und die App blieb bei Fehlern stumm.
+        val snackbarScope = rememberCoroutineScope()
+        LaunchedEffect(snackbarHostState, snackbarScope) {
+            SnackbarManager.setSnackbarState(snackbarHostState, snackbarScope)
         }
 
         // State für Swipe-Navigation
