@@ -13,6 +13,7 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 ### Kernfunktionen
 - **Automatische SMS-Weiterleitung**: Leitet eingehende SMS automatisch an vordefinierte Kontakte weiter
 - **E-Mail-Weiterleitung**: Sendet SMS-Inhalte zusätzlich per E-Mail
+- **Rufumleitung (Anrufe)**: Schaltet die Rufumleitung des Netzes per MMI-/USSD-Code auf den gewählten Kontakt — aktivieren, deaktivieren und Status abfragen direkt aus der App. Standard sind die GSM-Codes (`**21*Nummer#`, `##21#`, `*#21#`), die als USSD-Anfrage laufen und eine auswertbare Netzantwort liefern. Für den **Sonderfall A1** gibt es ein eigenes Profil (`*21*Nummer**`, `**21**`, `*021**`), das als Sprach-MMI gewählt wird; dessen Netzansage ist hörbar, aber nicht maschinell prüfbar. Eigene Codes sind ebenfalls konfigurierbar
 - **Multi-Teil SMS-Unterstützung**: Rekonstruiert automatisch mehrteilige SMS-Nachrichten
 - **Parallele Weiterleitung**: Gleichzeitige Verarbeitung von SMS- und E-Mail-Weiterleitung
 - **Zuverlässiger Vordergrund-Dienst**: Nutzt Foreground Service mit WakeLock für stabile Hintergrundverarbeitung
@@ -27,7 +28,7 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 - **SMTP-Unterstützung**: STARTTLS (587) oder SSL/TLS (465), TLS 1.2+ mit Prüfung der Serveridentität; Absenderadresse getrennt vom Benutzernamen für Anbieter, deren Login keine E-Mail-Adresse ist
 - **Test-Utilities**: Integrierte Tools zum Testen der SMS-Funktionalität
 - **Persistente Sendewarteschlangen**: Beide Kanäle haben eigene, verschlüsselte Warteschlangen. Jede Weiterleitung hat einen gespeicherten Zustand; Fehlschläge werden wiederholt, ungeklärte Fälle sichtbar gemacht. Sie überstehen Prozessende und Geräteneustart
-- **Rufumleitung per MMI/USSD**: Standard-GSM/USSD-Codes sind der Default; das A1-Sonderprofil wird nur bei ausdrücklicher Vertrags-/Supportvorgabe als Sprach-MMI verwendet
+- **MMI-Profile und -Audit**: Codeprofil je SIM wählbar (Standard-GSM als Default, A1-Sonderprofil nur bei ausdrücklicher Vertrags-/Supportvorgabe, sonst eigene Codes); jeder Schaltvorgang landet maskiert im lokalen Audit
 - **RCS-Hinweis**: Erklärt auf der Startseite und in der Hilfe, warum RCS-Chats nicht weitergeleitet werden können, und wie man den SMS-Fallback herstellt
 
 ### Bekannte Grenzen
