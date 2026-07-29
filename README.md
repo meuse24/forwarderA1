@@ -24,9 +24,9 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 - **Strukturiertes Logging**: XML-basierte Protokollierung mit automatischer Rotation
 - **Log-Export**: Exportiere Protokolle für Fehleranalyse und Monitoring
 - **Verschlüsselte Einstellungen**: Sichere Speicherung von Credentials und Konfiguration
-- **SMTP-Unterstützung**: Flexible E-Mail-Konfiguration mit verschiedenen Anbietern
+- **SMTP-Unterstützung**: STARTTLS (587) oder SSL/TLS (465), TLS 1.2+ mit Prüfung der Serveridentität; Absenderadresse getrennt vom Benutzernamen für Anbieter, deren Login keine E-Mail-Adresse ist
 - **Test-Utilities**: Integrierte Tools zum Testen der SMS-Funktionalität
-- **Persistente Sendewarteschlange**: Jede Weiterleitung hat einen gespeicherten Zustand; Fehlschläge werden wiederholt, ungeklärte Fälle sichtbar gemacht
+- **Persistente Sendewarteschlangen**: Beide Kanäle haben eigene, verschlüsselte Warteschlangen. Jede Weiterleitung hat einen gespeicherten Zustand; Fehlschläge werden wiederholt, ungeklärte Fälle sichtbar gemacht. Sie überstehen Prozessende und Geräteneustart
 - **Rufumleitung per MMI/USSD**: Standard-GSM/USSD-Codes sind der Default; das A1-Sonderprofil wird nur bei ausdrücklicher Vertrags-/Supportvorgabe als Sprach-MMI verwendet
 - **RCS-Hinweis**: Erklärt auf der Startseite und in der Hilfe, warum RCS-Chats nicht weitergeleitet werden können, und wie man den SMS-Fallback herstellt
 
@@ -70,6 +70,24 @@ gegenüber dem häufigeren Doppelversand. Bei mehrteiligen Nachrichten mit Teile
 Vorgang neu versandt; bereits zugestellte Teile können dann doppelt ankommen – eine unvollständige
 mehrteilige SMS wird vom Empfängergerät sonst nie zusammengesetzt. `Gesendet` heißt „vom Netz
 angenommen", nicht „beim Empfänger angekommen".
+
+Der **E-Mail-Kanal entscheidet bewusst umgekehrt: im Zweifel wird erneut gesendet.** Eine E-Mail
+kostet nichts, der Verlust einer Weiterleitung ist der eigentliche Schadensfall. Auch hier hat jeder
+Auftrag einen persistierten Zustand, hier aber mit dem Zustellstand **je Empfänger**:
+
+- Wiederholt wird **nach der Ursache**, nicht pauschal: nur bei Netz- und Serverproblemen sowie
+  vorübergehenden Serverantworten (SMTP 4xx). Ein abgelehntes Passwort, eine unzustellbare Adresse
+  oder ein gescheiterter TLS-Aufbau ergeben **genau einen** Versuch und erscheinen als Hinweis.
+- Wiederholt wird bis zu 24 Stunden lang (nach 1, 5, 15 und 60 Minuten, danach alle 3 Stunden).
+  Ohne Netz wird der Versuch aufgeschoben, ohne das Wiederholungsbudget zu verbrauchen.
+- Jeder Empfänger erhält eine eigene Nachricht; ein Neuversuch adressiert nur die noch offenen.
+  Wird einer dauerhaft abgelehnt, bekommen die übrigen ihre Nachricht trotzdem — und kein zweites Mal.
+- Endet der Prozess genau im Sendefenster, kann eine E-Mail doppelt ankommen. Eine stabile
+  `Message-ID` je Auftrag sorgt dafür, dass viele Server und Mailprogramme die Wiederholung als
+  solche erkennen; eine Zusicherung ist das nicht.
+
+Hintergrund und die abweichend entschiedenen Punkte stehen in [`sms.md`](sms.md) und
+[`smtp.md`](smtp.md).
 
 ## Technologie-Stack
 

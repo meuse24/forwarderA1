@@ -4,6 +4,12 @@
 **Version:** 4.1.0 "Barracuda"
 **Reviewer:** Claude (Automated Security Analysis)
 
+> **Stand:** Dieser Bericht bezieht sich auf 4.1.0. Seither sind zwei verschlüsselte
+> Weiterleitungs-Warteschlangen dazugekommen, die SMS-Volltexte bis zur Zustellung speichern
+> (vom Backup ausgeschlossen, Löschung nach spätestens 7 Tagen), sowie die erzwungene
+> Transportverschlüsselung des E-Mail-Versands. Diese Punkte sind in `sms.md`, `smtp.md` und der
+> Datenschutzerklärung beschrieben, hier aber noch nicht eingearbeitet.
+
 ---
 
 ## 🎯 Executive Summary

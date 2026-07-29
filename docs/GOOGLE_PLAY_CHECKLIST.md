@@ -262,8 +262,8 @@ Vor dem Upload:
 - [ ] App auf echtem Gerät getestet
 - [ ] Alle Berechtigungen funktionieren
 - [ ] Logs überprüft (keine Errors)
-- [x] Version Code erhöht (aktuell: 5)
-- [x] Version Name aussagekräftig (aktuell: "Barracuda 4.1.0")
+- [x] Version Code erhöht (aktuell: 7)
+- [x] Version Name aussagekräftig (aktuell: "Barracuda 5.1.0")
 
 ## 📊 Nach dem Release
 
@@ -286,7 +286,7 @@ Vor dem Upload:
 
 ```bash
 # Version erhöhen in build.gradle.kts:
-versionCode = 5
+versionCode = 8
 versionName = "NextCodename"
 
 # Release build
