@@ -35,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,8 +51,7 @@ import info.meuse24.smsforwarderneoA1.presentation.viewmodel.SimManagementViewMo
 fun SimManagementSection(
     viewModel: ContactsViewModel,
     simManagementViewModel: SimManagementViewModel,
-    onFocusChanged: (Boolean) -> Unit,
-    sectionTitleStyle: TextStyle
+    onFocusChanged: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     var simInfoList by remember { mutableStateOf<List<SimInfo>>(emptyList()) }
@@ -94,17 +92,10 @@ fun SimManagementSection(
     ) {
         PhoneSettingsSection(
             viewModel = viewModel,
-            onFocusChanged = onFocusChanged,
-            sectionTitleStyle = sectionTitleStyle
+            onFocusChanged = onFocusChanged
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = stringResource(R.string.heading_sim_overview),
-            style = sectionTitleStyle,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
 
         if (isLoading) {
             Box(

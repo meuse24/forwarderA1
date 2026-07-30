@@ -44,7 +44,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.R
@@ -60,8 +59,7 @@ fun AppSettingsSection(
     emailViewModel: EmailViewModel,
     testUtilsViewModel: TestUtilsViewModel,
     navigationViewModel: NavigationViewModel,
-    onFocusChanged: (Boolean) -> Unit,
-    sectionTitleStyle: TextStyle
+    onFocusChanged: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val testSmsText by testUtilsViewModel.testSmsText.collectAsState()

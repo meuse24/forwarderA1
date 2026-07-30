@@ -2,7 +2,6 @@ package info.meuse24.smsforwarderneoA1.presentation.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.domain.model.MmiCodeProfile
@@ -138,26 +138,42 @@ fun MmiCodeSettingsSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
+        // Untereinander, jeder über die volle Breite: Nebeneinander teilte sich der rechte
+        // Knopf den Rest der Zeile, der nach dem linken Label übrig blieb - zu wenig für Icon
+        // plus Text, worauf Compose zeichenweise umbrach ("S t a n d a r d" untereinander) und
+        // den Knopf auf mehrfache Höhe zog. Mit `weight` wäre der Platz zwar gleich verteilt,
+        // aber "A1 special profile" passt auf halber Breite auch dann nicht.
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
-                onClick = { showA1ProfileConfirmation = true }
+                onClick = { showA1ProfileConfirmation = true },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(stringResource(R.string.btn_preset_a1_special))
+                Text(
+                    text = stringResource(R.string.btn_preset_a1_special),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             Button(
-                onClick = { showStandardProfileConfirmation = true }
+                onClick = { showStandardProfileConfirmation = true },
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
                     Icons.Filled.Refresh,
-                    contentDescription = stringResource(R.string.btn_preset_standard),
+                    // Der Text daneben sagt es schon; sonst liest TalkBack die Beschriftung doppelt.
+                    contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.btn_preset_standard))
+                Text(
+                    text = stringResource(R.string.btn_preset_standard),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
 

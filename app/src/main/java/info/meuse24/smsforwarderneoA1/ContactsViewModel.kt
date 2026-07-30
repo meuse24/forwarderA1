@@ -757,17 +757,16 @@ class ContactsViewModel(
             ForwardingAction.ACTIVATE -> {
                 if (resolution.forwardingActive == true) {
                     val contact = pending.contact
+                    // Zustand und Prefs im selben Zug: `MutableStateFlow.value` ist thread-safe,
+                    // eine Coroutine braucht es dafuer nicht. Sie hatte ein Fenster geoeffnet, in
+                    // dem die Prefs schon neu und die Flows noch alt waren.
                     if (resolution.contactHandling == ForwardingResolutionReducer.ContactHandling.SAVE_PENDING_CONTACT) contact?.let {
-                        viewModelScope.launch {
-                            _selectedContact.value = it
-                            _forwardingActive.value = resolution.forwardingActive
-                        }
+                        _selectedContact.value = it
+                        _forwardingActive.value = resolution.forwardingActive
                         prefsManager.saveSelectedPhoneNumber(it.phoneNumber)
                         prefsManager.saveContactName(it.name)
                     } ?: run {
-                        viewModelScope.launch {
-                            _forwardingActive.value = resolution.forwardingActive
-                        }
+                        _forwardingActive.value = resolution.forwardingActive
                     }
                     prefsManager.saveForwardingStatus(resolution.forwardingActive)
                     prefsManager.saveForwardingCodeSnapshot(
@@ -817,10 +816,8 @@ class ContactsViewModel(
 
             ForwardingAction.DEACTIVATE -> {
                 if (resolution.forwardingActive == false) {
-                    viewModelScope.launch {
-                        _selectedContact.value = null
-                        _forwardingActive.value = resolution.forwardingActive
-                    }
+                    _selectedContact.value = null
+                    _forwardingActive.value = resolution.forwardingActive
                     if (resolution.contactHandling == ForwardingResolutionReducer.ContactHandling.CLEAR) {
                         prefsManager.clearSelection()
                     }
@@ -908,7 +905,21 @@ class ContactsViewModel(
         }
     }
 
-    /** User explicitly accepts continuing the independent SMS forwarding despite a carrier-side warning. */
+    /**
+     * Der Nutzer setzt die unabhängige SMS-Weiterleitung trotz Netz-Warnung bewusst fort.
+     *
+     * **Sieht nach totem Code aus, ist es nicht - bitte nicht wegräumen.** Der zugehörige Knopf
+     * hängt an [ForwardingVerification.USER_REPORTED_FAILURE], und [reportForwardingFailure]
+     * schaltet seit der Sicherheitsdeaktivierung sofort ab; die anschließende Auflösung
+     * überschreibt die Verifikation, der Knopf verschwindet also im Normalfall sofort wieder.
+     *
+     * Erreichbar bleibt er nach einem Prozesstod im Fenster zwischen dem Speichern der
+     * Fehlermeldung und dem Abschluss der Deaktivierung: Dann steht die Verifikation nach dem
+     * Neustart auf `USER_REPORTED_FAILURE` und die Weiterleitung noch auf aktiv, weil die
+     * Deaktivierung nie durchlief. Genau dort tut dieser Weg das Richtige. Scheitert die
+     * Deaktivierung sichtbar, wird die Verifikation `DIAL_FAILED` und es erscheint stattdessen
+     * "Erneut versuchen".
+     */
     fun continueWithAssumedForwarding() {
         _forwardingVerification.value = ForwardingVerification.ASSUMED_SUCCESS
         _showTransientForwardingHint.value = true
@@ -1216,54 +1227,6 @@ class ContactsViewModel(
             } finally {
                 _isCleaningUp.value = false
                 _showProgressDialog.value = false
-            }
-        }
-    }
-
-    fun saveCurrentState() {
-        viewModelScope.launch {
-            try {
-                val currentContact = _selectedContact.value
-                val isActive = _forwardingActive.value
-
-                if (currentContact != null && isActive) {
-                    LoggingManager.logInfo(
-                        component = "ContactsViewModel",
-                        action = "SAVE_STATE",
-                        message = "Speichere aktiven Weiterleitungskontakt",
-                        details = mapOf(
-                            "contact" to currentContact.name,
-                            "number" to MmiCodeMasker.maskNumber(currentContact.phoneNumber),
-                            "is_active" to true
-                        )
-                    )
-                    prefsManager.saveSelectedPhoneNumber(currentContact.phoneNumber)
-                    prefsManager.saveContactName(currentContact.name)
-                    prefsManager.saveForwardingStatus(true)
-                } else {
-                    LoggingManager.logInfo(
-                        component = "ContactsViewModel",
-                        action = "SAVE_STATE",
-                        message = "Keine aktive Weiterleitung zu speichern",
-                        details = mapOf(
-                            "has_contact" to (currentContact != null),
-                            "is_active" to isActive
-                        )
-                    )
-                    prefsManager.clearSelection()
-                    prefsManager.saveForwardingStatus(false)
-                }
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "ContactsViewModel",
-                    action = "SAVE_STATE_ERROR",
-                    message = "Fehler beim Speichern des aktuellen Zustands",
-                    error = e,
-                    details = mapOf(
-                        "has_selected_contact" to (_selectedContact.value != null),
-                        "forwarding_active" to _forwardingActive.value
-                    )
-                )
             }
         }
     }
@@ -1757,25 +1720,7 @@ class ContactsViewModel(
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        viewModelScope.launch {
-            try {
-                saveCurrentState()
-                LoggingManager.logInfo(
-                    component = "ContactsViewModel",
-                    action = "VIEWMODEL_CLEARED",
-                    message = "ViewModel wurde bereinigt",
-                    details = mapOf("state" to "saved")
-                )
-            } catch (e: Exception) {
-                LoggingManager.logError(
-                    component = "ContactsViewModel",
-                    action = "VIEWMODEL_CLEAR_ERROR",
-                    message = "Fehler beim Bereinigen des ViewModels",
-                    error = e
-                )
-            }
-        }
-    }
+    // Kein onCleared-Override: Beim Aufruf ist `viewModelScope` bereits abgebrochen, dort
+    // gestartete Arbeit lief nie. Zu sichern gibt es auch nichts - jeder abgeschlossene
+    // Vorgang schreibt seinen Zustand sofort in resolvePendingForwardingResult.
 }

@@ -29,13 +29,11 @@ import androidx.compose.ui.res.stringResource
 import info.meuse24.smsforwarderneoA1.R
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 
 @Composable
 fun LogSettingsSection(
-    sectionTitleStyle: TextStyle,
     onDeleteLogs: () -> Unit,
     onChangePin: () -> Unit,
     viewModel: ContactsViewModel,

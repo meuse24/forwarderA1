@@ -23,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
@@ -42,7 +41,6 @@ import info.meuse24.smsforwarderneoA1.domain.model.inSlot
 @Composable
 fun SmsReceiveFilterSection(
     viewModel: ContactsViewModel,
-    sectionTitleStyle: TextStyle,
     modifier: Modifier = Modifier
 ) {
     val availableSims by viewModel.availableSimCards.collectAsState()
@@ -53,12 +51,6 @@ fun SmsReceiveFilterSection(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = stringResource(R.string.section_sms_receive_filter),
-            style = sectionTitleStyle,
-            color = MaterialTheme.colorScheme.primary
-        )
-
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.medium,
