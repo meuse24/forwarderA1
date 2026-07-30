@@ -305,11 +305,11 @@
     <string name="html_heading_main_features">Hauptfunktionen</string>
 
     <!-- Contact Picker Feature -->
-    <string name="html_feature_contact_picker">Kontaktauswahl per Android Contact Picker</string>
-    <string name="html_feature_contact_picker_intro">Die App nutzt den nativen Android Contact Picker für eine einfache und schnelle Kontaktauswahl:</string>
-    <string name="html_feature_contact_picker_1">Ein-Klick Auswahl über den nativen Android Contact Picker</string>
+    <string name="html_feature_contact_picker">Rufnummernauswahl über den Android-Picker</string>
+    <string name="html_feature_contact_picker_intro">Die App nutzt das Auswahlmenü von Android und kommt dabei ohne Zugriff auf Ihr Adressbuch aus:</string>
+    <string name="html_feature_contact_picker_1">Auswahl einer konkreten Rufnummer, nicht nur eines Kontakts — bei mehreren Nummern entscheiden Sie</string>
     <string name="html_feature_contact_picker_2">Persistente verschlüsselte Speicherung der Auswahl</string>
-    <string name="html_feature_contact_picker_3">Übersichtliche Kontaktkarte mit Name, Nummer und Typ-Anzeige</string>
+    <string name="html_feature_contact_picker_3">Keine Kontakteberechtigung nötig: Das Auswahlmenü gibt allein die gewählte Nummer frei</string>
     <string name="html_feature_contact_picker_4">Schnelle Änderung oder Deaktivierung des ausgewählten Kontakts</string>
     <string name="html_feature_contact_picker_5">Integrierte Test-SMS Funktion direkt aus der Kontaktkarte</string>
     <string name="html_feature_contact_picker_6">Status-Abfrage für aktive Weiterleitungen</string>
@@ -426,7 +426,7 @@
     <string name="help_html_intro">Diese Anleitung hilft Ihnen, die Weiterleitung von Anrufen und SMS schnell und einfach einzurichten.</string>
     <string name="help_html_steps_heading">Einrichtung in 3 Schritten</string>
     <string name="help_step1_title">Ziel auswählen:</string>
-    <string name="help_step1_body">Tippen Sie auf der Hauptseite auf die Schaltfläche &lt;code&gt;%1$s&lt;/code&gt;. Wählen Sie einen Kontakt aus Ihren Kontakten aus. Dies ist die Nummer, an die Ihre Anrufe und SMS weitergeleitet werden.</string>
+    <string name="help_step1_body">Tippen Sie auf der Hauptseite auf die Schaltfläche &lt;code&gt;%1$s&lt;/code&gt;. Das Auswahlmenü von Android zeigt Ihnen die Rufnummern Ihrer Kontakte. Wählen Sie die Nummer, an die Ihre Anrufe und SMS weitergeleitet werden sollen — bei Kontakten mit mehreren Nummern entscheiden Sie damit selbst, welche es wird.</string>
     <string name="help_step2_title">Aktivieren:</string>
     <string name="help_step2_body">Nachdem Sie eine Nummer ausgewählt haben, wird die Weiterleitung automatisch aktiviert. Die App wählt den Code, um die Rufumleitung beim Provider einzurichten. Gleichzeitig startet der interne Dienst für die SMS-Weiterleitung.</string>
     <string name="help_step2_warning">Warten Sie den automatischen Wählvorgang vollständig ab. Beim Standardprofil verarbeitet die App die USSD-Antwort. Das A1-Sonderprofil kann eine Netzansage ausgeben, die Android nicht maschinell auswerten kann. Die App setzt den Ablauf automatisch fort.</string>
@@ -724,7 +724,7 @@
     <string name="help_loop_protection_3">Alle blockierten Versuche werden im Log-Tab protokolliert</string>
     <string name="help_multi_sim_heading">Multi-SIM Unterstützung</string>
     <string name="help_multi_sim_intro">Für Geräte mit mehreren SIM-Karten:</string>
-    <string name="help_multi_sim_1">Wählen Sie, welche SIM SMS zur Weiterleitung empfängt</string>
+    <string name="help_multi_sim_1">Wählen Sie, von welchen SIM-Karten eingehende SMS verarbeitet werden — das gilt für die SMS- und die E-Mail-Weiterleitung gleichermaßen</string>
     <string name="help_multi_sim_2">Wählen Sie die ausgehende SIM für weitergeleitete SMS</string>
     <string name="help_multi_sim_3">Konfigurieren Sie Rufumleitung pro SIM</string>
     <string name="help_data_security_heading">Datensicherheit</string>

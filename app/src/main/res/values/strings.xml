@@ -303,11 +303,11 @@
     <string name="html_heading_main_features">Main Features</string>
 
     <!-- Contact Picker Feature -->
-    <string name="html_feature_contact_picker">Contact Selection via Android Contact Picker</string>
-    <string name="html_feature_contact_picker_intro">The app uses the native Android Contact Picker for simple and fast contact selection:</string>
-    <string name="html_feature_contact_picker_1">One-click selection via native Android Contact Picker</string>
+    <string name="html_feature_contact_picker">Number selection via the Android picker</string>
+    <string name="html_feature_contact_picker_intro">The app uses the Android picker and needs no access to your address book:</string>
+    <string name="html_feature_contact_picker_1">You pick one specific number, not just a contact — with several numbers the choice is yours</string>
     <string name="html_feature_contact_picker_2">Persistent encrypted storage of selection</string>
-    <string name="html_feature_contact_picker_3">Clear contact card with name, number and type display</string>
+    <string name="html_feature_contact_picker_3">No contacts permission required: the picker releases only the number you selected</string>
     <string name="html_feature_contact_picker_4">Quick change or deactivation of selected contact</string>
     <string name="html_feature_contact_picker_5">Integrated test SMS function directly from contact card</string>
     <string name="html_feature_contact_picker_6">Status query for active forwardings</string>
@@ -473,7 +473,7 @@
     <string name="help_html_intro">This guide helps you set up call and SMS forwarding quickly and easily.</string>
     <string name="help_html_steps_heading">Setup in 3 Steps</string>
     <string name="help_step1_title">Select destination:</string>
-    <string name="help_step1_body">On the home screen tap the &lt;code&gt;%1$s&lt;/code&gt; button. Choose a contact from your address book. This is the number your calls and SMS will be forwarded to.</string>
+    <string name="help_step1_body">On the home screen tap the &lt;code&gt;%1$s&lt;/code&gt; button. The Android picker lists the phone numbers of your contacts. Choose the number your calls and SMS should be forwarded to — for contacts with several numbers, you decide which one it is.</string>
     <string name="help_step2_title">Activate:</string>
     <string name="help_step2_body">After choosing a number, forwarding is activated automatically. The app dials the code to set up call forwarding with your carrier. At the same time the internal service for SMS forwarding starts.</string>
     <string name="help_step2_warning">Wait until automatic dialing finishes. The standard profile processes the USSD response. The A1 special profile can play a carrier announcement which Android cannot machine-read. The workflow continues automatically.</string>
@@ -673,7 +673,7 @@
     <string name="help_loop_protection_3">All blocked attempts are logged in the Log tab</string>
     <string name="help_multi_sim_heading">Multi-SIM Support</string>
     <string name="help_multi_sim_intro">For devices with multiple SIM cards:</string>
-    <string name="help_multi_sim_1">Choose which SIM receives SMS for forwarding</string>
+    <string name="help_multi_sim_1">Choose which SIM cards have their incoming SMS processed — this applies to SMS and email forwarding alike</string>
     <string name="help_multi_sim_2">Select outgoing SIM for forwarded SMS</string>
     <string name="help_multi_sim_3">Configure call forwarding per SIM</string>
     <string name="help_data_security_heading">Data Security</string>

@@ -11,7 +11,7 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 ## Features
 
 ### Kernfunktionen
-- **Automatische SMS-Weiterleitung**: Leitet eingehende SMS automatisch an vordefinierte Kontakte weiter
+- **Automatische SMS-Weiterleitung**: Leitet eingehende SMS automatisch an eine ausgewählte Zielrufnummer weiter
 - **E-Mail-Weiterleitung**: Sendet SMS-Inhalte zusätzlich per E-Mail
 - **Rufumleitung (Anrufe)**: Schaltet die Rufumleitung des Netzes per MMI-/USSD-Code auf den gewählten Kontakt — aktivieren, deaktivieren und Status abfragen direkt aus der App. Standard sind die GSM-Codes (`**21*Nummer#`, `##21#`, `*#21#`), die als USSD-Anfrage laufen und eine auswertbare Netzantwort liefern. Für den **Sonderfall A1** gibt es ein eigenes Profil (`*21*Nummer**`, `**21**`, `*021**`), das als Sprach-MMI gewählt wird; dessen Netzansage ist hörbar, aber nicht maschinell prüfbar. Eigene Codes sind ebenfalls konfigurierbar
 - **Multi-Teil SMS-Unterstützung**: Rekonstruiert automatisch mehrteilige SMS-Nachrichten
@@ -19,7 +19,7 @@ Eine zuverlässige Android-Anwendung zum automatischen Weiterleiten von eingehen
 - **Zuverlässiger Vordergrund-Dienst**: Nutzt Foreground Service mit WakeLock für stabile Hintergrundverarbeitung
 
 ### Erweiterte Funktionen
-- **Kontaktverwaltung**: Intelligente Auswahl von Weiterleitungsempfängern aus Kontakten
+- **Rufnummernauswahl ohne Kontakteberechtigung**: Das Auswahlmenü von Android gibt allein die gewählte Rufnummer frei; das Adressbuch wird nicht gelesen. Die Nummer wird auf E.164 normalisiert, bevor sie gespeichert oder in einen MMI-Code eingesetzt wird
 - **SIM-Karten-Verwaltung**: Unterstützung für Dual-SIM-Geräte
 - **Loop Protection**: Verhindert Endlosschleifen durch intelligente Erkennung eigener SIM-Karten
 - **Strukturiertes Logging**: XML-basierte Protokollierung mit automatischer Rotation
@@ -240,7 +240,6 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 1. **Berechtigungen erteilen**
    - SMS empfangen/senden
-   - Kontakte lesen
    - Telefonstatus
    - Batterie-Optimierung ignorieren
    - Benachrichtigungen
@@ -251,9 +250,11 @@ adb install app/build/outputs/apk/debug/app-debug.apk
    - Absender- und Empfänger-Adressen eingeben
    - SMTP-Credentials (Passwort wird verschlüsselt gespeichert)
 
-3. **Kontakte auswählen**
-   - Wähle Kontakte für SMS-Weiterleitung
-   - Aktiviere/deaktiviere einzelne Kontakte nach Bedarf
+3. **Zielrufnummer auswählen**
+   - Auf der Startseite "Kontakt auswählen" antippen
+   - Im Android-Auswahlmenü die Rufnummer wählen; bei Kontakten mit mehreren Nummern
+     entscheidest du, welche es wird
+   - Die Weiterleitung wird damit sofort aktiviert
 
 4. **Dienst starten**
    - Der Vordergrund-Dienst startet automatisch
@@ -296,13 +297,11 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 info.meuse24.smsforwarderneoA1/
 ├── data/                          # Data Layer
 │   ├── local/                     # Lokale Datenhaltung
-│   │   ├── Logger.kt             # XML-Logging mit Rotation
+│   │   ├── FileLoggingTree.kt    # JSON-Lines-Logging mit Rotation
 │   │   └── SharedPreferencesManager.kt  # Verschlüsselte Settings
-│   └── repository/                # Repositories
-│       └── ContactsRepositoryImpl.kt    # Kontaktverwaltung
 ├── domain/                        # Domain Layer
 │   └── model/                     # Domain Models
-│       ├── Contact.kt            # Kontakt-Entität
+│       ├── Contact.kt            # Weiterleitungsziel (Name + Rufnummer)
 │       └── LogEntry.kt           # Log-Eintrag
 ├── presentation/                  # Presentation Layer
 │   ├── ui/
@@ -342,8 +341,8 @@ info.meuse24.smsforwarderneoA1/
 - ViewModel-Initialisierung
 - Lifecycle-Management
 
-#### ContactsViewModel.kt (1.278 Zeilen)
-- Kontaktauswahl und -verwaltung
+#### ContactsViewModel.kt (~1.700 Zeilen)
+- Auswahl der Zielrufnummer
 - Weiterleitungslogik
 - State-Management für UI
 
