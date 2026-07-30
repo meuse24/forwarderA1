@@ -4,6 +4,31 @@ Alle nennenswerten Änderungen an SMS Forwarder Neo A1.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [5.2.0] – Barracuda
+
+Diese Fassung ändert die Auswahl des Weiterleitungsziels: Statt eines Kontakts wählen Sie eine
+**Rufnummer**, und die App braucht dafür **keinen Zugriff auf Ihr Adressbuch** mehr. Wichtigster
+behobener Fehler: Bei bestimmten Schreibweisen im Adressbuch richtete die App die Rufumleitung
+auf eine **falsche Nummer** ein, ohne dass es auffiel.
+
+### Behoben
+
+- **Die Rufumleitung konnte auf eine falsche Nummer eingerichtet werden.** Die Zielrufnummer wurde unverändert aus dem Adressbuch in den Netzcode eingesetzt. Bei der verbreiteten Schreibweise `+43 (0)664 …` entfernt der Telefonie-Teil von Android die Klammern, die Null darin bleibt aber stehen — beim Netz landete dadurch eine andere Nummer als angezeigt. Die Nummer wird jetzt vor dem Speichern und vor dem Wählen in die internationale Form gebracht. Am Gerät gegen A1 geprüft.
+- **Bei Kontakten mit mehreren Rufnummern nahm die App eine beliebige.** Welche es wurde, entschied die Reihenfolge des Systems; steuern liess sich das nicht. Sie wählen die Nummer jetzt selbst.
+- **Rufnummern standen im Protokoll im Klartext** — auch Ihre eigenen SIM-Nummern, samt Zuordnung zur Karte. Das Protokoll lässt sich als CSV teilen und verliess damit das Gerät. Alle Nummern sind jetzt gekürzt dargestellt.
+- **Der Anbietername fehlte, wenn die App vor der Erteilung der Berechtigungen startete.** Statt „A1" stand dort „Unbekannter Anbieter", und zwar für die gesamte Sitzung, weil die SIM-Daten nur einmal beim Start gelesen wurden. Dasselbe traf die automatische A1-Erkennung, die dadurch keinen Profilvorschlag machen konnte. Die Daten werden jetzt nach der Berechtigungserteilung und bei jeder Rückkehr zur App neu gelesen — das deckt auch einen SIM-Wechsel und das Verlassen des Flugmodus ab.
+- **„Immer SIM 1" bzw. „Immer SIM 2" konnte die falsche Karte wählen.** Adressiert wurde die Position in einer Liste, nicht der Steckplatz. Steckt nur eine Karte, und zwar im zweiten Steckplatz, sendete „Immer SIM 1" über diese. Die Einstellung zeigte dieselbe Karte gleichzeitig als „nicht verfügbar" an.
+- **Eine Bildschirmdrehung konnte eine gerade abgeschaltete Weiterleitung wieder als aktiv speichern.** Der Zustand wurde beim Drehen aus einer Quelle geschrieben, die kurzzeitig veraltet sein konnte.
+- **Der Knopf „Standard" in den MMI-Einstellungen brach buchstabenweise um** und war dadurch mehrfach so hoch wie nötig.
+- **Fehlermeldungen im Zusammenhang mit der Weiterleitung erschienen auch in englischer Oberfläche auf Deutsch.**
+
+### Geändert
+
+- **Keine Kontakteberechtigung mehr.** Die Auswahl läuft über das Auswahlmenü von Android, das allein die gewählte Rufnummer freigibt. Die App fordert `READ_CONTACTS` nicht mehr an und startet auch ohne diese Berechtigung.
+- **Der SMS-Empfangsfilter ist ein eigener Einstellungsabschnitt.** Bisher stand er unter „SMS-Weiterleitung" und las sich wie ein Unterpunkt davon. Er wirkt aber vor der Aufteilung in SMS- und E-Mail-Kanal: Eine abgewählte SIM-Karte stoppt auch die E-Mail-Weiterleitung. Der Abschnitt sagt das jetzt ausdrücklich. Die Einstellung darüber heisst „Sende-SIM für SMS-Weiterleitung" und benennt damit, was sie festlegt.
+- **„Fehler melden" schaltet die Rufumleitung jetzt zur Sicherheit ab.** Bisher wurde die Meldung nur vermerkt, während die App weiter eine aktive Umleitung anzeigte — auch wenn das Netz sie nicht geschaltet hatte. Die Anzeige wird erst geleert, wenn die Abschaltung durch ist; scheitert sie, sagt die App das.
+- **Die Weiterleitung an eine Festnetznummer bleibt erlaubt.** Eine Netzrufumleitung dorthin ist gültig, auch wenn die SMS-Weiterleitung sie nicht erreicht.
+
 ## [5.1.0] – Barracuda
 
 > Die Version 5.0.0 wurde nie veröffentlicht: Ihr Stand war bereits getaggt, als der Umbau des
