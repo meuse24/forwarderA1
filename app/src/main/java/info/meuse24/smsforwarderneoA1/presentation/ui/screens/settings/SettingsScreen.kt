@@ -77,6 +77,7 @@ fun SettingsScreen(
     // Position tracking for each section
     var simManagementPosition by remember { mutableStateOf(0f) }
     var simSelectionPosition by remember { mutableStateOf(0f) }
+    var receiveFilterPosition by remember { mutableStateOf(0f) }
     var callForwardingPosition by remember { mutableStateOf(0f) }
     var emailSettingsPosition by remember { mutableStateOf(0f) }
     var appSettingsPosition by remember { mutableStateOf(0f) }
@@ -85,6 +86,7 @@ fun SettingsScreen(
     // Expansion states for each section - alle geschlossen beim Start
     var simManagementExpanded by remember { mutableStateOf(false) }
     var simSelectionExpanded by remember { mutableStateOf(false) }
+    var receiveFilterExpanded by remember { mutableStateOf(false) }
     var callForwardingExpanded by remember { mutableStateOf(false) }
     var emailSettingsExpanded by remember { mutableStateOf(false) }
     var appSettingsExpanded by remember { mutableStateOf(false) }
@@ -94,6 +96,7 @@ fun SettingsScreen(
     fun collapseAllExcept(section: String) {
         if (section != "simManagement") simManagementExpanded = false
         if (section != "simSelection") simSelectionExpanded = false
+        if (section != "receiveFilter") receiveFilterExpanded = false
         if (section != "callForwarding") callForwardingExpanded = false
         if (section != "email") emailSettingsExpanded = false
         if (section != "app") appSettingsExpanded = false
@@ -142,7 +145,7 @@ fun SettingsScreen(
                 )
             }
 
-            // Section 3: SIM Selection (inkl. SMS-Empfangsfilter)
+            // Section 3: Sende-SIM für weitergeleitete SMS
             ExpandableSection(
                 title = stringResource(R.string.section_sms_sim_selection),
                 expanded = simSelectionExpanded,
@@ -160,6 +163,30 @@ fun SettingsScreen(
                 }
             ) {
                 SimSelectionSection(
+                    viewModel = viewModel,
+                    sectionTitleStyle = sectionTitleStyle
+                )
+            }
+
+            // Eigener Abschnitt, nicht unter der Weiterleitung: Der Filter greift im
+            // SmsReceiver und betrifft damit auch die E-Mail-Weiterleitung.
+            ExpandableSection(
+                title = stringResource(R.string.section_sms_receive_filter),
+                expanded = receiveFilterExpanded,
+                onExpandChange = {
+                    if (it) {
+                        collapseAllExcept("receiveFilter")
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(receiveFilterPosition.toInt())
+                        }
+                    }
+                    receiveFilterExpanded = it
+                },
+                modifier = Modifier.onGloballyPositioned { coordinates ->
+                    receiveFilterPosition = coordinates.positionInParent().y
+                }
+            ) {
+                SmsReceiveFilterSection(
                     viewModel = viewModel,
                     sectionTitleStyle = sectionTitleStyle
                 )

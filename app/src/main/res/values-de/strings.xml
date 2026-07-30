@@ -73,14 +73,16 @@
     <!-- ==================== SETTINGS SECTIONS ==================== -->
     <string name="section_phone_settings">Telefon-Einstellungen</string>
     <string name="section_sim_management">SIM-Karten Übersicht</string>
-    <string name="section_sms_sim_selection">SMS-Weiterleitung</string>
+    <string name="section_sms_sim_selection">Sende-SIM für SMS-Weiterleitung</string>
     <string name="sim_selection_same_as_incoming">Gleiche SIM wie SMS-Eingang</string>
     <string name="sim_selection_always_sim1">Immer SIM 1</string>
     <string name="sim_selection_always_sim2">Immer SIM 2</string>
 
     <!-- SMS Empfangsfilter -->
     <string name="section_sms_receive_filter">SMS-Empfangsfilter</string>
-    <string name="desc_sms_receive_filter">Wählen Sie, von welchen SIM-Karten SMS empfangen werden sollen</string>
+    <string name="desc_sms_receive_filter">Legt fest, von welchen SIM-Karten eingehende SMS überhaupt verarbeitet werden</string>
+    <string name="desc_sms_send_sim">Legt fest, über welche SIM-Karte weitergeleitete SMS verschickt werden. Welche SMS weitergeleitet werden, steuert der Abschnitt „SMS-Empfangsfilter“.</string>
+    <string name="hint_sms_receive_filter_scope">Gilt für beide Weiterleitungswege: SMS und E-Mail. SMS einer nicht ausgewählten SIM-Karte werden verworfen — auch dann, wenn nur die E-Mail-Weiterleitung aktiv ist.</string>
 
     <string name="section_mmi_sim_selection">SIM-Auswahl für Rufumleitung</string>
     <string name="desc_mmi_sim_selection">Bestimmt, mit welcher SIM-Karte Rufumleitungen aktiviert/deaktiviert werden.</string>

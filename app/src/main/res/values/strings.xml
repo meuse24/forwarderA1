@@ -73,14 +73,16 @@
     <!-- ==================== SETTINGS SECTIONS ==================== -->
     <string name="section_phone_settings">Phone Settings</string>
     <string name="section_sim_management">SIM Card Overview</string>
-    <string name="section_sms_sim_selection">SMS Forwarding</string>
+    <string name="section_sms_sim_selection">Sending SIM for SMS forwarding</string>
     <string name="sim_selection_same_as_incoming">Same SIM as incoming SMS</string>
     <string name="sim_selection_always_sim1">Always SIM 1</string>
     <string name="sim_selection_always_sim2">Always SIM 2</string>
 
     <!-- SMS Receive Filter -->
     <string name="section_sms_receive_filter">SMS Receive Filter</string>
-    <string name="desc_sms_receive_filter">Select which SIM cards to receive SMS from</string>
+    <string name="desc_sms_receive_filter">Controls which SIM cards have their incoming SMS processed at all</string>
+    <string name="desc_sms_send_sim">Sets which SIM card sends the forwarded SMS. Which messages get forwarded is controlled by the “SMS receive filter” section.</string>
+    <string name="hint_sms_receive_filter_scope">Applies to both forwarding paths: SMS and email. SMS from a SIM card you leave unchecked are discarded — even when only email forwarding is active.</string>
     <string name="section_mmi_sim_selection">SIM Selection for Call Forwarding</string>
     <string name="desc_mmi_sim_selection">Determines which SIM card to use for activating/deactivating call forwarding.</string>
     <string name="suffix_default_voice">(Default Voice SIM)</string>
