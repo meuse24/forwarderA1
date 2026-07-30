@@ -483,13 +483,12 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        // Internationales Anschaltzeichen "+" durch konfigurierte Anschaltziffernfolge ersetzen
+        // Internationales Anschaltzeichen "+" durch konfigurierte Anschaltziffernfolge ersetzen.
+        // Nur das erste: Es steht fuer die Landesvorwahl der Zielrufnummer und kommt genau
+        // einmal vor. `replace` hatte jedes weitere mitgenommen und einen Code erzeugt, den
+        // niemand gepruefen kann.
         val dialPrefix = prefsManager.getInternationalDialPrefix()
-        val normalizedCode = if (code.contains("+")) {
-            code.replace("+", dialPrefix)
-        } else {
-            code
-        }
+        val normalizedCode = code.replaceFirst("+", dialPrefix)
         // A pending deactivation can be bound to the profile used at activation.
         // Its mode must not be recomputed from settings changed in the meantime.
         val isUssdCode = viewModel.executionModeForOperation(operationId, code) == MmiExecutionMode.USSD_CALLBACK

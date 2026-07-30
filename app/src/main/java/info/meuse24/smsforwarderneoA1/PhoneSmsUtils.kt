@@ -227,14 +227,10 @@ class PhoneSmsUtils private constructor() {
                 throw IllegalArgumentException("Phone number and text must not be empty")
             }
 
-            // Ersetze "+" durch konfigurierte Anschaltziffernfolge
+            // Nur das fuehrende "+" ersetzen - in einer Rufnummer steht es genau einmal, am Anfang.
             val prefsManager = prefs(context)
             val dialPrefix = prefsManager.getInternationalDialPrefix()
-            val normalizedPhoneNumber = if (phoneNumber.contains("+")) {
-                phoneNumber.replace("+", dialPrefix)
-            } else {
-                phoneNumber
-            }
+            val normalizedPhoneNumber = phoneNumber.replaceFirst("+", dialPrefix)
 
             // Netzwerk-Check entfernt - SMS werden über Mobilfunknetz versendet, nicht über Internet
             if (!PermissionHelper.hasPermission(context, Manifest.permission.SEND_SMS)) {
@@ -398,13 +394,9 @@ class PhoneSmsUtils private constructor() {
             if (phoneNumber.isBlank()) return ForwardSmsPreparation.Rejected("empty_target_number")
             if (text.isBlank()) return ForwardSmsPreparation.Rejected("empty_text")
 
-            // Ersetze "+" durch konfigurierte Anschaltziffernfolge
+            // Nur das fuehrende "+" ersetzen - in einer Rufnummer steht es genau einmal, am Anfang.
             val dialPrefix = prefs(context).getInternationalDialPrefix()
-            val normalizedPhoneNumber = if (phoneNumber.contains("+")) {
-                phoneNumber.replace("+", dialPrefix)
-            } else {
-                phoneNumber
-            }
+            val normalizedPhoneNumber = phoneNumber.replaceFirst("+", dialPrefix)
 
             val smsManager = obtainSmsManager(context, subscriptionId)
                 ?: return ForwardSmsPreparation.Rejected("sms_manager_unavailable")

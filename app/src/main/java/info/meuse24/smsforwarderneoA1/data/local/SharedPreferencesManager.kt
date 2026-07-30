@@ -413,9 +413,12 @@ class SharedPreferencesManager(private val context: Context) {
         getPreference(KEY_CONTACT_NAME, "")
 
     fun clearSelection() {
+        // Ein Editor, ein Commit. Die beiden `setPreference`-Aufrufe von zuvor loesten auf die
+        // Methode dieser Klasse auf und oeffneten je einen eigenen Editor - nur `putBoolean`
+        // landete im aeusseren. Drei Schreibvorgaenge, die wie einer aussahen.
         prefs.edit().apply {
-            setPreference(KEY_SELECTED_PHONE, "")
-            setPreference(KEY_CONTACT_NAME, "")
+            putString(KEY_SELECTED_PHONE, "")
+            putString(KEY_CONTACT_NAME, "")
             putBoolean(KEY_FORWARDING_ACTIVE, false)
             apply()
         }
