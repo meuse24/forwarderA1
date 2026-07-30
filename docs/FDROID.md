@@ -5,6 +5,24 @@ getaggten, öffentlichen Quellcode und signiert sie mit einem eigenen Schlüssel
 GitHub Releases verbreitete APK und die F-Droid-APK können deshalb nicht gegenseitig als
 Update installiert werden.
 
+## Status der Einreichung (30.07.2026)
+
+Die erste Einreichung wurde vorbereitet und als Merge Request an F-Droid übermittelt:
+
+* Quellcode-Release: `Barracuda 5.2.1` (`versionCode` 9), Git-Tag
+  [`V5.2.1`](https://github.com/meuse24/forwarderA1/tree/V5.2.1).
+* Store-Metadaten und Screenshots liegen im Quellcode unter
+  `fastlane/metadata/android/` auf Deutsch und Englisch.
+* F-Droid-Metadaten: `metadata/info.meuse24.smsforwarderneoA1.yml` im persönlichen
+  `fdroiddata`-Fork.
+* Einreichung: [F-Droid Merge Request !44367](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/44367).
+
+Die GitLab-Pipeline des persönlichen Forks konnte nicht starten, weil GitLab eine
+Telefonnummer-Verifizierung verlangt. Es wurden daher keine Build-Jobs ausgeführt. Der
+Merge Request enthält einen Hinweis mit der Bitte, dass ein F-Droid-Teammitglied die CI
+anstoßen soll. Bis zur Rückmeldung bleibt der Merge Request offen; er darf nicht selbst
+zusammengeführt werden.
+
 ## Voraussetzungen
 
 * Ein veröffentlichter Git-Tag, der exakt auf dem Release-Commit liegt. Für die erste
