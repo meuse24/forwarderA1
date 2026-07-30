@@ -1,0 +1,18 @@
+SMSForwarderNeo A1 automatically forwards incoming SMS messages to a chosen phone number and/or email address. It is designed for devices that need to remain reachable while messages are relayed reliably in the background.
+
+Features:
+
+• Forward incoming SMS by SMS, email, or both.
+• Reassemble multipart SMS messages before forwarding.
+• Configure network call forwarding with GSM, A1, or custom MMI/USSD profiles.
+• Support dual-SIM devices and choose the relevant SIM.
+• Keep persistent delivery queues and show unsuccessful or uncertain deliveries.
+• Protect against forwarding loops involving the device's own numbers.
+• Send email through a user-configured SMTP server using STARTTLS or TLS.
+• Export local logs for troubleshooting.
+
+The app does not contain advertising, tracking, analytics, or a proprietary backend. SMS forwarding and call-forwarding actions require the corresponding Android and telephone-network permissions. Email forwarding is optional and uses only the SMTP server configured by the user.
+
+Limitations:
+
+Only SMS messages can be received by third-party apps. RCS chats and MMS are not forwarded. Availability of call-forwarding MMI/USSD codes depends on the network operator and contract.

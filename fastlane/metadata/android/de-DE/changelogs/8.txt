@@ -1,0 +1,3 @@
+• SIM-Auswahl und SMS-Empfangsfilter verbessert.
+• Zuverlässigkeit der Sendewarteschlangen und Zustellmeldungen verbessert.
+• Rufumleitungssteuerung, Audit-Informationen und RCS-Hinweise verständlicher gestaltet.

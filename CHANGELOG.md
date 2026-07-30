@@ -4,6 +4,15 @@ Alle nennenswerten Änderungen an SMS Forwarder Neo A1.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [5.2.1] – Barracuda
+
+### Geändert
+
+- **Build-Konfiguration für F-Droid vorbereitet.** Die fest auf einen lokalen Windows-Pfad
+  gesetzte JDK-Position ist entfernt; Builds verwenden nun die JDK-Umgebung des jeweiligen
+  Systems. F-Droid-Store-Metadaten, deutsche und englische Beschreibungen sowie Screenshots
+  sind im Repository enthalten.
+
 ## [5.2.0] – Barracuda
 
 Diese Fassung ändert die Auswahl des Weiterleitungsziels: Statt eines Kontakts wählen Sie eine

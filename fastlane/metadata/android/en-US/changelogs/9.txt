@@ -1,0 +1,1 @@
+• Prepared portable builds and store metadata for F-Droid publication.

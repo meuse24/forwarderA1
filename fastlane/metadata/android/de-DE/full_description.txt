@@ -1,0 +1,18 @@
+SMSForwarderNeo A1 leitet eingehende SMS automatisch an eine gewählte Rufnummer und/oder E-Mail-Adresse weiter. Die App ist für Geräte gedacht, die erreichbar bleiben sollen, während Nachrichten zuverlässig im Hintergrund weitergeleitet werden.
+
+Funktionen:
+
+• Eingehende SMS per SMS, E-Mail oder über beide Wege weiterleiten.
+• Mehrteilige SMS vor dem Weiterleiten zusammensetzen.
+• Netz-Rufumleitung mit GSM-, A1- oder eigenen MMI-/USSD-Profilen steuern.
+• Dual-SIM unterstützen und die relevante SIM wählen.
+• Persistente Sendewarteschlangen führen und fehlgeschlagene oder ungeklärte Zustellungen anzeigen.
+• Weiterleitungsschleifen mit den eigenen Rufnummern verhindern.
+• E-Mails über einen selbst eingerichteten SMTP-Server mit STARTTLS oder TLS senden.
+• Lokale Protokolle zur Fehleranalyse exportieren.
+
+Die App enthält keine Werbung, kein Tracking, keine Analytik und kein proprietäres Backend. SMS-Weiterleitung und Rufumleitung benötigen die jeweiligen Android- und Netzberechtigungen. Die optionale E-Mail-Weiterleitung verwendet ausschließlich den vom Nutzer eingerichteten SMTP-Server.
+
+Grenzen:
+
+Nur SMS können von Drittanbieter-Apps empfangen werden. RCS-Chats und MMS werden nicht weitergeleitet. Ob Rufumleitungs-MMI-/USSD-Codes funktionieren, hängt vom Netzbetreiber und Vertrag ab.

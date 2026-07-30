@@ -1,0 +1,3 @@
+• Improved SIM selection and SMS receive filtering.
+• Improved reliability of forwarding queues and delivery reporting.
+• Added clearer call-forwarding controls, audit information, and RCS guidance.
