@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.R
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.inSlot
 
 /**
  * UI-Komponente für die SIM-Auswahl bei SMS-Weiterleitung.
@@ -81,8 +82,8 @@ fun SimSelectionSection(
                         mode,
                         availableSims.size,
                         defaultSmsSubId,
-                        availableSims.getOrNull(0)?.subscriptionId,
-                        availableSims.getOrNull(1)?.subscriptionId
+                        availableSims.inSlot(0)?.subscriptionId,
+                        availableSims.inSlot(1)?.subscriptionId
                     )
 
                     Row(
@@ -137,7 +138,7 @@ fun SimSelectionSection(
                 )
 
                 // SIM 1 checkbox
-                val sim1 = availableSims.getOrNull(0)
+                val sim1 = availableSims.inSlot(0)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -160,7 +161,7 @@ fun SimSelectionSection(
                 }
 
                 // SIM 2 checkbox
-                val sim2 = availableSims.getOrNull(1)
+                val sim2 = availableSims.inSlot(1)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

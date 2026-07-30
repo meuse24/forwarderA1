@@ -48,6 +48,7 @@ import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
 import info.meuse24.smsforwarderneoA1.domain.model.LoopProtectionPolicy
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.inSlot
 import info.meuse24.smsforwarderneoA1.domain.model.SmsDeliveryReducer
 import info.meuse24.smsforwarderneoA1.domain.model.SmsForwardingComposer
 import info.meuse24.smsforwarderneoA1.domain.model.SmsMessagePart
@@ -893,7 +894,7 @@ class SmsForegroundService : Service() {
                 }
             }
 
-            SimSelectionMode.ALWAYS_SIM_1 -> sims.getOrNull(0)?.subscriptionId ?: run {
+            SimSelectionMode.ALWAYS_SIM_1 -> sims.inSlot(0)?.subscriptionId ?: run {
                 LoggingManager.logWarning(
                     component = "SmsForegroundService",
                     action = "DETERMINE_SIM",
@@ -904,7 +905,7 @@ class SmsForegroundService : Service() {
                 -1
             }
 
-            SimSelectionMode.ALWAYS_SIM_2 -> sims.getOrNull(1)?.subscriptionId ?: run {
+            SimSelectionMode.ALWAYS_SIM_2 -> sims.inSlot(1)?.subscriptionId ?: run {
                 LoggingManager.logWarning(
                     component = "SmsForegroundService",
                     action = "DETERMINE_SIM",
@@ -912,7 +913,7 @@ class SmsForegroundService : Service() {
                     details = mapOf("available_sims" to sims.size)
                 )
                 SnackbarManager.showWarning(getString(R.string.snackbar_sim2_unavailable))
-                sims.getOrNull(0)?.subscriptionId ?: -1
+                sims.inSlot(0)?.subscriptionId ?: -1
             }
         }
     }
