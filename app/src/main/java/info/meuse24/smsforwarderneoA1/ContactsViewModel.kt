@@ -1129,7 +1129,8 @@ class ContactsViewModel(
             message = "Deaktivierung der Weiterleitung angefordert",
             details = mapOf(
                 "previous_contact" to (prevContact?.name ?: "none"),
-                "previous_number" to (prevContact?.phoneNumber ?: "none")
+                "previous_number" to (prevContact?.phoneNumber?.takeIf { it.isNotBlank() }
+                    ?.let(MmiCodeMasker::maskNumber) ?: "none")
             )
         )
 

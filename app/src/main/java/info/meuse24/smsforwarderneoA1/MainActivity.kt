@@ -1393,7 +1393,11 @@ class MainActivity : ComponentActivity() {
                 action = "CHECK_SIM_NUMBERS_DEBUG",
                 message = "SIM-Nummern-Prüfung gestartet",
                 details = mapOf(
-                    "stored_numbers" to storedNumbers.toString(),
+                    // Maskiert: Das sind die eigenen Rufnummern, und Protokolle werden exportiert.
+                    // Die letzten Stellen genuegen, um die Zuordnung je Subscription zu erkennen.
+                    "stored_numbers" to storedNumbers.entries.joinToString { (subId, number) ->
+                        "$subId=${MmiCodeMasker.maskNumber(number)}"
+                    },
                     "sim_count" to simInfoList.size
                 )
             )
@@ -1409,8 +1413,8 @@ class MainActivity : ComponentActivity() {
                     details = mapOf(
                         "subscription_id" to simInfo.subscriptionId,
                         "slot" to simInfo.slotIndex,
-                        "auto_detected" to (simInfo.phoneNumber ?: "null"),
-                        "stored" to (stored ?: "null"),
+                        "auto_detected" to (simInfo.phoneNumber?.let(MmiCodeMasker::maskNumber) ?: "null"),
+                        "stored" to (stored?.let(MmiCodeMasker::maskNumber) ?: "null"),
                         "carrier" to (simInfo.carrierName ?: "Unknown")
                     )
                 )

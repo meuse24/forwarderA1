@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 
 /**
  * Rueckmeldung des Telefonie-Frameworks zu einem gesendeten SMS-Teil.
@@ -148,7 +149,7 @@ class SmsSentReceiver : BroadcastReceiver() {
                 action = "SMS_SENT_SUCCESS",
                 message = "SMS erfolgreich gesendet$partInfo",
                 details = mapOf(
-                    "recipient" to recipient,
+                    "recipient" to MmiCodeMasker.maskNumber(recipient),
                     "part_index" to partIndex,
                     "total_parts" to totalParts
                 )
@@ -164,7 +165,7 @@ class SmsSentReceiver : BroadcastReceiver() {
             action = "SMS_SENT_ERROR",
             message = "SMS-Sendefehler$partInfo",
             details = mapOf(
-                "recipient" to recipient,
+                "recipient" to MmiCodeMasker.maskNumber(recipient),
                 "error_code" to resultCode,
                 "classification" to result.name
             )
