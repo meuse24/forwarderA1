@@ -102,6 +102,19 @@ class PhoneSmsUtils private constructor() {
             )
         }
 
+        /**
+         * Nutzt die vorhandene Instanz statt eine neue zu bauen.
+         *
+         * Der Konstruktor von [SharedPreferencesManager] faehrt Migrationen, Zustandspruefung
+         * und Audit-Bereinigung und erzwingt die Keystore-Initialisierung der verschluesselten
+         * Preferences. Auf dem Empfangspfad lief das bisher pro weitergeleiteter Nachricht.
+         * Der direkte Bau bleibt als Rueckfall, falls der Container noch nicht steht - etwa wenn
+         * ein Receiver vor dem Application-Setup feuert.
+         */
+        private fun prefs(context: Context): SharedPreferencesManager =
+            runCatching { AppContainer.requirePrefsManager() }
+                .getOrElse { SharedPreferencesManager(context) }
+
         @SuppressLint("MissingPermission")
         // checkNetworkStatus Funktion entfernt - SMS benötigen keine Internet-Verbindung, nur Mobilfunk
 
@@ -183,7 +196,7 @@ class PhoneSmsUtils private constructor() {
                     action = "SEND_TEST_SMS",
                     message = "Test-SMS erfolgreich gesendet",
                     details = mapOf(
-                        "recipient" to phoneNumber,
+                        "recipient" to MmiCodeMasker.maskNumber(phoneNumber),
                         "length" to codeUnitCount,
                         "parts" to msgCount,
                         "encoding" to encoding
@@ -198,7 +211,7 @@ class PhoneSmsUtils private constructor() {
                     message = "Fehler beim Senden der Test-SMS",
                     error = e,
                     details = mapOf(
-                        "recipient" to phoneNumber,
+                        "recipient" to MmiCodeMasker.maskNumber(phoneNumber),
                         "error_type" to e.javaClass.simpleName
                     )
                 )
@@ -215,7 +228,7 @@ class PhoneSmsUtils private constructor() {
             }
 
             // Ersetze "+" durch konfigurierte Anschaltziffernfolge
-            val prefsManager = SharedPreferencesManager(context)
+            val prefsManager = prefs(context)
             val dialPrefix = prefsManager.getInternationalDialPrefix()
             val normalizedPhoneNumber = if (phoneNumber.contains("+")) {
                 phoneNumber.replace("+", dialPrefix)
@@ -296,8 +309,8 @@ class PhoneSmsUtils private constructor() {
                         action = "SEND_SMS",
                         message ,
                         details = mapOf(
-                            "recipient" to normalizedPhoneNumber,
-                            "original_recipient" to phoneNumber,
+                            "recipient" to MmiCodeMasker.maskNumber(normalizedPhoneNumber),
+                            "original_recipient" to MmiCodeMasker.maskNumber(phoneNumber),
                             "parts" to parts.size,
                             "encoding" to encoding,
                             "text" to sanitizeSmsTextForLogging(text)
@@ -328,8 +341,8 @@ class PhoneSmsUtils private constructor() {
                         action = "SEND_SMS",
                         message ,
                         details = mapOf(
-                            "recipient" to normalizedPhoneNumber,
-                            "original_recipient" to phoneNumber,
+                            "recipient" to MmiCodeMasker.maskNumber(normalizedPhoneNumber),
+                            "original_recipient" to MmiCodeMasker.maskNumber(phoneNumber),
                             "encoding" to encoding,
                             "text" to sanitizeSmsTextForLogging(text))
                     )
@@ -342,7 +355,7 @@ class PhoneSmsUtils private constructor() {
                     action = "SEND_SMS",
                     message ,
                     error = e,
-                    details = mapOf("recipient" to phoneNumber)
+                    details = mapOf("recipient" to MmiCodeMasker.maskNumber(phoneNumber))
 
                 )
                 SnackbarManager.showError(context.getString(R.string.snackbar_sms_send_failed, phoneNumber, message))
@@ -386,7 +399,7 @@ class PhoneSmsUtils private constructor() {
             if (text.isBlank()) return ForwardSmsPreparation.Rejected("empty_text")
 
             // Ersetze "+" durch konfigurierte Anschaltziffernfolge
-            val dialPrefix = SharedPreferencesManager(context).getInternationalDialPrefix()
+            val dialPrefix = prefs(context).getInternationalDialPrefix()
             val normalizedPhoneNumber = if (phoneNumber.contains("+")) {
                 phoneNumber.replace("+", dialPrefix)
             } else {
@@ -690,7 +703,7 @@ class PhoneSmsUtils private constructor() {
         }
 
         private fun getUssdCodeType(context: Context, ussdCode: String): UssdRequestType {
-            val prefsManager = SharedPreferencesManager(context)
+            val prefsManager = prefs(context)
             val activatePrefix = prefsManager.getMmiActivatePrefix()
             val deactivateCode = prefsManager.getMmiDeactivateCode()
 

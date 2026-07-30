@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import info.meuse24.smsforwarderneoA1.LoggingManager
+import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 
 /**
  * BroadcastReceiver für SMS-Zustellungsstatus.
@@ -25,7 +26,7 @@ class SmsDeliveredReceiver : BroadcastReceiver() {
                     action = "SMS_DELIVERED_SUCCESS",
                     message = "SMS erfolgreich zugestellt$partInfo",
                     details = mapOf(
-                        "recipient" to recipient,
+                        "recipient" to MmiCodeMasker.maskNumber(recipient),
                         "part_index" to partIndex,
                         "total_parts" to totalParts
                     )
@@ -38,7 +39,7 @@ class SmsDeliveredReceiver : BroadcastReceiver() {
                     action = "SMS_DELIVERED_FAILED",
                     message = "SMS-Zustellung fehlgeschlagen$partInfo",
                     details = mapOf(
-                        "recipient" to recipient,
+                        "recipient" to MmiCodeMasker.maskNumber(recipient),
                         "part_index" to partIndex,
                         "total_parts" to totalParts
                     )
@@ -51,7 +52,7 @@ class SmsDeliveredReceiver : BroadcastReceiver() {
                     action = "SMS_DELIVERED_UNKNOWN",
                     message = "SMS-Zustellungsstatus unbekannt$partInfo",
                     details = mapOf(
-                        "recipient" to recipient,
+                        "recipient" to MmiCodeMasker.maskNumber(recipient),
                         "result_code" to resultCode
                     )
                 )

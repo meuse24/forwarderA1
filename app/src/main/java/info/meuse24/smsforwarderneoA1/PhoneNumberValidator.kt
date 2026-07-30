@@ -12,6 +12,31 @@ class PhoneNumberValidator(private val context: Context? = null) {
         context?.getString(resId) ?: fallback
 
     /**
+     * Einmal je Validator gelesen, nicht je Vergleich.
+     *
+     * [normalizePhoneNumber] lief zuvor pro Aufruf über einen frisch gebauten
+     * [SharedPreferencesManager]. Dessen `init` fährt Migrationen, Zustandsprüfung und
+     * Audit-Bereinigung und erzwingt die Keystore-Initialisierung der verschlüsselten
+     * Preferences - und [areSameNumber] ruft das zweimal pro verglichener Nummer auf, auf dem
+     * SMS-Empfangspfad unter gehaltenem WakeLock. Das Präfix ändert sich während eines
+     * Vergleichslaufs nicht, `lazy` genügt also.
+     */
+    private val dialPrefix: String by lazy {
+        val ctx = context ?: return@lazy ""
+        runCatching { AppContainer.requirePrefsManager().getInternationalDialPrefix() }
+            .recoverCatching { SharedPreferencesManager(ctx).getInternationalDialPrefix() }
+            .getOrElse { error ->
+                LoggingManager.logError(
+                    component = "PhoneNumberValidator",
+                    action = "READ_DIAL_PREFIX",
+                    message = tr(R.string.phone_error_normalization, "Fehler bei der Normalisierung der Telefonnummer"),
+                    error = error as? Exception ?: Exception(error)
+                )
+                ""
+            }
+    }
+
+    /**
      * Validiert und formatiert eine Telefonnummer.
      * @param phoneNumber Die zu validierende Telefonnummer
      * @param defaultRegion Der Default-Ländercode (z.B. "AT" für Österreich)
@@ -98,29 +123,17 @@ class PhoneNumberValidator(private val context: Context? = null) {
      * Normalisiert eine Telefonnummer: Ersetzt die konfigurierte Anschaltziffernfolge durch "+"
      */
     private fun normalizePhoneNumber(phoneNumber: String): String {
-        if (context == null) {
-            // Fallback: Verwende Standard-Normalisierung
+        val prefix = dialPrefix
+        if (prefix.isEmpty()) {
+            // Ohne konfiguriertes Praefix bleibt die uebliche Standardform.
             return phoneNumber.replace(Regex("^00"), "+")
         }
 
-        try {
-            val prefsManager = SharedPreferencesManager(context)
-            val dialPrefix = prefsManager.getInternationalDialPrefix()
-
-            // Ersetze die konfigurierte Anschaltziffernfolge durch "+"
-            return if (phoneNumber.startsWith(dialPrefix)) {
-                "+" + phoneNumber.substring(dialPrefix.length)
-            } else {
-                phoneNumber
-            }
-        } catch (e: Exception) {
-            LoggingManager.logError(
-                component = "PhoneNumberValidator",
-                action = "NORMALIZE_PHONE_NUMBER",
-                message = tr(R.string.phone_error_normalization, "Fehler bei der Normalisierung der Telefonnummer"),
-                error = e
-            )
-            return phoneNumber
+        // Ersetze die konfigurierte Anschaltziffernfolge durch "+"
+        return if (phoneNumber.startsWith(prefix)) {
+            "+" + phoneNumber.substring(prefix.length)
+        } else {
+            phoneNumber
         }
     }
 

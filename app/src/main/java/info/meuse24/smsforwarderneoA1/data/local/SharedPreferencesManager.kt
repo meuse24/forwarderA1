@@ -399,11 +399,13 @@ class SharedPreferencesManager(private val context: Context) {
     fun saveContactName(name: String) {
         setPreference(KEY_CONTACT_NAME, name)
 
+        // Der Name selbst gehoert hier nicht ins Protokoll: Er sagt ueber diesen Schreibvorgang
+        // nichts aus und steht bereits an den Vorgangs-Eintraegen der aufrufenden Ebene.
         LoggingManager.logInfo(
             component = "SharedPreferencesManager",
             action = "SAVE_CONTACT_NAME",
             message = "Kontaktname gespeichert",
-            details = mapOf("name" to name)
+            details = mapOf("has_name" to name.isNotBlank())
         )
     }
 

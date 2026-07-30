@@ -48,6 +48,7 @@ import info.meuse24.smsforwarderneoA1.domain.model.ForwardingVerification
 import info.meuse24.smsforwarderneoA1.domain.model.LoopProtectionPolicy
 import info.meuse24.smsforwarderneoA1.domain.model.SimInfo
 import info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode
+import info.meuse24.smsforwarderneoA1.domain.model.inSlot
 import info.meuse24.smsforwarderneoA1.domain.model.SmsDeliveryReducer
 import info.meuse24.smsforwarderneoA1.domain.model.SmsForwardingComposer
 import info.meuse24.smsforwarderneoA1.domain.model.SmsMessagePart
@@ -524,7 +525,7 @@ class SmsForegroundService : Service() {
             action = "PROCESS_MESSAGE_GROUP",
             message = "Verarbeite SMS-Gruppe",
             details = mapOf(
-                "sender" to group.sender,
+                "sender" to MmiCodeMasker.maskNumber(group.sender),
                 "parts_count" to group.parts.size,
                 "total_length" to group.text.length,
                 "subscription_id" to group.subscriptionId
@@ -542,7 +543,7 @@ class SmsForegroundService : Service() {
                             action = "FORWARD_SMS_ERROR",
                             message = "Fehler im SMS-Zweig",
                             error = e,
-                            details = mapOf("sender" to group.sender)
+                            details = mapOf("sender" to MmiCodeMasker.maskNumber(group.sender))
                         )
                     }
                 }
@@ -590,7 +591,7 @@ class SmsForegroundService : Service() {
                     component = "SmsForegroundService",
                     action = "LOOP_PROTECTION_SENDER",
                     message = "Weiterleitung gestoppt: Absender entspricht Zielrufnummer",
-                    details = mapOf("sender" to group.sender, "target" to targetNumber)
+                    details = mapOf("sender" to MmiCodeMasker.maskNumber(group.sender), "target" to MmiCodeMasker.maskNumber(targetNumber))
                 )
                 return
             }
@@ -601,9 +602,9 @@ class SmsForegroundService : Service() {
                     action = "LOOP_PROTECTION_CRITICAL",
                     message = "Weiterleitung gestoppt: Zielnummer ist eine eigene SIM-Karte!",
                     details = mapOf(
-                        "target" to targetNumber,
+                        "target" to MmiCodeMasker.maskNumber(targetNumber),
                         "own_numbers_count" to ownNumbers.size,
-                        "sender" to group.sender
+                        "sender" to MmiCodeMasker.maskNumber(group.sender)
                     )
                 )
                 SnackbarManager.showError(getString(R.string.snackbar_loop_protection_own_sim))
@@ -635,7 +636,7 @@ class SmsForegroundService : Service() {
                     "Warteschlange voll - kein Sendeversuch, Verlust NUR im Protokoll"
                 },
                 details = mapOf(
-                    "sender" to group.sender,
+                    "sender" to MmiCodeMasker.maskNumber(group.sender),
                     "max_entries" to ForwardingQueueRetentionPolicy.MAX_ENTRIES,
                     "warning_persisted" to recorded
                 )
@@ -660,7 +661,7 @@ class SmsForegroundService : Service() {
                 component = "SmsForegroundService",
                 action = "QUEUE_WRITE_FAILED",
                 message = "Vorgang konnte nicht persistiert werden - kein Sendeversuch",
-                details = mapOf("sender" to group.sender)
+                details = mapOf("sender" to MmiCodeMasker.maskNumber(group.sender))
             )
             SnackbarManager.showError(getString(R.string.warning_queue_write_failed))
             return
@@ -893,7 +894,7 @@ class SmsForegroundService : Service() {
                 }
             }
 
-            SimSelectionMode.ALWAYS_SIM_1 -> sims.getOrNull(0)?.subscriptionId ?: run {
+            SimSelectionMode.ALWAYS_SIM_1 -> sims.inSlot(0)?.subscriptionId ?: run {
                 LoggingManager.logWarning(
                     component = "SmsForegroundService",
                     action = "DETERMINE_SIM",
@@ -904,7 +905,7 @@ class SmsForegroundService : Service() {
                 -1
             }
 
-            SimSelectionMode.ALWAYS_SIM_2 -> sims.getOrNull(1)?.subscriptionId ?: run {
+            SimSelectionMode.ALWAYS_SIM_2 -> sims.inSlot(1)?.subscriptionId ?: run {
                 LoggingManager.logWarning(
                     component = "SmsForegroundService",
                     action = "DETERMINE_SIM",
@@ -912,7 +913,7 @@ class SmsForegroundService : Service() {
                     details = mapOf("available_sims" to sims.size)
                 )
                 SnackbarManager.showWarning(getString(R.string.snackbar_sim2_unavailable))
-                sims.getOrNull(0)?.subscriptionId ?: -1
+                sims.inSlot(0)?.subscriptionId ?: -1
             }
         }
     }

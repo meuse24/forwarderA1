@@ -7,6 +7,7 @@ import info.meuse24.smsforwarderneoA1.LoggingManager
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
 import info.meuse24.smsforwarderneoA1.SnackbarManager
 import info.meuse24.smsforwarderneoA1.data.local.SharedPreferencesManager
+import info.meuse24.smsforwarderneoA1.util.MmiCodeMasker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -87,7 +88,7 @@ class TestUtilsViewModel(
                 action = "TEST_SMS_SENT",
                 message = "Test-SMS wurde versendet",
                 details = mapOf(
-                    "receiver" to receiver,
+                    "receiver" to MmiCodeMasker.maskNumber(receiver),
                     "text" to sanitizedText,
                     "note" to "Email-Weiterleitung erfolgt durch regulären SMS-Empfang"
                 )
@@ -99,7 +100,7 @@ class TestUtilsViewModel(
                 action = "TEST_SMS_FAILED",
                 message = "Fehler beim Versenden der Test-SMS",
                 details = mapOf(
-                    "receiver" to receiver,
+                    "receiver" to MmiCodeMasker.maskNumber(receiver),
                     "text" to sanitizedText
                 )
             )

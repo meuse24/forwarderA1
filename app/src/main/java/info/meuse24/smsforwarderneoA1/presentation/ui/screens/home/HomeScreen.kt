@@ -76,6 +76,7 @@ import info.meuse24.smsforwarderneoA1.ui.theme.BackgroundGradientLight
 import info.meuse24.smsforwarderneoA1.ui.theme.ErrorGradient
 import info.meuse24.smsforwarderneoA1.ui.theme.PrimaryGradient
 import info.meuse24.smsforwarderneoA1.ui.theme.WarmContactGradient
+import info.meuse24.smsforwarderneoA1.domain.model.inSlot
 
 @Composable
 private fun ForwardingVerificationCard(viewModel: ContactsViewModel) {
@@ -696,7 +697,7 @@ fun ContactSelectionSection(
                                 }
                             }
                             info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode.ALWAYS_SIM_1 -> {
-                                val sim = availableSimCards.getOrNull(0)
+                                val sim = availableSimCards.inSlot(0)
                                 if (sim != null) {
                                     stringResource(
                                         R.string.mmi_sim_slot_display,
@@ -709,7 +710,7 @@ fun ContactSelectionSection(
                                 }
                             }
                             info.meuse24.smsforwarderneoA1.domain.model.MmiSimSelectionMode.ALWAYS_SIM_2 -> {
-                                val sim = availableSimCards.getOrNull(1)
+                                val sim = availableSimCards.inSlot(1)
                                 if (sim != null) {
                                     stringResource(
                                         R.string.mmi_sim_slot_display,
@@ -746,11 +747,11 @@ fun ContactSelectionSection(
                         val smsEingangInfo = buildString {
                             val enabledSims = mutableListOf<String>()
                             if (sim1ReceiveEnabled) {
-                                val sim1 = availableSimCards.getOrNull(0)
+                                val sim1 = availableSimCards.inSlot(0)
                                 enabledSims.add(if (sim1 != null) "SIM 1 (${sim1.carrierName})" else "SIM 1")
                             }
                             if (sim2ReceiveEnabled) {
-                                val sim2 = availableSimCards.getOrNull(1)
+                                val sim2 = availableSimCards.inSlot(1)
                                 enabledSims.add(if (sim2 != null) "SIM 2 (${sim2.carrierName})" else "SIM 2")
                             }
 
@@ -797,7 +798,7 @@ fun ContactSelectionSection(
                                     append("Gleiche SIM wie Eingang")
                                 }
                                 info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode.ALWAYS_SIM_1 -> {
-                                    val sim1 = availableSimCards.getOrNull(0)
+                                    val sim1 = availableSimCards.inSlot(0)
                                     if (sim1 != null) {
                                         val isDefault = sim1.subscriptionId == defaultSmsSubscriptionId && defaultSmsSubscriptionId != -1
                                         append("SIM 1 (${sim1.carrierName})")
@@ -807,7 +808,7 @@ fun ContactSelectionSection(
                                     }
                                 }
                                 info.meuse24.smsforwarderneoA1.domain.model.SimSelectionMode.ALWAYS_SIM_2 -> {
-                                    val sim2 = availableSimCards.getOrNull(1)
+                                    val sim2 = availableSimCards.inSlot(1)
                                     if (sim2 != null) {
                                         val isDefault = sim2.subscriptionId == defaultSmsSubscriptionId && defaultSmsSubscriptionId != -1
                                         append("SIM 2 (${sim2.carrierName})")
