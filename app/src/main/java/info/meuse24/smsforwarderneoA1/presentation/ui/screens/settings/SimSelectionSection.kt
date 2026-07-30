@@ -27,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
@@ -51,7 +50,6 @@ import info.meuse24.smsforwarderneoA1.domain.model.inSlot
 @Composable
 fun SimSelectionSection(
     viewModel: ContactsViewModel,
-    sectionTitleStyle: TextStyle,
     modifier: Modifier = Modifier
 ) {
     val selectedMode by viewModel.simSelectionMode.collectAsState()
@@ -62,12 +60,6 @@ fun SimSelectionSection(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = stringResource(R.string.section_sms_sim_selection),
-            style = sectionTitleStyle,
-            color = MaterialTheme.colorScheme.primary
-        )
-
         Text(
             text = stringResource(R.string.desc_sms_send_sim),
             style = MaterialTheme.typography.bodySmall,

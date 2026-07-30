@@ -183,7 +183,6 @@
     <string name="log_message_pin_changed">LOG-PIN changed</string>
 
     <!-- ==================== SIM MANAGEMENT SECTION ==================== -->
-    <string name="heading_sim_overview">SIM Cards Overview</string>
     <string name="error_no_sims_found">No SIM cards found</string>
     <string name="msg_check_permissions">Ensure permissions have been granted</string>
     <string name="label_sim_number">SIM %1$d</string>

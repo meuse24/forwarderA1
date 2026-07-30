@@ -140,8 +140,7 @@ fun SettingsScreen(
                 SimManagementSection(
                     viewModel = viewModel,
                     simManagementViewModel = simManagementViewModel,
-                    onFocusChanged = { isAnyFieldFocused = it },
-                    sectionTitleStyle = sectionTitleStyle
+                    onFocusChanged = { isAnyFieldFocused = it }
                 )
             }
 
@@ -163,8 +162,7 @@ fun SettingsScreen(
                 }
             ) {
                 SimSelectionSection(
-                    viewModel = viewModel,
-                    sectionTitleStyle = sectionTitleStyle
+                    viewModel = viewModel
                 )
             }
 
@@ -187,8 +185,7 @@ fun SettingsScreen(
                 }
             ) {
                 SmsReceiveFilterSection(
-                    viewModel = viewModel,
-                    sectionTitleStyle = sectionTitleStyle
+                    viewModel = viewModel
                 )
             }
 
@@ -211,7 +208,6 @@ fun SettingsScreen(
             ) {
                 EmailSettingsSection(
                     emailViewModel = emailViewModel,
-                    sectionTitleStyle = sectionTitleStyle,
                     onMailTabVisibilityChanged = viewModel::updateMailScreenVisibility
                 )
             }
@@ -262,8 +258,7 @@ fun SettingsScreen(
                     emailViewModel = emailViewModel,
                     testUtilsViewModel = testUtilsViewModel,
                     navigationViewModel = navigationViewModel,
-                    onFocusChanged = { isAnyFieldFocused = it },
-                    sectionTitleStyle = sectionTitleStyle
+                    onFocusChanged = { isAnyFieldFocused = it }
                 )
             }
 
@@ -285,7 +280,6 @@ fun SettingsScreen(
                 }
             ) {
                 LogSettingsSection(
-                    sectionTitleStyle = sectionTitleStyle,
                     onDeleteLogs = { showPinDialog = true },
                     onChangePin = { showChangePinDialog = true },
                     viewModel = viewModel,

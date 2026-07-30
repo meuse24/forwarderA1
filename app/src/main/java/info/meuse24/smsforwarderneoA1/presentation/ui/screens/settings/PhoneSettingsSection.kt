@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import info.meuse24.smsforwarderneoA1.ContactsViewModel
 import info.meuse24.smsforwarderneoA1.PhoneSmsUtils
@@ -23,8 +22,7 @@ import info.meuse24.smsforwarderneoA1.R
 @Composable
 fun PhoneSettingsSection(
     viewModel: ContactsViewModel,
-    onFocusChanged: (Boolean) -> Unit,
-    sectionTitleStyle: TextStyle
+    onFocusChanged: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val countryCode by viewModel.countryCode.collectAsState()

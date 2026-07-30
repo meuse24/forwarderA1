@@ -31,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import info.meuse24.smsforwarderneoA1.R
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -44,7 +43,6 @@ import info.meuse24.smsforwarderneoA1.AppContainer
 @Composable
 fun EmailSettingsSection(
     emailViewModel: EmailViewModel,
-    sectionTitleStyle: TextStyle,
     onMailTabVisibilityChanged: (Boolean) -> Unit
 ) {
     val context = LocalContext.current

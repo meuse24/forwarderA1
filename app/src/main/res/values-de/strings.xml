@@ -184,7 +184,6 @@
     <string name="log_message_pin_changed">LOG-PIN wurde geändert</string>
 
     <!-- ==================== SIM MANAGEMENT SECTION ==================== -->
-    <string name="heading_sim_overview">SIM-Karten Übersicht</string>
     <string name="error_no_sims_found">Keine SIM-Karten gefunden</string>
     <string name="msg_check_permissions">Stellen Sie sicher, dass Berechtigungen erteilt wurden</string>
     <string name="label_sim_number">SIM %1$d</string>
