@@ -48,12 +48,15 @@ Die erste Einreichung wurde vorbereitet und als Merge Request an F-Droid übermi
   Zeilentrenner der Plattform, F-Droid baut unter Linux. Eine unter Windows erzeugte
   Referenz-APK kann deshalb nicht bit-identisch sein.
 * Konsequenz: `Binaries` und `AllowedAPKSigningKeys` wurden aus den Metadaten entfernt. F-Droid
-  baut und signiert selbst — der Regelfall für Neuaufnahmen. Reproducible Builds lassen sich
-  später nachreichen, sobald die Release-APK aus einem Linux-Container stammt.
+  baut und signiert selbst — der Regelfall für Neuaufnahmen. Das ist endgültig; ein späteres
+  Nachreichen von Reproducible Builds ist ausgeschlossen (siehe unten).
 * Der Job `checkupdates` scheiterte zusätzlich daran, dass `fdroid checkupdates` das Feld
   `AutoName: SMSForwarderNeo A1` ergänzt und der Job anschließend `git diff --exit-code` prüft.
   Das Feld ist jetzt in der Metadaten-Datei eingetragen. `CurrentVersion` wurde von
   `Barracuda 5.2.3` auf den tatsächlichen `versionName` `5.2.3` korrigiert.
+* Mit Commit `2c10724d` sind alle neun Jobs der Merge-Request-Pipeline `#2721488556`
+  erfolgreich, darunter `fdroid build`, `checkupdates` und `check apk`. Die Einreichung liegt
+  damit bei den F-Droid-Maintainern; der Merge Request darf nicht selbst zusammengeführt werden.
 
 Das GitLab-Konto wurde für CI verifiziert. Die danach manuell gestartete Fork-Pipeline für
 `ef7c1f8c` ist erfolgreich durchgelaufen. Die frühere Merge-Request-Pipeline
@@ -123,22 +126,39 @@ ihn fehlschlagen.
 nicht `Barracuda 5.2.3`. Ein nicht-numerischer `versionName` war schon der Grund, warum die
 frühere `Binaries`-URL mit `%v` ins Leere lief.
 
-## Reproducible Builds: derzeit bewusst nicht aktiviert
+## Reproducible Builds: bewusst und endgültig abgelehnt
 
 Mit `Binaries` und `AllowedAPKSigningKeys` würde F-Droid die selbst gebaute APK mit der
 GitHub-Release-APK vergleichen und bei Gleichheit die vom Entwickler signierte Datei
-verteilen. Beide Felder sind entfernt, weil dieser Vergleich mit einer unter **Windows**
-gebauten Referenz-APK nicht gelingen kann: R8 schreibt `META-INF/services/*` mit dem
-Zeilentrenner der Plattform, also CRLF statt LF, und auch `classes.dex` sowie
-`assets/dexopt/baseline.prof` weichen ab. F-Droid baut und signiert daher selbst — das ist
-der Regelfall und für die Aufnahme ausreichend.
+verteilen. Beide Felder sind entfernt; F-Droid baut und signiert mit eigenem Schlüssel.
 
-Wer den Vergleich später aktivieren will, muss die Release-APK in einem Linux-Container mit
-derselben Toolchain (JDK 17, Gradle-Wrapper des Projekts) bauen, sie als
-`app-release.apk` an das unveränderliche GitHub-Release hängen und beide Felder wieder
-eintragen. `AllowedAPKSigningKeys` ist dabei der kleingeschriebene SHA-256-Fingerabdruck
-ohne Doppelpunkte des Zertifikats aus `keyandroid.jks`
-(`dff4458848d98fdbc005e47159d1507cf22c58b47600ef094ab3e08b99f1c72c`).
+**Diese Entscheidung ist nach der Veröffentlichung nicht mehr revidierbar.** F-Droid-Entwickler
+`linsui` hat am 31.07.2026 im Merge Request darauf hingewiesen: Ein nachträglicher Wechsel von
+der F-Droid-Signatur auf Reproducible Builds ist ausgeschlossen, weil die bereits
+installierten Nutzer dann keine Updates mehr erhalten würden.
+
+Ausschlaggebend war, dass es keine auf Updates angewiesene Nutzerbasis gibt. Damit entfällt
+der einzige echte Vorteil — die gemeinsame Signatur, die einen Umstieg von der GitHub-APK auf
+F-Droid ohne Deinstallation und ohne Datenverlust erlaubt hätte. Dagegen stand ein dauerhafter
+Preis: Jede künftige Version müsste bit-identisch zum F-Droid-Linux-Build sein, und ein
+Fehlschlag würde nicht nur den Vergleich, sondern die Auslieferung dieser Version verhindern.
+
+Der Grund für den gescheiterten Vergleich war der Windows-Build. Der Log von Pipeline
+`#2721364453` nennt drei Abweichungen, für die `reproducible-apk-tools` jeweils ein Skript
+bereithält:
+
+| Abweichung | Werkzeug | Ursache |
+| --- | --- | --- |
+| CRLF in `META-INF/services/*` | `fix-newlines.py --from-crlf` | R8 nutzt den Zeilentrenner der Plattform |
+| `classes.dex` | `fix-pg-map-id.py` | R8 bettet eine wechselnde ProGuard-Map-ID ein |
+| `assets/dexopt/baseline.prof` | `sort-baseline.py` | nicht-deterministische Sortierung |
+
+Der Weg wäre also gangbar gewesen: die unsigned APK aus den Pipeline-Artefakten ziehen, die
+eigene APK damit angleichen, `zipalign`, neu signieren — oder gleich in einem Linux-Container
+mit derselben Toolchain (JDK 17, Gradle-Wrapper des Projekts) bauen. Er wurde nur deshalb
+nicht beschritten, weil sich der Aufwand ohne Nutzerbasis nicht rechnet. Der zugehörige
+Fingerabdruck aus `keyandroid.jks` lautete
+`dff4458848d98fdbc005e47159d1507cf22c58b47600ef094ab3e08b99f1c72c`.
 
 Unabhängig davon gilt für jede veröffentlichte GitHub-APK: Nach dem Gradle-Build darf sie
 nicht mehr verändert werden. `zipalign` muss **vor** `apksigner` laufen; ein nachträgliches
