@@ -15,6 +15,11 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val releaseSigningProperties = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+val hasReleaseSigningConfig = releaseSigningProperties.all { key ->
+    keystoreProperties.getProperty(key)?.isNotBlank() == true
+}
+
 /**
  * Herkunft des Builds fuer die Info-Seite.
  *
@@ -77,8 +82,8 @@ android {
     compileSdk = 36
 
     signingConfigs {
-        create("release") {
-            if (keystoreProperties.containsKey("storeFile")) {
+        if (hasReleaseSigningConfig) {
+            create("release") {
                 storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
                 keyAlias = keystoreProperties["keyAlias"] as String
@@ -91,8 +96,8 @@ android {
         applicationId = "info.meuse24.smsforwarderneoA1"
         minSdk = 29
         targetSdk = 36
-        versionCode = 9
-        versionName = "Barracuda 5.2.1"
+        versionCode = 10
+        versionName = "Barracuda 5.2.2"
 
         val agpVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION
         buildConfigField("String", "AGP_VERSION", "\"$agpVersion\"")
@@ -144,8 +149,10 @@ android {
             isShrinkResources = true
             isDebuggable = false
 
-            // Apply signing configuration
-            signingConfig = signingConfigs.getByName("release")
+            // F-Droid has no local keystore and signs the resulting APK itself.
+            if (hasReleaseSigningConfig) {
+                signingConfig = signingConfigs.getByName("release")
+            }
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

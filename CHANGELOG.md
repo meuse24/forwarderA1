@@ -4,6 +4,15 @@ Alle nennenswerten Änderungen an SMS Forwarder Neo A1.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [5.2.2] – Barracuda
+
+### Geändert
+
+- **F-Droid-Build kompatibel gemacht.** Der Foojay-Toolchain-Resolver wurde entfernt,
+  weil F-Droid ihn beim Quellcode-Scan nicht zulässt. Die lokale Release-Signierung wird
+  nur aktiviert, wenn alle Keystore-Werte vorhanden sind; F-Droid kann den Release dadurch
+  ohne lokalen Schlüssel bauen und selbst signieren.
+
 ## [5.2.1] – Barracuda
 
 ### Geändert
