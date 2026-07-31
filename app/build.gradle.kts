@@ -96,8 +96,8 @@ android {
         applicationId = "info.meuse24.smsforwarderneoA1"
         minSdk = 29
         targetSdk = 36
-        versionCode = 10
-        versionName = "Barracuda 5.2.2"
+        versionCode = 11
+        versionName = "5.2.3"
 
         val agpVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION
         buildConfigField("String", "AGP_VERSION", "\"$agpVersion\"")

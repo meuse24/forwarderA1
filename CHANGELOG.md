@@ -4,6 +4,14 @@ Alle nennenswerten Änderungen an SMS Forwarder Neo A1.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [5.2.3]
+
+### Geändert
+
+- **Versionsname für F-Droid vereinheitlicht.** Der Android-`versionName` enthält nur noch
+  die numerische Version. Dadurch lässt sich die Release-APK über den F-Droid-Platzhalter
+  `%v` direkt aus dem Git-Tag `V5.2.3` beziehen.
+
 ## [5.2.2] – Barracuda
 
 ### Geändert
