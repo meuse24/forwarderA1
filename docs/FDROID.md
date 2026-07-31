@@ -57,13 +57,19 @@ Die erste Einreichung wurde vorbereitet und als Merge Request an F-Droid übermi
 * Mit Commit `2c10724d` sind alle neun Jobs der Merge-Request-Pipeline `#2721488556`
   erfolgreich, darunter `fdroid build`, `checkupdates` und `check apk`. Die Einreichung liegt
   damit bei den F-Droid-Maintainern; der Merge Request darf nicht selbst zusammengeführt werden.
+* `linsui` hat den Merge Request am 31.07.2026 als „mostly ready" eingestuft, das Label
+  `waiting-on-response` entfernt und `review-requested` gesetzt. Gemergt wird erst nach einem
+  eigenen Test durch die Maintainer; wegen der langen Warteschlange kann das dauern.
+* **Solange der Merge Request offen ist, muss jedes neue Release dort manuell nachgezogen
+  werden** — `versionName`, `versionCode` und `commit` im Build-Eintrag sowie `CurrentVersion`
+  und `CurrentVersionCode`. Erst nach dem Merge übernimmt `AutoUpdateMode: Version` das
+  automatisch. Ohne dringenden Anlass bleibt `5.2.3` deshalb bis zum Merge stehen.
 
-Das GitLab-Konto wurde für CI verifiziert. Die danach manuell gestartete Fork-Pipeline für
-`ef7c1f8c` ist erfolgreich durchgelaufen. Die frühere Merge-Request-Pipeline
-`#2720019186` wurde noch vor der Verifizierung erstellt, enthält deshalb keine Jobs und
-bleibt fehlgeschlagen. Der F-Droid-Reviewer wurde am 31.07.2026 gebeten, eine neue
-Merge-Request-Pipeline auszulösen. Bis zu deren Ergebnis bleibt der Merge Request offen;
-er darf nicht selbst zusammengeführt werden.
+Das GitLab-Konto wurde für CI verifiziert. Die frühere Merge-Request-Pipeline `#2720019186`
+war noch vor der Verifizierung erstellt worden, enthält deshalb keine Jobs und bleibt
+fehlgeschlagen; seit der Verifizierung starten Merge-Request-Pipelines mit jedem Push in den
+Fork-Branch von selbst. Der Merge Request bleibt bis zum Test durch F-Droid offen und darf
+nicht selbst zusammengeführt werden.
 
 ## Voraussetzungen
 
