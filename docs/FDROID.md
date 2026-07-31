@@ -32,6 +32,28 @@ Die erste Einreichung wurde vorbereitet und als Merge Request an F-Droid übermi
 * Die F-Droid-Pipeline für `V5.2.1` scheitert beim Quellcode-Scan am Foojay-Toolchain-
   Resolver. Dieser ist für das nächste Patch-Release entfernt; `V5.2.1` bleibt wegen seines
   unveränderlichen Commit-Hashes nicht nachträglich reparierbar.
+* Als Ersatz ist `V5.2.3` (`versionCode` 11) auf Commit
+  `c5cc87cb4556ce64b3b51d5a00b1cf3ae8c0ce5d` in den Metadaten eingetragen. Die numerische
+  `versionName` erlaubt die generische Binary-URL mit `%v`; `UpdateCheckData` ist daher nicht
+  mehr erforderlich.
+* Der Build aus diesem Commit läuft in der F-Droid-CI erfolgreich durch. Der anschließende
+  Binary-Vergleich scheiterte zunächst an einer ungültig hochgeladenen Referenz-APK; nach dem
+  Neu-Upload meldet `apksigner` in der CI `Verifies` (v2). Damit ist das Signaturproblem erledigt.
+* Pipeline `#2721364453` vom 31.07.2026 scheiterte danach am eigentlichen Reproducible-Build-
+  Vergleich: F-Droid kopiert die Signatur der Referenz-APK auf das selbst gebaute Ergebnis, und
+  dessen Verifikation schlägt fehl, weil der Inhalt abweicht. Der Log nennt genau fünf
+  Unterschiede — `META-INF/services/a3.t`, `b3.a` und `javax.mail.Provider` mit CRLF statt LF
+  sowie binär abweichende `classes.dex` und `assets/dexopt/baseline.prof`. Die CRLF-Zeilenenden
+  sind der Fingerabdruck eines Windows-Builds: R8 schreibt die Service-Dateien mit dem
+  Zeilentrenner der Plattform, F-Droid baut unter Linux. Eine unter Windows erzeugte
+  Referenz-APK kann deshalb nicht bit-identisch sein.
+* Konsequenz: `Binaries` und `AllowedAPKSigningKeys` wurden aus den Metadaten entfernt. F-Droid
+  baut und signiert selbst — der Regelfall für Neuaufnahmen. Reproducible Builds lassen sich
+  später nachreichen, sobald die Release-APK aus einem Linux-Container stammt.
+* Der Job `checkupdates` scheiterte zusätzlich daran, dass `fdroid checkupdates` das Feld
+  `AutoName: SMSForwarderNeo A1` ergänzt und der Job anschließend `git diff --exit-code` prüft.
+  Das Feld ist jetzt in der Metadaten-Datei eingetragen. `CurrentVersion` wurde von
+  `Barracuda 5.2.3` auf den tatsächlichen `versionName` `5.2.3` korrigiert.
 
 Das GitLab-Konto wurde für CI verifiziert. Die danach manuell gestartete Fork-Pipeline für
 `ef7c1f8c` ist erfolgreich durchgelaufen. Die frühere Merge-Request-Pipeline
@@ -42,8 +64,8 @@ er darf nicht selbst zusammengeführt werden.
 
 ## Voraussetzungen
 
-* Ein veröffentlichter Git-Tag, der exakt auf dem Release-Commit liegt. Für die erste
-  Einreichung ist das aktuell `V5.2.1` mit `versionCode` 9. Der Tag dient der
+* Ein veröffentlichter Git-Tag, der exakt auf dem Release-Commit liegt. Für den aktuellen
+  Einreichungsstand ist das `V5.2.3` mit `versionCode` 11. Der Tag dient der
   Update-Erkennung; der konkrete Build referenziert stets den unveränderlichen vollen
   Commit-Hash.
 * Das Repository, der Tag, die MIT-Lizenz und GitHub Issues bleiben öffentlich erreichbar.
@@ -70,38 +92,70 @@ SourceCode: https://github.com/meuse24/forwarderA1
 IssueTracker: https://github.com/meuse24/forwarderA1/issues
 Changelog: https://github.com/meuse24/forwarderA1/blob/main/CHANGELOG.md
 
+AutoName: SMSForwarderNeo A1
+
 RepoType: git
 Repo: https://github.com/meuse24/forwarderA1.git
-Binaries: https://github.com/meuse24/forwarderA1/releases/download/V%v/app-release.apk
 
 Builds:
-  - versionName: Barracuda 5.2.1
-    versionCode: 9
-    commit: 9a68b8569aff8fcf3d5b2f49703a9a79b782be76
+  - versionName: 5.2.3
+    versionCode: 11
+    commit: c5cc87cb4556ce64b3b51d5a00b1cf3ae8c0ce5d
     subdir: app
     gradle:
       - yes
 
-AllowedAPKSigningKeys: dff4458848d98fdbc005e47159d1507cf22c58b47600ef094ab3e08b99f1c72c
-
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: Barracuda 5.2.1
-CurrentVersionCode: 9
+CurrentVersion: 5.2.3
+CurrentVersionCode: 11
 ```
 
 YAML ist einrückungssensitiv: Alle Felder auf oberster Ebene (`Categories`, `License`,
 `Builds` usw.) müssen in Spalte 1 beginnen. Die Datei muss mit einem Zeilenumbruch enden.
 
-`Binaries` steht unmittelbar unter `Repo` und verweist auf die APK des jeweiligen,
-unveränderlichen GitHub-Releases. F-Droid ersetzt `%v` durch die Release-Version und
-vergleicht die APK mit dem selbst gebauten Ergebnis. Die URL darf deshalb weder auf
-`latest` zeigen noch als feste Versions-URL eingetragen werden.
+`AutoName` muss eingetragen sein und exakt dem Wert entsprechen, den `fdroid checkupdates`
+aus dem Manifest liest (`SMSForwarderNeo A1`). Der CI-Job `checkupdates` führt das Werkzeug
+aus und prüft danach mit `git diff --exit-code`; ein fehlendes oder abweichendes Feld lässt
+ihn fehlschlagen.
 
-`AllowedAPKSigningKeys` ist der kleingeschriebene SHA-256-Fingerabdruck ohne Doppelpunkte
-des Zertifikats, mit dem die GitHub-Release-APK signiert wurde. Der oben eingetragene Wert
-wurde aus `keyandroid.jks` ermittelt. Bei einem späteren Wechsel des Release-Schlüssels
-muss der neue Fingerabdruck ergänzt werden, bevor die damit signierte APK übernommen wird.
+`CurrentVersion` muss dem `versionName` aus `app/build.gradle.kts` entsprechen — also `5.2.3`,
+nicht `Barracuda 5.2.3`. Ein nicht-numerischer `versionName` war schon der Grund, warum die
+frühere `Binaries`-URL mit `%v` ins Leere lief.
+
+## Reproducible Builds: derzeit bewusst nicht aktiviert
+
+Mit `Binaries` und `AllowedAPKSigningKeys` würde F-Droid die selbst gebaute APK mit der
+GitHub-Release-APK vergleichen und bei Gleichheit die vom Entwickler signierte Datei
+verteilen. Beide Felder sind entfernt, weil dieser Vergleich mit einer unter **Windows**
+gebauten Referenz-APK nicht gelingen kann: R8 schreibt `META-INF/services/*` mit dem
+Zeilentrenner der Plattform, also CRLF statt LF, und auch `classes.dex` sowie
+`assets/dexopt/baseline.prof` weichen ab. F-Droid baut und signiert daher selbst — das ist
+der Regelfall und für die Aufnahme ausreichend.
+
+Wer den Vergleich später aktivieren will, muss die Release-APK in einem Linux-Container mit
+derselben Toolchain (JDK 17, Gradle-Wrapper des Projekts) bauen, sie als
+`app-release.apk` an das unveränderliche GitHub-Release hängen und beide Felder wieder
+eintragen. `AllowedAPKSigningKeys` ist dabei der kleingeschriebene SHA-256-Fingerabdruck
+ohne Doppelpunkte des Zertifikats aus `keyandroid.jks`
+(`dff4458848d98fdbc005e47159d1507cf22c58b47600ef094ab3e08b99f1c72c`).
+
+Unabhängig davon gilt für jede veröffentlichte GitHub-APK: Nach dem Gradle-Build darf sie
+nicht mehr verändert werden. `zipalign` muss **vor** `apksigner` laufen; ein nachträgliches
+Auspacken, Neu-Packen oder `zipalign` zerstört die v2-Signatur. Bei einer bereits
+hochgeladenen, ungültigen Datei genügt kein Überschreiben — das Asset zuerst löschen, dann
+die neue Datei hochladen. Prüfung vor dem Upload:
+
+```powershell
+./gradlew.bat clean assembleRelease
+$apk = 'app/build/outputs/apk/release/app-release.apk'
+apksigner verify --verbose --print-certs $apk
+Get-FileHash $apk -Algorithm SHA256
+```
+
+Für `V5.2.3` ergab der geprüfte lokale Build vom Release-Commit den SHA-256-Wert
+`9D78DB68D48E6B1653A8FFCF4EA244FE8631335AA63CA343DC438F00280D7E3A`; das GitHub-Asset trägt
+denselben Digest.
 
 Die Build-Zeile ist vor dem Merge mit `fdroid build -v -l info.meuse24.smsforwarderneoA1`
 oder einer von F-Droid ausgelösten Merge-Request-Pipeline zu validieren. Eine erfolgreich
